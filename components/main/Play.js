@@ -8,7 +8,7 @@ import LadderStepWord from '../shared/LadderStepWord'
 import { TextInput } from 'react-native-gesture-handler';
 import FlatButton from '../shared/button';
 import { validateWord, validateLevelOneWord, validateExtraLevelTwoRule } from '../../utils/validations';
-import LevelCompleteScreen from '../shared/LevelCompleteScreen';
+import LevelCompleteScreen, { completionBonusMap } from '../shared/LevelCompleteScreen';
 
 export class Play extends Component {
     constructor(props) {
@@ -43,7 +43,14 @@ export class Play extends Component {
                             newUser.wordLadder[level.toLowerCase()].longestStreak = newUser.wordLadder[level.toLowerCase()].currentStreak
                         }
                         newUser.wordLadder[level.toLowerCase()].lastSolved = newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle;
-
+                        const timeBonus = 180 - timeTaken > 0 ? 180 - timeTaken : 0;
+                        const completionBonus = completionBonusMap[level.toLowerCase()];
+                        const wordBonus = Math.floor(200 - this.state.ladderWords.length * 10) > 0 ? Math.floor(180 - this.state.ladderWords.length * 10) : 0;
+                        const totalRoundScore = timeBonus + completionBonus + wordBonus;
+                        newUser.wordLadder[level.toLowerCase()].totalScore = newUser.wordLadder[level.toLowerCase()].totalScore + totalRoundScore;
+                        if(totalRoundScore > newUser.wordLadder[level.toLowerCase()].highScore){
+                            newUser.wordLadder[level.toLowerCase()].highScore = totalRoundScore;
+                        }
 
                         this.props.updateUser(
                             this.props.currentUser.id, newUser
@@ -75,7 +82,17 @@ export class Play extends Component {
                                     newUser.wordLadder[level.toLowerCase()].longestStreak = newUser.wordLadder[level.toLowerCase()].currentStreak
                                 }
                                 newUser.wordLadder[level.toLowerCase()].lastSolved = newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle;
+                                let timeTaken = Math.round(Math.abs(((currentUser.wordLadder[level.toLowerCase()].timeFinished - currentUser.wordLadder[level.toLowerCase()].timeStarted)) / 1000));
 
+                                const timeBonus = 180 - timeTaken > 0 ? 180 - timeTaken : 0;
+                                const completionBonus = completionBonusMap[level.toLowerCase()];
+                                const wordBonus = Math.floor(200 - this.state.ladderWords.length * 10) > 0 ? Math.floor(180 - this.state.ladderWords.length * 10) : 0;
+                                const totalRoundScore = timeBonus + completionBonus + wordBonus;
+                                newUser.wordLadder[level.toLowerCase()].totalScore = newUser.wordLadder[level.toLowerCase()].totalScore + totalRoundScore;
+                                if(totalRoundScore > newUser.wordLadder[level.toLowerCase()].highScore){
+                                    newUser.wordLadder[level.toLowerCase()].highScore = totalRoundScore;
+                                }
+                                
                                 this.props.updateUser(
                                     this.props.currentUser.id, newUser
                                 )

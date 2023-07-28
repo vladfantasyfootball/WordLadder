@@ -5,7 +5,7 @@ import { levelColorScheme } from '../../redux/constants/colorScheme';
 import LadderStepWord from './LadderStepWord';
 import * as Animatable from 'react-native-animatable';
 
-const completionBonusMap = {
+export const completionBonusMap = {
     one: 50,
     two: 100,
     three: 150,
