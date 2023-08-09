@@ -43,6 +43,8 @@ export class Play extends Component {
                             newUser.wordLadder[level.toLowerCase()].longestStreak = newUser.wordLadder[level.toLowerCase()].currentStreak
                         }
                         newUser.wordLadder[level.toLowerCase()].lastSolved = newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle;
+                        let timeTaken = Math.round(Math.abs(((newUser.wordLadder[level.toLowerCase()].timeFinished - newUser.wordLadder[level.toLowerCase()].timeStarted)) / 1000));
+
                         const timeBonus = 180 - timeTaken > 0 ? 180 - timeTaken : 0;
                         const completionBonus = completionBonusMap[level.toLowerCase()];
                         const wordBonus = Math.floor(200 - this.state.ladderWords.length * 10) > 0 ? Math.floor(180 - this.state.ladderWords.length * 10) : 0;
@@ -82,7 +84,7 @@ export class Play extends Component {
                                     newUser.wordLadder[level.toLowerCase()].longestStreak = newUser.wordLadder[level.toLowerCase()].currentStreak
                                 }
                                 newUser.wordLadder[level.toLowerCase()].lastSolved = newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle;
-                                let timeTaken = Math.round(Math.abs(((currentUser.wordLadder[level.toLowerCase()].timeFinished - currentUser.wordLadder[level.toLowerCase()].timeStarted)) / 1000));
+                                let timeTaken = Math.round(Math.abs(((newUser.wordLadder[level.toLowerCase()].timeFinished - newUser.wordLadder[level.toLowerCase()].timeStarted)) / 1000));
 
                                 const timeBonus = 180 - timeTaken > 0 ? 180 - timeTaken : 0;
                                 const completionBonus = completionBonusMap[level.toLowerCase()];
