@@ -15,6 +15,7 @@ import thunk from 'redux-thunk';
 import MainScreen from './components/Main';
 import Play from './components/main/Play';
 import ProfilePage from './components/main/ProfilePage';
+import PayWall from './components/main/PayWall';
 
 const store = createStore(rootReducer, applyMiddleware(thunk));
 
@@ -93,6 +94,7 @@ export class App extends Component {
             <Stack.Screen name="Main" component={MainScreen} options={{headerShown: false}}/>
             <Stack.Screen name="Play" component={Play} options={({ route, navigation }) => {return { headerTitleAlign: "center", headerTitle: `Level ${route.params.level}`}}}/>
             <Stack.Screen name="ProfilePage" component={ProfilePage} options={({ route, navigation }) => {return { headerTitleAlign: "center", headerTitle: `Profile`}}}/>
+            <Stack.Screen name="Paywall" component={PayWall} options={{headerShown: false, presentation: 'modal'}}/>
           </Stack.Navigator>
         </NavigationContainer>
       </Provider>

@@ -27,6 +27,7 @@ export default function Game({ navigation, level }) {
         navigation.navigate('Play', {level});
     }
     const onPressUnlock = () => {
+        navigation.navigate('Paywall')
     }
     const onPressHowTo = (level) => {
         setHowToOpen(level)

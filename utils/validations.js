@@ -4,16 +4,12 @@ const baseUrl = 'https://api.dictionaryapi.dev/api/v2/entries/en/'
 
 export const validateWord = async (word) => {
     try {
-        return axios({
-            method: 'get',
-            url: `${baseUrl}${word}`,
-          }).then((response) => {
-            return true;
+        return axios.get(`http://localhost:3000/api/checkValidEnglishWord?word=${word}`).then((response) => {
+            return response.data;
           }).catch((error) => {
-              return false;
+            return false;
           });
-    }
-    catch (error){
+    } catch (error){
         return false;
     }
 }

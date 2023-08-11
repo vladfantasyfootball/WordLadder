@@ -27,6 +27,7 @@ export class Play extends Component {
     onPress = async (level) => {
         if (level.toLowerCase() === "one" || level.toLowerCase() === "two") {
             const validWord = await validateWord(this.state.nextWord.toLowerCase())
+            console.log(validWord);
             if (validWord) {
                 if (validateLevelOneWord(this.state.ladderWords.length > 1 ?
                     this.state.ladderWords[this.state.ladderWords.length - 1].toLowerCase() :
@@ -190,13 +191,21 @@ export class Play extends Component {
                                 persistentScrollbar={true}>
                                 {this.state.ladderWords.slice(1).map((ladderWord, index) => {
                                     return (
-                                        <LadderStepWord
-                                            key={index}
-                                            word={ladderWord}
-                                            level={level}
-                                            size={this.state.ladderWords.length - 2 === index ? 62 : 50}
-                                            fontSize={this.state.ladderWords.length - 2 === index ? 50 : 32}
-                                        />
+                                        <View style={[styles.rowStyle, {paddingRight: this.state.ladderWords.length - 2 === index ? '39px': '0px' }]}>
+                                            {this.state.ladderWords.length - 2 === index && 
+                                                <Text style={{marginRight:'auto', paddingRight: "20px", marginTop: '25px' ,fontSize: '20px'}}>
+                                                    {"->"}
+                                                </Text>
+                                            }
+                                            <LadderStepWord
+                                                key={index}
+                                                word={ladderWord}
+                                                level={level}
+                                                size={this.state.ladderWords.length - 2 === index ? 62 : 50}
+                                                fontSize={this.state.ladderWords.length - 2 === index ? 50 : 32}
+                                            />
+                                        </View>
+                                        
                                     )
                                 })}
                             </ScrollView>
@@ -242,6 +251,11 @@ const styles = StyleSheet.create({
         padding: 5,
         textAlign: 'center',
     },
+    rowStyle: {
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'center',
+    }
 });
 
 const mapStateToProps = (store) => ({

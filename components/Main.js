@@ -46,7 +46,7 @@ export class MainScreen extends Component {
                         ),
                     }}
                 />
-                <Tab.Screen
+                {/* <Tab.Screen
                     name="Leaderboards"
                     component={Leaderboards}
                     options={{
@@ -58,7 +58,7 @@ export class MainScreen extends Component {
                             <MaterialIcons name="leaderboard" color={color} size={size} />
                         ),
                     }}
-                />
+                /> */}
             </Tab.Navigator>
         )
     }
