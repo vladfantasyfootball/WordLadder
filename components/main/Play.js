@@ -27,45 +27,46 @@ export class Play extends Component {
     onPress = async (level) => {
         if (level.toLowerCase() === "one" || level.toLowerCase() === "two") {
             const validWord = await validateWord(this.state.nextWord.toLowerCase())
-            console.log(validWord);
             if (validWord) {
                 if (validateLevelOneWord(this.state.ladderWords.length > 1 ?
                     this.state.ladderWords[this.state.ladderWords.length - 1].toLowerCase() :
                     this.props.wordLadder[level.toLowerCase()].startingWord.toLowerCase(),
                     this.state.nextWord.toLowerCase())) {
                     if (this.state.nextWord.toLowerCase() === this.props.wordLadder[level.toLowerCase()].endingWord.toLowerCase()) {
-                        this.setState({ gameCompleted: true, ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' })
-                        const newUser = {...this.props.currentUser}
-                        newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentAttempt = this.state.ladderWords;
-                        newUser.wordLadder[level.toLowerCase()].timeFinished = Date.now();
-                        newUser.wordLadder[level.toLowerCase()].currentWordLadder.completed = true;
-                        newUser.wordLadder[level.toLowerCase()].currentStreak = newUser.wordLadder[level.toLowerCase()].currentStreak + 1;
-                        if(newUser.wordLadder[level.toLowerCase()].currentStreak > newUser.wordLadder[level.toLowerCase()].longestStreak){
-                            newUser.wordLadder[level.toLowerCase()].longestStreak = newUser.wordLadder[level.toLowerCase()].currentStreak
-                        }
-                        newUser.wordLadder[level.toLowerCase()].lastSolved = newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle;
-                        let timeTaken = Math.round(Math.abs(((newUser.wordLadder[level.toLowerCase()].timeFinished - newUser.wordLadder[level.toLowerCase()].timeStarted)) / 1000));
-
-                        const timeBonus = 180 - timeTaken > 0 ? 180 - timeTaken : 0;
-                        const completionBonus = completionBonusMap[level.toLowerCase()];
-                        const wordBonus = Math.floor(200 - this.state.ladderWords.length * 10) > 0 ? Math.floor(180 - this.state.ladderWords.length * 10) : 0;
-                        const totalRoundScore = timeBonus + completionBonus + wordBonus;
-                        newUser.wordLadder[level.toLowerCase()].totalScore = newUser.wordLadder[level.toLowerCase()].totalScore + totalRoundScore;
-                        if(totalRoundScore > newUser.wordLadder[level.toLowerCase()].highScore){
-                            newUser.wordLadder[level.toLowerCase()].highScore = totalRoundScore;
-                        }
-
-                        this.props.updateUser(
-                            this.props.currentUser.id, newUser
-                        )
+                        this.setState({ gameCompleted: true, ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, () => {
+                            const newUser = {...this.props.currentUser}
+                            newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentAttempt = this.state.ladderWords;
+                            newUser.wordLadder[level.toLowerCase()].timeFinished = Date.now();
+                            newUser.wordLadder[level.toLowerCase()].currentWordLadder.completed = true;
+                            newUser.wordLadder[level.toLowerCase()].currentStreak = newUser.wordLadder[level.toLowerCase()].currentStreak + 1;
+                            if(newUser.wordLadder[level.toLowerCase()].currentStreak > newUser.wordLadder[level.toLowerCase()].longestStreak){
+                                newUser.wordLadder[level.toLowerCase()].longestStreak = newUser.wordLadder[level.toLowerCase()].currentStreak
+                            }
+                            newUser.wordLadder[level.toLowerCase()].lastSolved = newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle;
+                            let timeTaken = Math.round(Math.abs(((newUser.wordLadder[level.toLowerCase()].timeFinished - newUser.wordLadder[level.toLowerCase()].timeStarted)) / 1000));
+    
+                            const timeBonus = 180 - timeTaken > 0 ? 180 - timeTaken : 0;
+                            const completionBonus = completionBonusMap[level.toLowerCase()];
+                            const wordBonus = Math.floor(200 - this.state.ladderWords.length * 10) > 0 ? Math.floor(180 - this.state.ladderWords.length * 10) : 0;
+                            const totalRoundScore = timeBonus + completionBonus + wordBonus;
+                            newUser.wordLadder[level.toLowerCase()].totalScore = newUser.wordLadder[level.toLowerCase()].totalScore + totalRoundScore;
+                            if(totalRoundScore > newUser.wordLadder[level.toLowerCase()].highScore){
+                                newUser.wordLadder[level.toLowerCase()].highScore = totalRoundScore;
+                            }
+    
+                            this.props.updateUser(
+                                this.props.currentUser.id, newUser
+                            )
+                        })
                     }
                     else {
-                        this.setState({ ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' })
-                        const newUser = {...this.props.currentUser}
-                        newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentAttempt = this.state.ladderWords;
-                        this.props.updateUser(
-                            this.props.currentUser.id, newUser
-                        )
+                        this.setState({ ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, () => {
+                            const newUser = {...this.props.currentUser}
+                            newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentAttempt = this.state.ladderWords;
+                            this.props.updateUser(
+                                this.props.currentUser.id, newUser
+                            )
+                        })
                     }
                 }
                 else {
@@ -75,38 +76,39 @@ export class Play extends Component {
                             this.props.wordLadder[level.toLowerCase()].startingWord.toLowerCase(),
                             this.state.nextWord.toLowerCase())) {
                             if (this.state.nextWord.toLowerCase() === this.props.wordLadder[level.toLowerCase()].endingWord.toLowerCase()) {
-                                this.setState({ gameCompleted: true, ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' })
-                                const newUser = {...this.props.currentUser}
-                                newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentAttempt = this.state.ladderWords;
-                                newUser.wordLadder[level.toLowerCase()].timeFinished = Date.now();
-                                newUser.wordLadder[level.toLowerCase()].currentWordLadder.completed = true;
-                                newUser.wordLadder[level.toLowerCase()].currentStreak = newUser.wordLadder[level.toLowerCase()].currentStreak + 1;
-                                if(newUser.wordLadder[level.toLowerCase()].currentStreak > newUser.wordLadder[level.toLowerCase()].longestStreak){
-                                    newUser.wordLadder[level.toLowerCase()].longestStreak = newUser.wordLadder[level.toLowerCase()].currentStreak
-                                }
-                                newUser.wordLadder[level.toLowerCase()].lastSolved = newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle;
-                                let timeTaken = Math.round(Math.abs(((newUser.wordLadder[level.toLowerCase()].timeFinished - newUser.wordLadder[level.toLowerCase()].timeStarted)) / 1000));
-
-                                const timeBonus = 180 - timeTaken > 0 ? 180 - timeTaken : 0;
-                                const completionBonus = completionBonusMap[level.toLowerCase()];
-                                const wordBonus = Math.floor(200 - this.state.ladderWords.length * 10) > 0 ? Math.floor(180 - this.state.ladderWords.length * 10) : 0;
-                                const totalRoundScore = timeBonus + completionBonus + wordBonus;
-                                newUser.wordLadder[level.toLowerCase()].totalScore = newUser.wordLadder[level.toLowerCase()].totalScore + totalRoundScore;
-                                if(totalRoundScore > newUser.wordLadder[level.toLowerCase()].highScore){
-                                    newUser.wordLadder[level.toLowerCase()].highScore = totalRoundScore;
-                                }
-                                
-                                this.props.updateUser(
-                                    this.props.currentUser.id, newUser
-                                )
+                                this.setState({ gameCompleted: true, ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, () => {
+                                    const newUser = {...this.props.currentUser}
+                                    newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentAttempt = this.state.ladderWords;
+                                    newUser.wordLadder[level.toLowerCase()].timeFinished = Date.now();
+                                    newUser.wordLadder[level.toLowerCase()].currentWordLadder.completed = true;
+                                    newUser.wordLadder[level.toLowerCase()].currentStreak = newUser.wordLadder[level.toLowerCase()].currentStreak + 1;
+                                    if(newUser.wordLadder[level.toLowerCase()].currentStreak > newUser.wordLadder[level.toLowerCase()].longestStreak){
+                                        newUser.wordLadder[level.toLowerCase()].longestStreak = newUser.wordLadder[level.toLowerCase()].currentStreak
+                                    }
+                                    newUser.wordLadder[level.toLowerCase()].lastSolved = newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle;
+                                    let timeTaken = Math.round(Math.abs(((newUser.wordLadder[level.toLowerCase()].timeFinished - newUser.wordLadder[level.toLowerCase()].timeStarted)) / 1000));
+    
+                                    const timeBonus = 180 - timeTaken > 0 ? 180 - timeTaken : 0;
+                                    const completionBonus = completionBonusMap[level.toLowerCase()];
+                                    const wordBonus = Math.floor(200 - this.state.ladderWords.length * 10) > 0 ? Math.floor(180 - this.state.ladderWords.length * 10) : 0;
+                                    const totalRoundScore = timeBonus + completionBonus + wordBonus;
+                                    newUser.wordLadder[level.toLowerCase()].totalScore = newUser.wordLadder[level.toLowerCase()].totalScore + totalRoundScore;
+                                    if(totalRoundScore > newUser.wordLadder[level.toLowerCase()].highScore){
+                                        newUser.wordLadder[level.toLowerCase()].highScore = totalRoundScore;
+                                    }
+                                    this.props.updateUser(
+                                        this.props.currentUser.id, newUser
+                                    )
+                                })
                             }
                             else {
-                                this.setState({ ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' })
-                                const newUser = {...this.props.currentUser}
-                                newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentAttempt = this.state.ladderWords;
-                                this.props.updateUser(
-                                    this.props.currentUser.id, newUser
-                                )
+                                this.setState({ ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, () => {
+                                    const newUser = {...this.props.currentUser}
+                                    newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentAttempt = this.state.ladderWords;
+                                    this.props.updateUser(
+                                        this.props.currentUser.id, newUser
+                                    )
+                                })
                             }
                         } else {
                             alert('Not a valid word')
@@ -151,12 +153,13 @@ export class Play extends Component {
             if(
                 this.props.wordLadder && this.props.wordLadder[this.props.route.params.level.toLowerCase()]
             ){
-                this.setState({ ladderWords: [this.props.wordLadder[this.props.route.params.level.toLowerCase()].startingWord]})
-                const newUser = {...this.props.currentUser}
-                newUser.wordLadder[this.props.route.params.level.toLowerCase()].currentWordLadder.currentAttempt = [this.props.wordLadder[this.props.route.params.level.toLowerCase()].startingWord];
-                this.props.updateUser(
-                    this.props.currentUser.id, newUser
-                )
+                this.setState({ ladderWords: [this.props.wordLadder[this.props.route.params.level.toLowerCase()].startingWord]}, () => {
+                    const newUser = {...this.props.currentUser}
+                    newUser.wordLadder[this.props.route.params.level.toLowerCase()].currentWordLadder.currentAttempt = [this.props.wordLadder[this.props.route.params.level.toLowerCase()].startingWord];
+                    this.props.updateUser(
+                        this.props.currentUser.id, newUser
+                    )
+                })
             }
         }
     }

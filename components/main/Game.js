@@ -8,6 +8,7 @@ import { updateUser } from '../../redux/actions';
 export default function Game({ navigation, level }) {
     const dispatch = useDispatch();
     const currentUser = useSelector((state) => {return state.userState.currentUser});
+    console.log('here6',currentUser)
     const wordLadder = useSelector((state) => state.wordLadderState.wordLadder);
     const [howToOpen, setHowToOpen] = useState(null);
 
@@ -32,55 +33,64 @@ export default function Game({ navigation, level }) {
     const onPressHowTo = (level) => {
         setHowToOpen(level)
     }
+    
+    const determineLevelDisabled = (level) => {
+        if(level.toLowerCase() === "two"){
+            return currentUser?.wordLadder['one'].currentWordLadder.completed === false
+        } else {
+            return false
+        }
+    }
+
     return (
         <View style={[styles.container, {backgroundColor: levelColorScheme[level]}]}>
             {howToOpen !== null 
                 ? 
                     <ScrollView persistentScrollbar={true} contentContainerStyle={{backgroundColor: levelColorScheme[level], width: '100%', maxHeight: '750px', display: 'flex', justifyContent: 'center', alignItems: 'center', paddingTop: 5 }}>
-                        <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 10, paddingLeft: 15, fontSize: 24 }}>
+                        <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 10, paddingLeft: 15, fontSize: 24, color: '#5B5A53' }}>
                             {`Level ${level} Rules:`}
                         </Text>
                         {level.toLowerCase() === "one" && 
-                            <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 10, paddingLeft: 15, fontSize: 14 }}>
+                            <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 10, paddingLeft: 15, fontSize: 14, color: '#5B5A53' }}>
                                 {`Your goal is to get from the starting word(top of page) to the ending word(bottom of page) one step at a time.`}
                             </Text>
                         }
-                        <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 10, paddingLeft: 15, fontSize: 14 }}>
+                        <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 10, paddingLeft: 15, fontSize: 14, color: '#5B5A53' }}>
                             {`For Level ${level}, you have the following operations available to you:`}
                         </Text>
                         {level.toLowerCase() === "one" ? 
                             <>
-                                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 40, paddingRight: 15, paddingBottom: 10, fontSize: 14 }}>
+                                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 40, paddingRight: 15, paddingBottom: 10, fontSize: 14, color: '#5B5A53' }}>
                                     {`1.Change one letter at a time (i.e. from bike you can make bake)`}
                                 </Text>
-                                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 15, paddingRight: 15, paddingBottom: 10, fontSize: 14 }}>
+                                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 15, paddingRight: 15, paddingBottom: 10, fontSize: 14, color: '#5B5A53' }}>
                                     {`So an example of a completed Level One word ladder with starting word "coat" and ending word "lake" would be:`}
                                 </Text>
-                                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 40, paddingRight: 40, paddingBottom: 10, fontSize: 14 }}>
+                                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 40, paddingRight: 40, paddingBottom: 10, fontSize: 14, color: '#5B5A53' }}>
                                     {`coat -> cost -> cast -> case -> cake -> lake`}
                                 </Text>
-                                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 15, paddingRight: 15, paddingBottom: 10, fontSize: 14 }}>
+                                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 15, paddingRight: 15, paddingBottom: 10, fontSize: 14, color: '#5B5A53' }}>
                                     {`All words have to be real words. And you are scored on how many words you use as well as how long it takes you to complete!`}
                                 </Text>
                             </>
                         : level.toLowerCase() === "two" && 
                             <>
-                                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 40, paddingRight: 15, paddingBottom: 10, fontSize: 14 }}>
+                                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 40, paddingRight: 15, paddingBottom: 10, fontSize: 14, color: '#5B5A53' }}>
                                     {`1.Change one letter at a time (i.e. from bike you can make bake)`}
                                 </Text>
-                                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 40, paddingRight: 15, paddingBottom: 10, fontSize: 14 }}>
+                                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 40, paddingRight: 15, paddingBottom: 10, fontSize: 14, color: '#5B5A53' }}>
                                     {`or`}
                                 </Text>
-                                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 40, paddingRight: 15, paddingBottom: 10, fontSize: 14 }}>
+                                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 40, paddingRight: 15, paddingBottom: 10, fontSize: 14, color: '#5B5A53' }}>
                                     {`2.Rearrange all letters in word to change to different word. (i.e. from "bake" you can make "beak")`}
                                 </Text>
-                                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 15, paddingRight: 15, paddingBottom: 10, fontSize: 14 }}>
+                                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 15, paddingRight: 15, paddingBottom: 10, fontSize: 14, color: '#5B5A53' }}>
                                     {`So an example of a completed Level Two word ladder with starting word "safe" and ending word "open" would be:`}
                                 </Text>
-                                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 40, paddingRight: 40, paddingBottom: 10, fontSize: 14 }}>
+                                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 40, paddingRight: 40, paddingBottom: 10, fontSize: 14, color: '#5B5A53' }}>
                                     {`safe -> sale -> sole -> sore -> rose -> nose -> nope -> open`}
                                 </Text>
-                                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 15, paddingRight: 15, paddingBottom: 10, fontSize: 14 }}>
+                                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 15, paddingRight: 15, paddingBottom: 10, fontSize: 14, color: '#5B5A53' }}>
                                     {`All words have to be real words. And you are scored on how many words you use as well as how long it takes you to complete!`}
                                 </Text>
                             </>
@@ -91,12 +101,12 @@ export default function Game({ navigation, level }) {
                     </ScrollView>
                 : 
                     <>
-                        <FlatButton text={`Play Level ${level}`} onPress={() => {onPressPlay(level)}} width='60' disabled={false}/>
+                        <FlatButton text={`Play Level ${level}`} onPress={() => {onPressPlay(level)}} width='60' disabled={determineLevelDisabled(level)}/>
                         {level === 'Two' && 
                             <FlatButton text={`Unlock Level Two`} onPress={onPressUnlock} width='50' disabled={false}/> 
                         }
                         <FlatButton text='How to Play' onPress={() => onPressHowTo(level)} width='40' disabled={false}/>
-                    </>
+                    </> 
             }
             
         </View>
