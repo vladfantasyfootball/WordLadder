@@ -9,7 +9,8 @@ npm-debug.*
 *.key
 *.mobileprovision
 *.orig.*
+WordLadder.app/
 web-build/
-
+*.gz
 # macOS
 .DS_Store
