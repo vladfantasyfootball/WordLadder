@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, {useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LandingScreen from './components/auth/Landing';
@@ -15,9 +15,7 @@ import thunk from 'redux-thunk';
 import MainScreen from './components/Main';
 import Play from './components/main/Play';
 import ProfilePage from './components/main/ProfilePage';
-import PayWall from './components/main/PayWall';
 
-const store = createStore(rootReducer, applyMiddleware(thunk));
 
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
@@ -36,70 +34,68 @@ if(getApps.length === 0){
 
 const Stack = createNativeStackNavigator();
 
-export class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      loaded: false,
-    }
-  }
+const AppWrapper = () => {
+  const store = createStore(rootReducer, applyMiddleware(thunk));
 
-  componentDidMount() {
+  return (
+    <Provider store={store}>
+      <App />
+    </Provider>
+  )
+}
+
+function App() {
+  const [loaded, setLoaded] = useState(false)
+  const [loggedIn, setLoggedIn] = useState(false)
+
+
+  useEffect(() => {
     const auth = getAuth();
     auth.onAuthStateChanged(async (user) => {
       if(!user){
-        this.setState({
-          loggedIn: false,
-          loaded: true,
-        })
+        setLoaded(true)
+        setLoggedIn(false)
       } else {
         try {
-          this.setState({
-            loggedIn: true,
-            loaded: true,
-          })
+          setLoaded(true)
+          setLoggedIn(true)
         } catch (error) {
           console.log(error);
         }
       }
     })
-  }
-  render() {
-    const { loggedIn, loaded } = this.state;
+  }, [])
 
-    if(!loaded){
-      return (
-        <View style={{flex: 1, justifyContent: 'center'}}>
-          <Text> Loading </Text>
-        </View>
-      )
-    }
-
-    if(!loggedIn){
-      return (
-        <NavigationContainer>{/* Rest of your app code */}
-          <Stack.Navigator initialRouteName="Landing">
-            <Stack.Screen name="Landing" component={LandingScreen} options={{headerShown: false}}/>
-            <Stack.Screen name="Register" component={RegisterScreen} />
-            <Stack.Screen name="Login" component={LoginScreen} />
-          </Stack.Navigator>
-        </NavigationContainer>
-      );
-    }
-
+  if(!loaded){
     return (
-      <Provider store={store}>
-        <NavigationContainer>
-          <Stack.Navigator initialRouteName="Landing">
-            <Stack.Screen name="Main" component={MainScreen} options={{headerShown: false}}/>
-            <Stack.Screen name="Play" component={Play} options={({ route, navigation }) => {return { headerTitleAlign: "center", headerTitle: `Level ${route.params.level}`}}}/>
-            <Stack.Screen name="ProfilePage" component={ProfilePage} options={({ route, navigation }) => {return { headerTitleAlign: "center", headerTitle: `Profile`}}}/>
-            <Stack.Screen name="Paywall" component={PayWall} options={{headerShown: false, presentation: 'modal'}}/>
-          </Stack.Navigator>
-        </NavigationContainer>
-      </Provider>
+      <View style={{flex: 1, justifyContent: 'center'}}>
+        <Text> Loading </Text>
+      </View>
     )
   }
+
+  if(!loggedIn){
+    return (
+      <NavigationContainer>{/* Rest of your app code */}
+        <Stack.Navigator initialRouteName="Landing">
+          <Stack.Screen name="Landing" component={LandingScreen} options={{headerShown: false}}/>
+          <Stack.Screen name="Register" component={RegisterScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    );
+  }
+
+  return (
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="Landing">
+          <Stack.Screen name="Main" component={MainScreen} options={{headerShown: false}}/>
+          <Stack.Screen name="Play" component={Play} options={({ route, navigation }) => {return { headerTitleAlign: "center", headerTitle: `Level ${route.params.level}`}}}/>
+          <Stack.Screen name="ProfilePage" component={ProfilePage} options={({ route, navigation }) => {return { headerTitleAlign: "center", headerTitle: `Profile`}}}/>
+          {/* <Stack.Screen name="Paywall" component={PayWall} options={{headerShown: false, presentation: 'modal'}}/> */}
+        </Stack.Navigator>
+      </NavigationContainer>
+  )
 }
 
-export default App
+export default AppWrapper
