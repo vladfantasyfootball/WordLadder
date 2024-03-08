@@ -9,7 +9,6 @@ export default function LogoutButton({ }) {
         const auth = getAuth();
         auth.signOut()
         .then((result) => {
-            console.log('User has been signed out')
         })
         .catch((error) => {
             console.log(error);

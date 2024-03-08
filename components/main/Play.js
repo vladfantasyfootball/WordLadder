@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { fetchUser, getWordLadders, updateUser } from '../../redux/actions';
 import LadderStepWord from '../shared/LadderStepWord'
-import { TextInput } from 'react-native-gesture-handler';
+import { TextInput } from 'react-native';
 import FlatButton from '../shared/button';
 import { validateWord, validateLevelOneWord, validateExtraLevelTwoRule } from '../../utils/validations';
 import LevelCompleteScreen, { completionBonusMap } from '../shared/LevelCompleteScreen';
@@ -147,8 +147,6 @@ export class Play extends Component {
     }
 
     componentDidMount() {
-        this.props.fetchUser();
-        this.props.getWordLadders();
         if(this.state.ladderWords.length === 0 ){
             if(
                 this.props.wordLadder && this.props.wordLadder[this.props.route.params.level.toLowerCase()]
@@ -165,7 +163,7 @@ export class Play extends Component {
     }
 
     render() {
-        const { route, navigation, wordLadder } = this.props;
+        const { route, wordLadder } = this.props;
         const level = route.params.level;
         return (
             <SafeAreaView style={[styles.container, { backgroundColor: levelColorScheme[level] }]}>
@@ -188,15 +186,15 @@ export class Play extends Component {
                         />
                         {this.state.ladderWords.length > 1 &&
                             <ScrollView
-                                contentContainerStyle={{ alignItems: 'center', paddingTop: 10, marginTop: 5, paddingBottom: 5, backgroundColor: `${levelColorScheme[level]}` }}
+                                contentContainerStyle={{ alignItems: 'center', paddingTop: 10, marginTop: 5, paddingBottom: 5, backgroundColor: `${levelColorScheme[level]}`, justifyContent: 'center' }}
                                 ref={ref => { this.scrollView = ref }}
                                 onContentSizeChange={() => this.scrollView.scrollToEnd({ animated: true })}
                                 persistentScrollbar={true}>
                                 {this.state.ladderWords.slice(1).map((ladderWord, index) => {
                                     return (
-                                        <View style={[styles.rowStyle, {paddingRight: this.state.ladderWords.length - 2 === index ? '39px': '0px' }]}>
+                                        <View style={[styles.rowStyle, {display: 'flex', justifyContent: 'center'}, this.state.ladderWords.length - 2 !== index && {marginLeft: 105}]}>                                               
                                             {this.state.ladderWords.length - 2 === index && 
-                                                <Text style={{marginRight:'auto', paddingRight: "20px", marginTop: '25px' ,fontSize: '20px'}}>
+                                                <Text style={{marginRight:'auto', paddingRight: 20, marginTop: 25 ,fontSize: 20, marginLeft: 42}}>
                                                     {"->"}
                                                 </Text>
                                             }
@@ -208,7 +206,6 @@ export class Play extends Component {
                                                 fontSize={this.state.ladderWords.length - 2 === index ? 50 : 32}
                                             />
                                         </View>
-                                        
                                     )
                                 })}
                             </ScrollView>
@@ -257,7 +254,7 @@ const styles = StyleSheet.create({
     rowStyle: {
         display: 'flex',
         flexDirection: 'row',
-        justifyContent: 'center',
+        justifyContent: 'center'
     }
 });
 

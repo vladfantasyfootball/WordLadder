@@ -19,7 +19,6 @@ export class LoginScreen extends Component {
         const auth = getAuth();
         signInWithEmailAndPassword(auth, email, password)
         .then((result) => {
-            console.log(result)
         })
         .catch((error) => {
             console.log(error);

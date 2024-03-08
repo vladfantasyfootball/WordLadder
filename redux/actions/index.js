@@ -2,6 +2,7 @@ import { getFirestore } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
 import { USER_STATE_CHANGE, WORD_LADDER_CHANGE } from '../constants/index';
 import axios from 'axios';
+import { user } from '../reducers/user';
 
 export function fetchUser() {
     return (async (dispatch) => {

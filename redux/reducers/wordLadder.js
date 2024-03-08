@@ -1,8 +1,15 @@
 const initialState = {
     wordLadder: {
-        startingWord: "",
-        endingWord: "",
-        id: "",
+        "one": {
+            startingWord: "",
+            endingWord: "",
+            id: "",
+        },
+        "two": {
+            startingWord: "",
+            endingWord: "",
+            id: "",
+        },
     }
 }
 

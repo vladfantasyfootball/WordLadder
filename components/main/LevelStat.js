@@ -1,9 +1,7 @@
-import React, { useState } from 'react'
-import { View, StyleSheet, Text, ScrollView } from 'react-native'
-import FlatButton from '../shared/button';
+import React, { useEffect, useState } from 'react'
+import { View, StyleSheet, Text } from 'react-native'
 import { levelColorScheme } from '../../redux/constants/colorScheme';
-import { useDispatch, useSelector } from 'react-redux';
-import { updateUser } from '../../redux/actions';
+import { useSelector } from 'react-redux';
 
 export default function LevelStat({ navigation, level }) {
     const currentUser = useSelector((state) => {return state.userState.currentUser});

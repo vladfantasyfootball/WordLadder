@@ -108,12 +108,12 @@ export default function LevelCompleteScreen({ completeLadder, level }) {
                         width: '50%',
                     }}
                 />
-                <View style={{ display: 'flex', flexDirection: "row", justifyContent: 'center', alignItems: 'center', fontSize: "18px" }}>
-                    <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 10, fontSize: "18px" }}>
+                <View style={{ display: 'flex', flexDirection: "row", justifyContent: 'center', alignItems: 'center', fontSize: 18 }}>
+                    <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 10, fontSize: 18 }}>
                         {`Total Score: `}
                     </Text>
                     <Animatable.View style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }} animation="bounceInRight" duration={2000} delay={3500}>
-                        <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 10, fontSize: "18px"  }}>
+                        <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 10, fontSize: 18  }}>
                             {`${completionBonus + wordBonus + timeBonus}`}
                         </Text>
                     </Animatable.View>
