@@ -14,7 +14,8 @@ const rewardedInterstitialAd = RewardedInterstitialAd.createForAdRequest(TestIds
 export default function Game({ navigation, level }) {
     const dispatch = useDispatch();
     const currentUser = useSelector((state) => {return state.userState.currentUser});
-    const [adWatched, setAdWatched] = useState(currentUser?.ad?.adWatched || false)
+    const [adWatched, setAdWatched] = useState(false)
+
     const [adLoaded, setAdLoaded] = useState(false)
 
     const wordLadder = useSelector((state) => state.wordLadderState.wordLadder);
@@ -66,6 +67,11 @@ export default function Game({ navigation, level }) {
     },[adWatched])
     
     useEffect(() => {
+        if(currentUser){
+            if(currentUser?.ad?.dateWatched === new Date().toLocaleString().split(',')[0] && currentUser?.ad?.adWatched){
+                setAdWatched(true)
+            }
+        }
         const unsubscribeRewardedInterstitial = loadRewardedInterstitial()
 
         return unsubscribeRewardedInterstitial
@@ -84,6 +90,7 @@ export default function Game({ navigation, level }) {
                 currentUser.id, newUser
             ))
         }
+
         if(level.toLowerCase() === "two" && !adWatched){
             rewardedInterstitialAd.show().then(() => {StatusBar.setStatusBarHidden(true)});
         } else {

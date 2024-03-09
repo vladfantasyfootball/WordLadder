@@ -192,14 +192,14 @@ export class Play extends Component {
                                 persistentScrollbar={true}>
                                 {this.state.ladderWords.slice(1).map((ladderWord, index) => {
                                     return (
-                                        <View style={[styles.rowStyle, {display: 'flex', justifyContent: 'center'}, this.state.ladderWords.length - 2 !== index && {marginLeft: 105}]}>                                               
+                                        <View key={`arrow-${index}`} style={[styles.rowStyle, {display: 'flex', justifyContent: 'center'}, this.state.ladderWords.length - 2 !== index && {marginLeft: 105}]}>                                               
                                             {this.state.ladderWords.length - 2 === index && 
                                                 <Text style={{marginRight:'auto', paddingRight: 20, marginTop: 25 ,fontSize: 20, marginLeft: 42}}>
                                                     {"->"}
                                                 </Text>
                                             }
                                             <LadderStepWord
-                                                key={index}
+                                                key={`ladderWord-${index}`}
                                                 word={ladderWord}
                                                 level={level}
                                                 size={this.state.ladderWords.length - 2 === index ? 62 : 50}
