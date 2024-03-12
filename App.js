@@ -9,13 +9,12 @@ import { getAuth } from 'firebase/auth';
 import  config from './config';
 import { View, Text } from'react-native';
 import { Provider } from 'react-redux';
-import { createStore, applyMiddleware } from 'redux';
-import rootReducer from './redux/reducers';
-import thunk from 'redux-thunk';
 import MainScreen from './components/Main';
 import Play from './components/main/Play';
 import ProfilePage from './components/main/ProfilePage';
-
+import { configureStore } from '@reduxjs/toolkit'
+import { user } from './redux/reducers/user';
+import { wordLadder } from './redux/reducers/wordLadder';
 
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
@@ -35,7 +34,15 @@ if(getApps.length === 0){
 const Stack = createNativeStackNavigator();
 
 const AppWrapper = () => {
-  const store = createStore(rootReducer, applyMiddleware(thunk));
+
+// Automatically adds the thunk middleware and the Redux DevTools extension
+  const store = configureStore({
+  // Automatically calls `combineReducers`
+  reducer: {
+    userState: user,
+    wordLadderState: wordLadder
+  }
+})
 
   return (
     <Provider store={store}>

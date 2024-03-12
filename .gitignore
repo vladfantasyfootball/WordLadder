@@ -12,6 +12,7 @@ npm-debug.*
 WordLadder.app/
 web-build/
 *.gz
+*.apk
 # macOS
 .DS_Store
 

@@ -10,10 +10,10 @@ export default function LevelStat({ navigation, level }) {
         <View style={[styles.container, {backgroundColor: levelColorScheme[level]}]}>
             <View>
                 <Text style={{ fontWeight: 'bold', textAlign: 'center', alignItems: 'center', padding: 20, fontSize: 24, color: '#5B5A53' }}>
-                    {`Current Streak: ${currentUser.wordLadder[level.toLowerCase()].currentStreak}`}
+                    {`Current Streak: ${currentUser?.wordLadder[level.toLowerCase()].currentStreak}`}
                 </Text>
                 <Text style={{ fontWeight: 'bold', textAlign: 'center', alignItems: 'center', padding: 20, fontSize: 24, color: '#5B5A53' }}>
-                    {`Longest Streak: ${currentUser.wordLadder[level.toLowerCase()].longestStreak}`}
+                    {`Longest Streak: ${currentUser?.wordLadder[level.toLowerCase()].longestStreak}`}
                 </Text>
                 <View
                     style={{
@@ -22,10 +22,10 @@ export default function LevelStat({ navigation, level }) {
                     }}
                 />  
                 <Text style={{ fontWeight: 'bold', textAlign: 'center', alignItems: 'center', padding: 20, fontSize: 24, color: '#5B5A53' }}>
-                    {`Total Score: ${currentUser.wordLadder[level.toLowerCase()].totalScore}`}
+                    {`Total Score: ${currentUser?.wordLadder[level.toLowerCase()].totalScore}`}
                 </Text>
                 <Text style={{ fontWeight: 'bold', textAlign: 'center', alignItems: 'center', padding: 20, fontSize: 24, color: '#5B5A53' }}>
-                    {`High Score: ${currentUser.wordLadder[level.toLowerCase()].highScore}`}
+                    {`High Score: ${currentUser?.wordLadder[level.toLowerCase()].highScore}`}
                 </Text>
             </View>
         </View>
