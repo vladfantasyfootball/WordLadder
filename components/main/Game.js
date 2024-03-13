@@ -79,7 +79,7 @@ export default function Game({ navigation, level }) {
 
     const onPressPlay = ( level ) => {
         if(currentUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle !== wordLadder[level.toLowerCase()].id){
-            const newUser = {...currentUser}
+            const newUser = JSON.parse(JSON.stringify(currentUser))
             newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle = wordLadder[level.toLowerCase()].id;
             newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentAttempt = [];
             newUser.wordLadder[level.toLowerCase()].currentWordLadder.completed = false;
