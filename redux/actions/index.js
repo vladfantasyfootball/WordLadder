@@ -22,18 +22,20 @@ export function fetchUser() {
 
 export function getWordLadders() {
     return (async (dispatch) => {
-        await axios.get(Platform.OS === 'ios' ? 'http://localhost:3000/api/getUser' : 'http://10.0.2.2:3000/api/getPuzzles').then((response) => {
+        await axios.get(Platform.OS === 'ios' ? 'http://localhost:3000/api/getPuzzles' : 'http://10.0.2.2:3000/api/getPuzzles').then((response) => {
             dispatch({
                 type: WORD_LADDER_CHANGE,
                 wordLadder: { "one": response.data.one, "two": response.data.two }
             })
+        }).catch((e) => {
+            console.log(e)
         })
     })
 }
 
 export function updateUser(id, userUpdate) {
     return (async (dispatch) => {
-        await axios.post(Platform.OS === 'ios' ? 'http://localhost:3000/api/getUser' : 'http://10.0.2.2:3000/api/updateUser', {id, userUpdate: userUpdate}).then((response) => {
+        await axios.post(Platform.OS === 'ios' ? 'http://localhost:3000/api/updateUser' : 'http://10.0.2.2:3000/api/updateUser', {id, userUpdate: userUpdate}).then((response) => {
             dispatch({
                 type: USER_STATE_CHANGE,
                 currentUser: userUpdate

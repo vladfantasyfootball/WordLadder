@@ -78,19 +78,6 @@ export default function Game({ navigation, level }) {
     },[currentUser])
 
     const onPressPlay = ( level ) => {
-        if(currentUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle !== wordLadder[level.toLowerCase()].id){
-            const newUser = JSON.parse(JSON.stringify(currentUser))
-            newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle = wordLadder[level.toLowerCase()].id;
-            newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentAttempt = [];
-            newUser.wordLadder[level.toLowerCase()].currentWordLadder.completed = false;
-            newUser.wordLadder[level.toLowerCase()].timeStarted = Date.now();
-            newUser.wordLadder[level.toLowerCase()].timeFinished = null;
-
-            dispatch(updateUser(
-                currentUser.id, newUser
-            ))
-        }
-
         if(level.toLowerCase() === "two" && !adWatched){
             rewardedInterstitialAd.show().then(() => {StatusBar.setStatusBarHidden(true)});
         } else {

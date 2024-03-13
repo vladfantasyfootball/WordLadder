@@ -164,6 +164,7 @@ export class Play extends Component {
 
     render() {
         const { route, wordLadder } = this.props;
+        console.log(wordLadder)
         const level = route.params.level;
         return (
             <SafeAreaView style={[styles.container, { backgroundColor: levelColorScheme[level] }]}>
