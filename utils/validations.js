@@ -1,10 +1,11 @@
 import axios from 'axios';
+import { Platform } from 'react-native';
 
 const baseUrl = 'https://api.dictionaryapi.dev/api/v2/entries/en/'
 
 export const validateWord = async (word) => {
     try {
-        return axios.get(`http://localhost:3000/api/checkValidEnglishWord?word=${word}`).then((response) => {
+        return axios.get(Platform.OS === 'ios' ? `http://localhost:3000/api/checkValidEnglishWord?word=${word}` : `http://10.0.2.2:3000/api/checkValidEnglishWord?word=${word}`).then((response) => {
             return response.data;
           }).catch((error) => {
             return false;
