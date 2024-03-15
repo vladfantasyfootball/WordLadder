@@ -176,7 +176,7 @@ export class Play extends Component {
                 {!this.state.gameCompleted &&
                     <View style={[styles.container, { backgroundColor: levelColorScheme[level] }]}>
                         <View style={{ alignItems: 'center', marginTop: 5, marginBottom: 10 }}>
-                            <LadderStepWord word={wordLadder[level.toLowerCase()].startingWord} size={62} fontSize={50} />
+                            <LadderStepWord word={wordLadder[level.toLowerCase()].startingWord} size={62} fontSize={44} />
                         </View>
                         <View
                             style={{
@@ -192,9 +192,9 @@ export class Play extends Component {
                                 persistentScrollbar={true}>
                                 {this.state.ladderWords.slice(1).map((ladderWord, index) => {
                                     return (
-                                        <View key={`arrow-${index}`} style={[styles.rowStyle, {display: 'flex', justifyContent: 'center'}, this.state.ladderWords.length - 2 !== index && {marginLeft: 105}]}>                                               
+                                        <View key={`arrow-${index}`} style={[styles.rowStyle, {display: 'flex', justifyContent: 'center'}, this.state.ladderWords.length - 2 !== index && {marginLeft: 100}]}>                                               
                                             {this.state.ladderWords.length - 2 === index && 
-                                                <Text style={{marginRight:'auto', paddingRight: 20, marginTop: 25 ,fontSize: 20, marginLeft: 42}}>
+                                                <Text style={{marginRight:'auto', paddingRight: 20, marginTop: 25 ,fontSize: 20, marginLeft: (Platform.OS === 'ios' ? 42 : 38)}}>
                                                     {"->"}
                                                 </Text>
                                             }
@@ -203,7 +203,7 @@ export class Play extends Component {
                                                 word={ladderWord}
                                                 level={level}
                                                 size={this.state.ladderWords.length - 2 === index ? 62 : 50}
-                                                fontSize={this.state.ladderWords.length - 2 === index ? 50 : 32}
+                                                fontSize={this.state.ladderWords.length - 2 === index ? 44 : 32}
                                             />
                                         </View>
                                     )
@@ -218,7 +218,7 @@ export class Play extends Component {
                             }}
                         />
                         <View style={{ alignItems: 'center', paddingTop: 10 }}>
-                            <LadderStepWord word={wordLadder[level.toLowerCase()].endingWord} size={62} fontSize={50} />
+                            <LadderStepWord word={wordLadder[level.toLowerCase()].endingWord} size={62} fontSize={44} />
                         </View>
                         {Platform.OS === 'android' ? (
                             this.renderInput()
