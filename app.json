@@ -17,12 +17,27 @@
       "**/*"
     ],
     "ios": {
-      "bundleIdentifier": "com.companyname.appname",
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "bundleIdentifier": "com.vlad.wordLadder",
       "buildNumber": "1.0.0",
       "supportsTablet": true
     },
+    "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      "@react-native-firebase/crashlytics",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ]
+    ],
     "android": {
-      "package": "com.companyname.appname",
+      "googleServicesFile": "./google-services.json",
+      "package": "com.vlad.wordLadder",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

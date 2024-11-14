@@ -16,6 +16,7 @@ import { configureStore } from '@reduxjs/toolkit'
 import { user } from './redux/reducers/user';
 import { wordLadder } from './redux/reducers/wordLadder';
 
+
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: config.API_KEY,
@@ -81,28 +82,32 @@ function App() {
     )
   }
 
-  if(!loggedIn){
-    return (
-      <NavigationContainer>{/* Rest of your app code */}
-        <Stack.Navigator initialRouteName="Landing">
-          <Stack.Screen name="Landing" component={LandingScreen} options={{headerShown: false}}/>
-          <Stack.Screen name="Register" component={RegisterScreen} />
-          <Stack.Screen name="Login" component={LoginScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    );
-  }
-
   return (
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName="Landing">
-          <Stack.Screen name="Main" component={MainScreen} options={{headerShown: false}}/>
-          <Stack.Screen name="Play" component={Play} options={({ route, navigation }) => {return { headerTitleAlign: "center", headerTitle: `Level ${route.params.level}`}}}/>
-          <Stack.Screen name="ProfilePage" component={ProfilePage} options={({ route, navigation }) => {return { headerTitleAlign: "center", headerTitle: `Profile`}}}/>
-          {/* <Stack.Screen name="Paywall" component={PayWall} options={{headerShown: false, presentation: 'modal'}}/> */}
-        </Stack.Navigator>
-      </NavigationContainer>
+    <Text>Hellor</Text>
   )
+
+  // if(!loggedIn){
+  //   return (
+  //     <NavigationContainer>{/* Rest of your app code */}
+  //       <Stack.Navigator initialRouteName="Landing">
+  //         <Stack.Screen name="Landing" component={LandingScreen} options={{headerShown: false}}/>
+  //         <Stack.Screen name="Register" component={RegisterScreen} />
+  //         <Stack.Screen name="Login" component={LoginScreen} />
+  //       </Stack.Navigator>
+  //     </NavigationContainer>
+  //   );
+  // }
+
+  // return (
+  //     <NavigationContainer>
+  //       <Stack.Navigator initialRouteName="Landing">
+  //         <Stack.Screen name="Main" component={MainScreen} options={{headerShown: false}}/>
+  //         <Stack.Screen name="Play" component={Play} options={({ route, navigation }) => {return { headerTitleAlign: "center", headerTitle: `Level ${route.params.level}`}}}/>
+  //         <Stack.Screen name="ProfilePage" component={ProfilePage} options={({ route, navigation }) => {return { headerTitleAlign: "center", headerTitle: `Profile`}}}/>
+  //         {/* <Stack.Screen name="Paywall" component={PayWall} options={{headerShown: false, presentation: 'modal'}}/> */}
+  //       </Stack.Navigator>
+  //     </NavigationContainer>
+  // )
 }
 
 export default AppWrapper
