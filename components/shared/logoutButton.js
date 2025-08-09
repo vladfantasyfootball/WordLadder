@@ -1,18 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
-import { getAuth, signOut } from "firebase/auth";
 
-export default function LogoutButton({ }) {
+export default function LogoutButton({auth, onClickLogout}) {
     const [disabled, setDisabled] = useState(false);
     const handleLogout = () => {
         setDisabled(true)
-        const auth = getAuth();
-        auth.signOut()
-        .then((result) => {
-        })
-        .catch((error) => {
-            console.log(error);
-        })
+        onClickLogout()
     }
 
     return (

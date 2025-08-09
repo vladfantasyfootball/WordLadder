@@ -18,9 +18,8 @@ export class RegisterScreen extends Component {
 
     onSignUp() {
         const { email, name, password} = this.state;
-        const auth = getAuth();
         const db = getFirestore();
-        createUserWithEmailAndPassword(auth, email, password)
+        createUserWithEmailAndPassword(getAuth(), email, password)
             .then((result) => {
                 setDoc(doc(db, "users", auth.currentUser.uid), {
                     name,

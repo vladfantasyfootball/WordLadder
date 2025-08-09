@@ -1,11 +1,18 @@
 import React from 'react'
 import { View } from 'react-native'
 import LogoutButton from '../shared/logoutButton'
+import { getAuth } from '@react-native-firebase/auth';
 
 export default function ProfilePage({ navigation, level }) {
+    const auth = getAuth()
+    const logoutFunction = async () => {
+        await auth.signOut().catch((e) => {
+            console.log(e)
+        })
+    }
     return (
         <View >
-            <LogoutButton />
+            <LogoutButton auth={auth} onClickLogout={() => {logoutFunction()}}/>
         </View>
     )
 }

@@ -8,12 +8,15 @@ import Stats from './main/Stats';
 import Leaderboards from './main/Leaderboards';
 import { MaterialCommunityIcons, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Profile from './main/Profile';
+import { getAuth } from '@react-native-firebase/auth';
+
 
 const Tab = createBottomTabNavigator();
 
 export class MainScreen extends Component {
     componentDidMount() {
-        this.props.fetchUser();
+        const auth = getAuth()
+        this.props.fetchUser(auth);
         this.props.getWordLadder();
     }
 

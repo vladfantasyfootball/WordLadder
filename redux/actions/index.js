@@ -3,9 +3,8 @@ import { USER_STATE_CHANGE, WORD_LADDER_CHANGE } from '../constants/index';
 import axios from 'axios';
 import { Platform } from 'react-native';
 
-export function fetchUser() {
+export function fetchUser(auth) {
     return (async (dispatch) => {
-        const auth = getAuth();
         if (auth.currentUser) {
             await axios.post(Platform.OS === 'ios' ? 'http://localhost:3000/api/getUser' : 'http://10.0.2.2:3000/api/getUser', { id: auth.currentUser.uid }).then((response) => {
                 let userData = response.data;

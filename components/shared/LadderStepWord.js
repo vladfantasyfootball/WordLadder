@@ -8,8 +8,6 @@ const ladderWordStyleScheme = {
 }
 
 const LadderStepWord = ({ word, level, size, fontSize }) => {
-    console.log(size)
-    console.log('fontsize',fontSize)
     return (
         <FlatList
             data={[...word].map((letter, index) => {

@@ -12,12 +12,11 @@ export class LoginScreen extends Component {
         }
 
         this.onSignIn = this.onSignIn.bind(this)
-    }
+    } 
 
     onSignIn() {
         const { email, password} = this.state;
-        const auth = getAuth();
-        signInWithEmailAndPassword(auth, email, password)
+        signInWithEmailAndPassword(getAuth(), email, password)
         .then((result) => {
         })
         .catch((error) => {

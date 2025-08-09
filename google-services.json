@@ -14,7 +14,7 @@
       },
       "oauth_client": [
         {
-          "client_id": "938399512582-9t5i54925sur907oc8cu3gh58iecc9jk.apps.googleusercontent.com",
+          "client_id": "938399512582-bte9oc4riasoaull0l6329u8igpstsm1.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -29,6 +29,13 @@
             {
               "client_id": "938399512582-9t5i54925sur907oc8cu3gh58iecc9jk.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "938399512582-r33fns8mkrj87mldrbof2ltmmm74nhsv.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.vlad.wordLadder"
+              }
             }
           ]
         }
