@@ -11,7 +11,6 @@
   "dependencies": {
     "@babel/plugin-proposal-export-namespace-from": "^7.18.9",
     "@babel/plugin-transform-private-methods": "^7.25.9",
-    "@expo/config-plugins": "^9.0.9",
     "@expo/vector-icons": "^14.0.2",
     "@expo/webpack-config": "^0.12.52",
     "@invertase/react-native-apple-authentication": "^2.4.0",
@@ -34,7 +33,6 @@
     "expo-apple-authentication": "~7.0.1",
     "expo-build-properties": "~0.13.1",
     "expo-dev-client": "~5.0.1",
-    "expo-modules-core": "^2.0.3",
     "expo-splash-screen": "^0.29.8",
     "expo-status-bar": "~2.0.0",
     "metro-react-native-babel-preset": "^0.77.0",
@@ -64,7 +62,6 @@
     "@babel/core": "^7.20.0",
     "@react-native-community/cli": "latest",
     "@types/react": "~18.3.12",
-    "@types/react-native": "~0.64.12",
     "@types/react-native-dotenv": "^0.2.0",
     "typescript": "^5.3.0"
   },
