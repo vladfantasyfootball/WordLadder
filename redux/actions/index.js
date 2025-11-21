@@ -1,4 +1,3 @@
-import { getAuth } from "firebase/auth";
 import { USER_STATE_CHANGE, WORD_LADDER_CHANGE } from '../constants/index';
 import axios from 'axios';
 import { Platform } from 'react-native';
