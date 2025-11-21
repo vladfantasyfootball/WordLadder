@@ -17,7 +17,7 @@
       "**/*"
     ],
     "ios": {
-      "googleServicesFile" : "./GoogleService-Info.plist",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "bundleIdentifier": "com.vlad.wordLadder",
       "buildNumber": "1.0.0",
       "supportsTablet": true
@@ -46,7 +46,13 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "15906805-b6d8-483b-8ff2-0d92876281fa"
+      }
+    },
+    "owner": "vladfantasyfootball"
   },
   "react-native-google-mobile-ads": {
     "android_app_id": "ca-app-pub-5826991812725211~3233115456",
