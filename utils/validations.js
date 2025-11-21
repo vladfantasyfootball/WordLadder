@@ -1,15 +1,11 @@
-import axios from 'axios';
-import { Platform } from 'react-native';
+import { englishWords } from "./validEnglishWords";
 
 export const validateWord = async (word) => {
     try {
-        return axios.get(Platform.OS === 'ios' ? `http://localhost:3000/api/checkValidEnglishWord?word=${word}` : `http://10.0.2.2:3000/api/checkValidEnglishWord?word=${word}`).then((response) => {
-            return response.data;
-          }).catch((error) => {
-            return false;
-          });
-    } catch (error){
-        return false;
+        return englishWords.has(word.toUpperCase());
+    } catch (error) {
+        console.log(error);
+        return null;
     }
 }
 

@@ -74,6 +74,7 @@ export default function Game({ navigation, level }) {
         }
         const unsubscribeRewardedInterstitial = loadRewardedInterstitial()
 
+
         return unsubscribeRewardedInterstitial
     },[currentUser])
 
