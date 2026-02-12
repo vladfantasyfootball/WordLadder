@@ -147,18 +147,37 @@ export class Play extends Component {
     }
 
     componentDidMount() {
+        const level = this.props.route.params.level.toLowerCase();
+        const newUser = JSON.parse(JSON.stringify(this.props.currentUser));
+        
+        // Set timeStarted when user opens puzzle for the first time
+        if (!newUser.wordLadder[level].timeStarted) {
+            newUser.wordLadder[level].timeStarted = Date.now();
+        }
+        
+        // Set currentPuzzle ID when puzzle is first loaded
+        if (this.props.wordLadder && this.props.wordLadder[level] && this.props.wordLadder[level].id) {
+            if (!newUser.wordLadder[level].currentWordLadder.currentPuzzle) {
+                newUser.wordLadder[level].currentWordLadder.currentPuzzle = this.props.wordLadder[level].id;
+            }
+        }
+        
         if(this.state.ladderWords.length === 0 ){
             if(
-                this.props.wordLadder && this.props.wordLadder[this.props.route.params.level.toLowerCase()]
+                this.props.wordLadder && this.props.wordLadder[level]
             ){
-                this.setState({ ladderWords: [this.props.wordLadder[this.props.route.params.level.toLowerCase()].startingWord]}, () => {
-                    const newUser = JSON.parse(JSON.stringify(this.props.currentUser))
-                    newUser.wordLadder[this.props.route.params.level.toLowerCase()].currentWordLadder.currentAttempt = [this.props.wordLadder[this.props.route.params.level.toLowerCase()].startingWord];
+                this.setState({ ladderWords: [this.props.wordLadder[level].startingWord]}, () => {
+                    newUser.wordLadder[level].currentWordLadder.currentAttempt = [this.props.wordLadder[level].startingWord];
                     this.props.updateUser(
                         this.props.currentUser.id, newUser
                     )
                 })
             }
+        } else {
+            // Update user even if ladderWords already exist (to set timeStarted and currentPuzzle)
+            this.props.updateUser(
+                this.props.currentUser.id, newUser
+            )
         }
     }
 

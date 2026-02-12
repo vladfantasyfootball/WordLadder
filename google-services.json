@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:938399512582:android:48680c081025d68e052b87",
+        "mobilesdk_app_id": "1:938399512582:android:5652f7ba5557278a052b87",
         "android_client_info": {
-          "package_name": "com.vlad.wordLadder"
+          "package_name": "com.vlad.wordLadderAndroid"
         }
       },
       "oauth_client": [

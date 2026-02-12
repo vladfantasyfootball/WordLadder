@@ -37,7 +37,7 @@
     ],
     "android": {
       "googleServicesFile": "./google-services.json",
-      "package": "com.vlad.wordLadder",
+      "package": "com.vlad.wordLadderAndroid",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

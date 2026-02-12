@@ -2,41 +2,39 @@ import React, { useEffect } from 'react'
 import { Text, View, Button, Platform } from 'react-native'
 import { AppleButton, appleAuth } from '@invertase/react-native-apple-authentication';
 import { AppleAuthProvider, GoogleAuthProvider, getAuth, signInWithCredential } from '@react-native-firebase/auth';
-import { GoogleSignin, statusCodes, GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import config from '../../config';
 
+// Only import GoogleSignin on Android to avoid iOS native module errors
+const GoogleSignin = Platform.OS === 'android' ? require('@react-native-google-signin/google-signin').GoogleSignin : null;
+
+console.log('CONFIG GOOGLE_WEB_CLIENT_ID (startup):', config.GOOGLE_WEB_CLIENT_ID);
+console.log('CONFIG ANDROID_CLIENT_ID (startup):', config.ANDROID_CLIENT_ID);
+
 export default function LandingScreen({ navigation }) {
+
+  // Configure Google Sign-In for Android
   useEffect(() => {
     if (Platform.OS === 'android') {
-      // Configure Google Sign-In. Ensure `GOOGLE_WEB_CLIENT_ID` is set in your env/config for Android.
-      if (config.GOOGLE_WEB_CLIENT_ID) {
-        GoogleSignin.configure({ webClientId: config.GOOGLE_WEB_CLIENT_ID });
-      } else {
-        console.warn('Google Sign-In web client ID not set in config.GOOGLE_WEB_CLIENT_ID');
-      }
+      GoogleSignin.configure({
+        webClientId: config.GOOGLE_WEB_CLIENT_ID, // Firebase Web Client ID
+      });
     }
   }, []);
 
+  // Google Sign-In handler for Android (uses Google Play Services)
   async function onGoogleButtonPress() {
     try {
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
       const userInfo = await GoogleSignin.signIn();
-      const { idToken, accessToken } = userInfo;
-      const googleCredential = GoogleAuthProvider.credential(idToken, accessToken);
-      const user = await signInWithCredential(getAuth(), googleCredential);
-      return user;
+      const { idToken } = await GoogleSignin.getTokens();
+      const googleCredential = GoogleAuthProvider.credential(idToken);
+      return signInWithCredential(getAuth(), googleCredential);
     } catch (error) {
-      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        console.log('Google sign-in cancelled');
-      } else if (error.code === statusCodes.IN_PROGRESS) {
-        console.log('Google sign-in in progress');
-      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        console.log('Google Play Services not available or outdated');
-      } else {
-        console.error('Google sign-in error:', error);
-      }
+      console.error('Google sign-in error:', error);
     }
   }
+
+  // ...existing code...
 
   async function onAppleButtonPress() {
     try {
@@ -77,18 +75,11 @@ export default function LandingScreen({ navigation }) {
         }}
         onPress={() => onAppleButtonPress().then(() => console.log('Apple sign-in complete!'))}
       />}
-      {Platform.OS === 'android' && (
-        config.GOOGLE_WEB_CLIENT_ID ? (
-          <GoogleSigninButton
-            style={{ width: 192, height: 48 }}
-            size={GoogleSigninButton.Size.Wide}
-            color={GoogleSigninButton.Color.Light}
-            onPress={() => onGoogleButtonPress().then(() => console.log('Google sign-in complete!'))}
-          />
-        ) : (
-          <Text style={{textAlign: 'center'}}>Google Sign-In not configured. Set `GOOGLE_WEB_CLIENT_ID` in config.</Text>
-        )
-      )}
+      {Platform.OS === 'android' &&
+      <Button
+        title="Sign in with Google"
+        onPress={() => onGoogleButtonPress().then(() => console.log('Google sign-in complete!'))}
+      />}
     </View>
   )
 }
