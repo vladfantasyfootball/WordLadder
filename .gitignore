@@ -14,6 +14,10 @@ web-build/
 *.gz
 *.apk
 
+# Firebase configuration files - contain sensitive data
+GoogleService-Info.plist
+google-services.json
+
 # EAS Prebuild generates these folders - don't commit them
 /ios
 /android
