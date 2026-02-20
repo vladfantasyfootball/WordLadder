@@ -13,6 +13,11 @@ WordLadder.app/
 web-build/
 *.gz
 *.apk
+
+# EAS Prebuild generates these folders - don't commit them
+/ios
+/android
+
 # macOS
 .DS_Store
 

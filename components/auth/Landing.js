@@ -1,9 +1,41 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Text, View, Button, Platform } from 'react-native'
 import { AppleButton, appleAuth } from '@invertase/react-native-apple-authentication';
-import { AppleAuthProvider, getAuth, signInWithCredential } from '@react-native-firebase/auth';
+import { AppleAuthProvider, GoogleAuthProvider, getAuth, signInWithCredential } from '@react-native-firebase/auth';
+import config from '../../config';
+
+// Only import GoogleSignin on Android to avoid iOS native module errors
+const GoogleSignin = Platform.OS === 'android' ? require('@react-native-google-signin/google-signin').GoogleSignin : null;
+
+console.log('CONFIG GOOGLE_WEB_CLIENT_ID (startup):', config.GOOGLE_WEB_CLIENT_ID);
+console.log('CONFIG ANDROID_CLIENT_ID (startup):', config.ANDROID_CLIENT_ID);
 
 export default function LandingScreen({ navigation }) {
+
+  // Configure Google Sign-In for Android
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      GoogleSignin.configure({
+        webClientId: config.GOOGLE_WEB_CLIENT_ID, // Firebase Web Client ID
+      });
+    }
+  }, []);
+
+  // Google Sign-In handler for Android (uses Google Play Services)
+  async function onGoogleButtonPress() {
+    try {
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      const userInfo = await GoogleSignin.signIn();
+      const { idToken } = await GoogleSignin.getTokens();
+      const googleCredential = GoogleAuthProvider.credential(idToken);
+      return signInWithCredential(getAuth(), googleCredential);
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+    }
+  }
+
+  // ...existing code...
+
   async function onAppleButtonPress() {
     try {
       // Start the sign-in request
@@ -33,13 +65,6 @@ export default function LandingScreen({ navigation }) {
   
   return (
     <View style={{flex: 1, justifyContent: 'center', margin: '10px'}}>
-      <Button 
-        title="Register"
-        onPress={() => {navigation.navigate("Register")}}/>
-      <Button 
-        title="Login"
-        onPress={() => {navigation.navigate("Login")}}/>
-        
       {Platform.OS === 'ios' && 
       <AppleButton
         buttonStyle={AppleButton.Style.WHITE}
@@ -49,6 +74,11 @@ export default function LandingScreen({ navigation }) {
           height: 45,
         }}
         onPress={() => onAppleButtonPress().then(() => console.log('Apple sign-in complete!'))}
+      />}
+      {Platform.OS === 'android' &&
+      <Button
+        title="Sign in with Google"
+        onPress={() => onGoogleButtonPress().then(() => console.log('Google sign-in complete!'))}
       />}
     </View>
   )

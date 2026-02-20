@@ -2,11 +2,7 @@ import React, {useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LandingScreen from './components/auth/Landing';
-import RegisterScreen from './components/auth/Register'
-import LoginScreen from './components/auth/Login'
-import { initializeApp, getApps} from 'firebase/app';
 import { getAuth, onAuthStateChanged, signOut } from '@react-native-firebase/auth';
-import  config from './config';
 import { Provider } from 'react-redux';
 import MainScreen from './components/Main';
 import Play from './components/main/Play';
@@ -16,20 +12,7 @@ import { user } from './redux/reducers/user';
 import { wordLadder } from './redux/reducers/wordLadder';
 
 
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: config.API_KEY,
-  authDomain: config.AUTH_DOMAIN,
-  projectId: config.PROJECT_ID,
-  storageBucket: config.STORAGE_BUCKET,
-  messagingSenderId: config.MESSAGING_SENDER_ID,
-  appId: config.APP_ID,
-  measurementId: config.MEASUREMENT_ID
-};
-
-if(getApps.length === 0){
-  const app = initializeApp(firebaseConfig);
-}
+// Using native @react-native-firebase modules; no web SDK initialization here.
 
 const Stack = createNativeStackNavigator();
 
@@ -74,8 +57,6 @@ function App() {
       <NavigationContainer>{/* Rest of your app code */}
         <Stack.Navigator initialRouteName="Landing">
           <Stack.Screen name="Landing" component={LandingScreen} options={{headerShown: false}}/>
-          <Stack.Screen name="Register" component={RegisterScreen} />
-          <Stack.Screen name="Login" component={LoginScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     );
