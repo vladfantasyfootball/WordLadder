@@ -34,8 +34,7 @@
             "deploymentTarget": "15.1"
           }
         }
-      ],
-      "react-native-reanimated/plugin"
+      ]
     ],
     "android": {
       "googleServicesFile": "./google-services.json",
