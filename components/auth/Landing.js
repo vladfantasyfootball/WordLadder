@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { Text, View, Button, Platform } from 'react-native'
 import { AppleButton, appleAuth } from '@invertase/react-native-apple-authentication';
-import { AppleAuthProvider, GoogleAuthProvider, getAuth, signInWithCredential } from '@react-native-firebase/auth';
+import { getAuth, signInWithCredential, GoogleAuthProvider, OAuthProvider } from 'firebase/auth';
 import config from '../../config';
 
 // Only import GoogleSignin on Android to avoid iOS native module errors
@@ -28,7 +28,8 @@ export default function LandingScreen({ navigation }) {
       const userInfo = await GoogleSignin.signIn();
       const { idToken } = await GoogleSignin.getTokens();
       const googleCredential = GoogleAuthProvider.credential(idToken);
-      return signInWithCredential(getAuth(), googleCredential);
+      const auth = getAuth();
+      return signInWithCredential(auth, googleCredential);
     } catch (error) {
       console.error('Google sign-in error:', error);
     }
@@ -53,10 +54,15 @@ export default function LandingScreen({ navigation }) {
 
       // Create a Firebase credential from the response
       const { identityToken, nonce } = appleAuthRequestResponse;
-      const appleCredential = AppleAuthProvider.credential(identityToken, nonce);
+      const provider = new OAuthProvider('apple.com');
+      const appleCredential = provider.credential({
+        idToken: identityToken,
+        rawNonce: nonce,
+      });
 
       // Sign the user in with the credential
-      let user = await signInWithCredential(getAuth(), appleCredential);
+      const auth = getAuth();
+      let user = await signInWithCredential(auth, appleCredential);
       return user
     } catch (error) {
       console.error('Apple sign-in error:', error);

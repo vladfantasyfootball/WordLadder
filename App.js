@@ -2,7 +2,8 @@ import React, {useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LandingScreen from './components/auth/Landing';
-import { getAuth, onAuthStateChanged, signOut } from '@react-native-firebase/auth';
+import { initializeApp } from 'firebase/app';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { Provider } from 'react-redux';
 import MainScreen from './components/Main';
 import Play from './components/main/Play';
@@ -10,9 +11,21 @@ import ProfilePage from './components/main/ProfilePage';
 import { configureStore } from '@reduxjs/toolkit'
 import { user } from './redux/reducers/user';
 import { wordLadder } from './redux/reducers/wordLadder';
+import config from './config';
 
+// Initialize Firebase
+const firebaseConfig = {
+  apiKey: config.API_KEY,
+  authDomain: config.AUTH_DOMAIN,
+  projectId: config.PROJECT_ID,
+  storageBucket: config.STORAGE_BUCKET,
+  messagingSenderId: config.MESSAGING_SENDER_ID,
+  appId: config.APP_ID,
+  measurementId: config.MEASUREMENT_ID
+};
 
-// Using native @react-native-firebase modules; no web SDK initialization here.
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
 const Stack = createNativeStackNavigator();
 
@@ -46,7 +59,7 @@ function App() {
   }
 
   useEffect(() => {
-    const subscriber = onAuthStateChanged(getAuth(), handleAuthStateChanged);
+    const subscriber = onAuthStateChanged(auth, handleAuthStateChanged);
     return subscriber; // unsubscribe on unmount
   }, []);
 

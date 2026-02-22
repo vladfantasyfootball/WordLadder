@@ -1,7 +1,7 @@
 import React from 'react'
 import { View } from 'react-native'
 import LogoutButton from '../shared/logoutButton'
-import { getAuth } from '@react-native-firebase/auth';
+import { getAuth } from 'firebase/auth';
 
 export default function ProfilePage({ navigation, level }) {
     const auth = getAuth()

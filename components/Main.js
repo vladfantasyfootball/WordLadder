@@ -8,7 +8,7 @@ import Stats from './main/Stats';
 import Leaderboards from './main/Leaderboards';
 import { MaterialCommunityIcons, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Profile from './main/Profile';
-import { getAuth } from '@react-native-firebase/auth';
+import { getAuth } from 'firebase/auth';
 
 
 const Tab = createBottomTabNavigator();
