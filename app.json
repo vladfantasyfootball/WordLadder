@@ -26,9 +26,6 @@
       }
     },
     "plugins": [
-      "expo-build-properties",
-      "@react-native-firebase/app",
-      "@react-native-firebase/auth",
       [
         "expo-build-properties",
         {
@@ -38,14 +35,7 @@
           }
         }
       ],
-      [
-        "@react-native-firebase/app",
-        {
-          "ios": {
-            "useSwift": false
-          }
-        }
-      ]
+      "react-native-reanimated/plugin"
     ],
     "android": {
       "googleServicesFile": "./google-services.json",
