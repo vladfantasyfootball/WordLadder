@@ -24,7 +24,8 @@
     "production": {
       "env": {
         "GOOGLE_SERVICES_INFO_PLIST": "./GoogleService-Info.plist",
-        "GOOGLE_SERVICES_JSON": "./google-services.json"
+        "GOOGLE_SERVICES_JSON": "./google-services.json",
+        "REANIMATED_PLUGIN_TESTS": "0"
       }
     }
   },
