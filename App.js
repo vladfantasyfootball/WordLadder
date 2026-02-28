@@ -24,6 +24,12 @@ const firebaseConfig = {
   measurementId: config.MEASUREMENT_ID
 };
 
+console.log('Firebase config:', { 
+  apiKey: config.API_KEY ? 'SET' : 'MISSING',
+  authDomain: config.AUTH_DOMAIN ? 'SET' : 'MISSING',
+  projectId: config.PROJECT_ID ? 'SET' : 'MISSING',
+});
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
