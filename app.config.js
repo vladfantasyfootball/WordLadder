@@ -36,7 +36,6 @@ module.exports = ({ config }) => {
   }
   
   return {
-    ...appJson,
     expo: {
       ...baseConfig,
       extra,
