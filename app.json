@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "WordLadder",
-    "slug": "WordLadder",
+    "slug": "wordladder",
     "version": "2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -18,7 +18,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "15906805-b6d8-483b-8ff2-0d92876281fa"
+        "projectId": "785b674b-120a-4948-832d-898826a35fa1"
       }
     },
     "ios": {
@@ -53,15 +53,10 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "extra": {
-      "eas": {
-        "projectId": "15906805-b6d8-483b-8ff2-0d92876281fa"
-      }
-    },
-    "owner": "vladfantasyfootball"
-  },
-  "react-native-google-mobile-ads": {
-    "android_app_id": "ca-app-pub-5826991812725211~3233115456",
-    "ios_app_id": "ca-app-pub-5826991812725211~5820606577"
+    "owner": "vladfantasyfootball",
+    "react-native-google-mobile-ads": {
+      "android_app_id": "ca-app-pub-5826991812725211~3233115456",
+      "ios_app_id": "ca-app-pub-5826991812725211~5820606577"
+    }
   }
 }

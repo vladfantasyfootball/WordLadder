@@ -5,30 +5,36 @@ module.exports = ({ config }) => {
   console.log('app.config.js - EAS_BUILD:', process.env.EAS_BUILD);
   console.log('app.config.js - API_KEY available:', !!process.env.API_KEY);
   
-  return {
-    ...config,
-    expo: {
-      ...config.expo,
-      "react-native-google-mobile-ads": {
-        android_app_id: "ca-app-pub-5826991812725211~3233115456",
-        ios_app_id: "ca-app-pub-5826991812725211~5820606577"
-      },
-      extra: {
-        ...(config.expo?.extra || {}),
-        // In EAS builds, use process.env. Otherwise undefined (will fall back to @env in config.js)
-        API_KEY: isEASBuild ? process.env.API_KEY : undefined,
-        AUTH_DOMAIN: isEASBuild ? process.env.AUTH_DOMAIN : undefined,
-        PROJECT_ID: isEASBuild ? process.env.PROJECT_ID : undefined,
-        STORAGE_BUCKET: isEASBuild ? process.env.STORAGE_BUCKET : undefined,
-        MESSAGING_SENDER_ID: isEASBuild ? process.env.MESSAGING_SENDER_ID : undefined,
-        APP_ID: isEASBuild ? process.env.APP_ID : undefined,
-        MEASUREMENT_ID: isEASBuild ? process.env.MEASUREMENT_ID : undefined,
-        GOOGLE_WEB_CLIENT_ID: isEASBuild ? process.env.GOOGLE_WEB_CLIENT_ID : undefined,
-        EXPO_CLIENT_ID: isEASBuild ? process.env.EXPO_CLIENT_ID : undefined,
-        IOS_CLIENT_ID: isEASBuild ? process.env.IOS_CLIENT_ID : undefined,
-        ANDROID_CLIENT_ID: isEASBuild ? process.env.ANDROID_CLIENT_ID : undefined,
-        WORD_LADDER_BACKEND: isEASBuild ? process.env.WORD_LADDER_BACKEND : undefined,
+  // Get the base config from app.json
+  const baseConfig = config || {};
+  const expoConfig = baseConfig.expo || {};
+  
+  // Only inject extra fields during EAS builds
+  if (isEASBuild) {
+    return {
+      ...baseConfig,
+      expo: {
+        ...expoConfig,
+        extra: {
+          ...(expoConfig.extra || {}),
+          // In EAS builds, inject process.env secrets
+          API_KEY: process.env.API_KEY,
+          AUTH_DOMAIN: process.env.AUTH_DOMAIN,
+          PROJECT_ID: process.env.PROJECT_ID,
+          STORAGE_BUCKET: process.env.STORAGE_BUCKET,
+          MESSAGING_SENDER_ID: process.env.MESSAGING_SENDER_ID,
+          APP_ID: process.env.APP_ID,
+          MEASUREMENT_ID: process.env.MEASUREMENT_ID,
+          GOOGLE_WEB_CLIENT_ID: process.env.GOOGLE_WEB_CLIENT_ID,
+          EXPO_CLIENT_ID: process.env.EXPO_CLIENT_ID,
+          IOS_CLIENT_ID: process.env.IOS_CLIENT_ID,
+          ANDROID_CLIENT_ID: process.env.ANDROID_CLIENT_ID,
+          WORD_LADDER_BACKEND: process.env.WORD_LADDER_BACKEND,
+        }
       }
-    }
-  };
+    };
+  }
+  
+  // In local dev, return config unchanged (preserves app.json extra.eas.projectId)
+  return baseConfig;
 };
