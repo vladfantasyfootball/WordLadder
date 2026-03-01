@@ -22,6 +22,8 @@ module.exports = ({ config }) => {
       IOS_CLIENT_ID: isEASBuild ? process.env.IOS_CLIENT_ID : undefined,
       ANDROID_CLIENT_ID: isEASBuild ? process.env.ANDROID_CLIENT_ID : undefined,
       WORD_LADDER_BACKEND: isEASBuild ? process.env.WORD_LADDER_BACKEND : undefined,
-    }
+    },
+    // Preserve Google Mobile Ads config from app.json
+    "react-native-google-mobile-ads": config["react-native-google-mobile-ads"]
   };
 };
