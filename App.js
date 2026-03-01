@@ -13,6 +13,10 @@ import { configureStore } from '@reduxjs/toolkit'
 import { user } from './redux/reducers/user';
 import { wordLadder } from './redux/reducers/wordLadder';
 import config from './config';
+import { Alert } from 'react-native';
+
+console.log('=== APP.JS LOADING ===');
+console.log('Config object:', config);
 
 // Initialize Firebase
 const firebaseConfig = {
@@ -32,6 +36,15 @@ console.log('PROJECT_ID:', config.PROJECT_ID || 'MISSING');
 console.log('BACKEND:', config.WORD_LADDER_BACKEND || 'MISSING');
 console.log('DEV MODE:', __DEV__);
 console.log('===========================');
+
+// Alert to verify app is running
+setTimeout(() => {
+  Alert.alert(
+    'Debug Info',
+    `API_KEY: ${config.API_KEY ? 'SET' : 'MISSING'}\nDEV: ${__DEV__}`,
+    [{ text: 'OK' }]
+  );
+}, 1000);
 
 const app = initializeApp(firebaseConfig);
 const auth = initializeAuth(app, {
