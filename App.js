@@ -13,43 +13,48 @@ import { configureStore } from '@reduxjs/toolkit'
 import { user } from './redux/reducers/user';
 import { wordLadder } from './redux/reducers/wordLadder';
 import config from './config';
-import { Alert } from 'react-native';
+import { Alert, View, Text } from 'react-native';
 
 console.log('=== APP.JS LOADING ===');
 console.log('Config object:', config);
 
-// Initialize Firebase
-const firebaseConfig = {
-  apiKey: config.API_KEY,
-  authDomain: config.AUTH_DOMAIN,
-  projectId: config.PROJECT_ID,
-  storageBucket: config.STORAGE_BUCKET,
-  messagingSenderId: config.MESSAGING_SENDER_ID,
-  appId: config.APP_ID,
-  measurementId: config.MEASUREMENT_ID
-};
+let app, auth;
+let initError = null;
 
-console.log('=== ENV VARIABLES CHECK ===');
-console.log('API_KEY:', config.API_KEY ? `${config.API_KEY.substring(0, 10)}...` : 'MISSING');
-console.log('AUTH_DOMAIN:', config.AUTH_DOMAIN || 'MISSING');
-console.log('PROJECT_ID:', config.PROJECT_ID || 'MISSING');
-console.log('BACKEND:', config.WORD_LADDER_BACKEND || 'MISSING');
-console.log('DEV MODE:', __DEV__);
-console.log('===========================');
+try {
+  // Initialize Firebase
+  const firebaseConfig = {
+    apiKey: config.API_KEY,
+    authDomain: config.AUTH_DOMAIN,
+    projectId: config.PROJECT_ID,
+    storageBucket: config.STORAGE_BUCKET,
+    messagingSenderId: config.MESSAGING_SENDER_ID,
+    appId: config.APP_ID,
+    measurementId: config.MEASUREMENT_ID
+  };
 
-// Alert to verify app is running
-setTimeout(() => {
-  Alert.alert(
-    'Debug Info',
-    `API_KEY: ${config.API_KEY ? 'SET' : 'MISSING'}\nDEV: ${__DEV__}`,
-    [{ text: 'OK' }]
-  );
-}, 1000);
+  console.log('=== ENV VARIABLES CHECK ===');
+  console.log('API_KEY:', config.API_KEY ? `${String(config.API_KEY).substring(0, 10)}...` : 'MISSING');
+  console.log('AUTH_DOMAIN:', config.AUTH_DOMAIN || 'MISSING');
+  console.log('PROJECT_ID:', config.PROJECT_ID || 'MISSING');
+  console.log('BACKEND:', config.WORD_LADDER_BACKEND || 'MISSING');
+  console.log('DEV MODE:', __DEV__);
+  console.log('===========================');
 
-const app = initializeApp(firebaseConfig);
-const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage)
-});
+  if (!config.API_KEY) {
+    throw new Error('API_KEY is missing from config');
+  }
+
+  app = initializeApp(firebaseConfig);
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage)
+  });
+  
+  console.log('Firebase initialized successfully');
+} catch (error) {
+  console.error('Firebase initialization error:', error);
+  initError = error.message;
+}
 
 const Stack = createNativeStackNavigator();
 
@@ -72,6 +77,26 @@ const AppWrapper = () => {
 }
 
 function App() {
+  // Show error screen if Firebase failed to initialize
+  if (initError) {
+    return (
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#ffebee'}}>
+        <Text style={{fontSize: 20, fontWeight: 'bold', color: '#c62828', marginBottom: 10}}>
+          Initialization Error
+        </Text>
+        <Text style={{fontSize: 14, color: '#666', textAlign: 'center'}}>
+          {initError}
+        </Text>
+        <Text style={{fontSize: 12, color: '#999', marginTop: 20, textAlign: 'center'}}>
+          Config values:{'\n'}
+          API_KEY: {config.API_KEY ? 'SET' : 'MISSING'}{'\n'}
+          AUTH_DOMAIN: {config.AUTH_DOMAIN || 'MISSING'}{'\n'}
+          DEV MODE: {__DEV__ ? 'true' : 'false'}
+        </Text>
+      </View>
+    );
+  }
+
   // Set an initializing state whilst Firebase connects
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState();
