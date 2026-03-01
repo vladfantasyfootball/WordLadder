@@ -4,8 +4,9 @@ module.exports = ({ config }) => {
   
   console.log('app.config.js - EAS_BUILD:', process.env.EAS_BUILD);
   console.log('app.config.js - API_KEY available:', !!process.env.API_KEY);
+  console.log('app.config.js - config has google ads:', !!config["react-native-google-mobile-ads"]);
   
-  return {
+  const result = {
     ...config,
     extra: {
       ...config.extra,
@@ -22,8 +23,14 @@ module.exports = ({ config }) => {
       IOS_CLIENT_ID: isEASBuild ? process.env.IOS_CLIENT_ID : undefined,
       ANDROID_CLIENT_ID: isEASBuild ? process.env.ANDROID_CLIENT_ID : undefined,
       WORD_LADDER_BACKEND: isEASBuild ? process.env.WORD_LADDER_BACKEND : undefined,
-    },
-    // Preserve Google Mobile Ads config from app.json
-    "react-native-google-mobile-ads": config["react-native-google-mobile-ads"]
+    }
   };
+  
+  // Google Mobile Ads config must be at root level, not inside expo
+  result["react-native-google-mobile-ads"] = {
+    android_app_id: "ca-app-pub-5826991812725211~3233115456",
+    ios_app_id: "ca-app-pub-5826991812725211~5820606577"
+  };
+  
+  return result;
 };
