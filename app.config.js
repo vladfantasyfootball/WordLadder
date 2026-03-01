@@ -6,35 +6,28 @@ module.exports = ({ config }) => {
   console.log('app.config.js - API_KEY available:', !!process.env.API_KEY);
   
   // Get the base config from app.json
-  const baseConfig = config || {};
-  const expoConfig = baseConfig.expo || {};
+  const expoConfig = config.expo || {};
   
-  // Only inject extra fields during EAS builds
-  if (isEASBuild) {
-    return {
-      ...baseConfig,
-      expo: {
-        ...expoConfig,
-        extra: {
-          ...(expoConfig.extra || {}),
-          // In EAS builds, inject process.env secrets
-          API_KEY: process.env.API_KEY,
-          AUTH_DOMAIN: process.env.AUTH_DOMAIN,
-          PROJECT_ID: process.env.PROJECT_ID,
-          STORAGE_BUCKET: process.env.STORAGE_BUCKET,
-          MESSAGING_SENDER_ID: process.env.MESSAGING_SENDER_ID,
-          APP_ID: process.env.APP_ID,
-          MEASUREMENT_ID: process.env.MEASUREMENT_ID,
-          GOOGLE_WEB_CLIENT_ID: process.env.GOOGLE_WEB_CLIENT_ID,
-          EXPO_CLIENT_ID: process.env.EXPO_CLIENT_ID,
-          IOS_CLIENT_ID: process.env.IOS_CLIENT_ID,
-          ANDROID_CLIENT_ID: process.env.ANDROID_CLIENT_ID,
-          WORD_LADDER_BACKEND: process.env.WORD_LADDER_BACKEND,
-        }
+  return {
+    ...config,
+    expo: {
+      ...expoConfig,
+      extra: {
+        ...(expoConfig.extra || {}),
+        // In EAS builds, inject process.env secrets. Otherwise undefined (falls back to @env)
+        API_KEY: isEASBuild ? process.env.API_KEY : undefined,
+        AUTH_DOMAIN: isEASBuild ? process.env.AUTH_DOMAIN : undefined,
+        PROJECT_ID: isEASBuild ? process.env.PROJECT_ID : undefined,
+        STORAGE_BUCKET: isEASBuild ? process.env.STORAGE_BUCKET : undefined,
+        MESSAGING_SENDER_ID: isEASBuild ? process.env.MESSAGING_SENDER_ID : undefined,
+        APP_ID: isEASBuild ? process.env.APP_ID : undefined,
+        MEASUREMENT_ID: isEASBuild ? process.env.MEASUREMENT_ID : undefined,
+        GOOGLE_WEB_CLIENT_ID: isEASBuild ? process.env.GOOGLE_WEB_CLIENT_ID : undefined,
+        EXPO_CLIENT_ID: isEASBuild ? process.env.EXPO_CLIENT_ID : undefined,
+        IOS_CLIENT_ID: isEASBuild ? process.env.IOS_CLIENT_ID : undefined,
+        ANDROID_CLIENT_ID: isEASBuild ? process.env.ANDROID_CLIENT_ID : undefined,
+        WORD_LADDER_BACKEND: isEASBuild ? process.env.WORD_LADDER_BACKEND : undefined,
       }
-    };
-  }
-  
-  // In local dev, return config unchanged (preserves app.json extra.eas.projectId)
-  return baseConfig;
+    }
+  };
 };
