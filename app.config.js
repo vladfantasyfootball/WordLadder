@@ -64,6 +64,10 @@ export default {
     },
     scheme: "wordladder",
     owner: "vladfantasyfootball",
+    "react-native-google-mobile-ads": {
+      android_app_id: "ca-app-pub-5826991812725211~3233115456",
+      ios_app_id: "ca-app-pub-5826991812725211~5820606577"
+    },
     extra: {
       eas: {
         projectId: "15906805-b6d8-483b-8ff2-0d92876281fa"
@@ -81,9 +85,5 @@ export default {
       ANDROID_CLIENT_ID: process.env.ANDROID_CLIENT_ID,
       WORD_LADDER_BACKEND: process.env.WORD_LADDER_BACKEND
     }
-  },
-  "react-native-google-mobile-ads": {
-    android_app_id: "ca-app-pub-5826991812725211~3233115456",
-    ios_app_id: "ca-app-pub-5826991812725211~5820606577"
   }
 };
