@@ -70,7 +70,9 @@ export default function LandingScreen({ navigation }) {
   }
   
   return (
-    <View style={{flex: 1, justifyContent: 'center', margin: '10px'}}>
+    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', margin: '10px', backgroundColor: '#90EE90'}}>
+      <Text style={{fontSize: 48, fontWeight: 'bold', marginBottom: 8}}>Word Ladder</Text>
+      <Text style={{fontSize: 16, color: '#666', marginBottom: 40}}>MuskratProductions</Text>
       {Platform.OS === 'ios' && 
       <AppleButton
         buttonStyle={AppleButton.Style.WHITE}

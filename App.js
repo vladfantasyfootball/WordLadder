@@ -3,7 +3,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LandingScreen from './components/auth/Landing';
 import { initializeApp } from 'firebase/app';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { initializeAuth, getReactNativePersistence, onAuthStateChanged } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Provider } from 'react-redux';
 import MainScreen from './components/Main';
 import Play from './components/main/Play';
@@ -24,14 +25,18 @@ const firebaseConfig = {
   measurementId: config.MEASUREMENT_ID
 };
 
-console.log('Firebase config:', { 
-  apiKey: config.API_KEY ? 'SET' : 'MISSING',
-  authDomain: config.AUTH_DOMAIN ? 'SET' : 'MISSING',
-  projectId: config.PROJECT_ID ? 'SET' : 'MISSING',
-});
+console.log('=== ENV VARIABLES CHECK ===');
+console.log('API_KEY:', config.API_KEY ? `${config.API_KEY.substring(0, 10)}...` : 'MISSING');
+console.log('AUTH_DOMAIN:', config.AUTH_DOMAIN || 'MISSING');
+console.log('PROJECT_ID:', config.PROJECT_ID || 'MISSING');
+console.log('BACKEND:', config.WORD_LADDER_BACKEND || 'MISSING');
+console.log('DEV MODE:', __DEV__);
+console.log('===========================');
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(AsyncStorage)
+});
 
 const Stack = createNativeStackNavigator();
 
