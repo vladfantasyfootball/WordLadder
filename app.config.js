@@ -8,12 +8,20 @@ module.exports = ({ config }) => {
   // Get the base config from app.json
   const expoConfig = config.expo || {};
   
+  // Read projectId from app.json directly since config parameter doesn't include it
+  const fs = require('fs');
+  const path = require('path');
+  const appJsonPath = path.join(__dirname, 'app.json');
+  const appJson = JSON.parse(fs.readFileSync(appJsonPath, 'utf8'));
+  const projectId = appJson.expo?.extra?.eas?.projectId;
+  
   return {
     ...config,
     expo: {
       ...expoConfig,
       extra: {
-        ...(expoConfig.extra || {}),
+        // Preserve eas object with projectId from app.json
+        eas: projectId ? { projectId } : {},
         // In EAS builds, inject process.env secrets. Otherwise undefined (falls back to @env)
         API_KEY: isEASBuild ? process.env.API_KEY : undefined,
         AUTH_DOMAIN: isEASBuild ? process.env.AUTH_DOMAIN : undefined,
