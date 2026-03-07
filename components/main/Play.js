@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { SafeAreaView, View, Text, StyleSheet, Platform, ScrollView } from 'react-native'
+import { SafeAreaView, View, Text, StyleSheet, Platform, ScrollView, Alert } from 'react-native'
 import { levelColorScheme } from '../../redux/constants/colorScheme';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
@@ -121,14 +121,39 @@ export class Play extends Component {
                                 })
                             }
                         } else {
-                            alert('Not a valid word')
+                            Alert.alert(
+                                '',
+                                'Not a valid word transformation',
+                                [
+                                    { text: 'OK', style: 'cancel' },
+                                    { text: 'View Rules', onPress: () => {
+                                        this.props.navigation.goBack();
+                                        setTimeout(() => {
+                                            this.props.route.params?.onShowRules?.();
+                                        }, 100);
+                                    }}
+                                ]
+                            )
                         }
                     } else {
-                        alert('Not a valid word')
+                        Alert.alert(
+                            '',
+                            'Not a valid word transformation',
+                            [
+                                { text: 'OK', style: 'cancel' },
+                                { text: 'View Rules', onPress: () => {
+                                    this.props.navigation.goBack();
+                                    setTimeout(() => {
+                                        this.props.route.params?.onShowRules?.();
+                                    }, 100);
+                                }}
+                            ]
+                        )
                     }
                 }
             } else {
-                alert('Not a real word')
+                Alert.alert('', 'Word does not exist.');
+                this.setState({ nextWord: '' });
             }
         }
     }
@@ -221,20 +246,26 @@ export class Play extends Component {
                                 onContentSizeChange={() => this.scrollView.scrollToEnd({ animated: true })}
                                 persistentScrollbar={true}>
                                 {this.state.ladderWords.slice(1).map((ladderWord, index) => {
+                                    const isLastWord = this.state.ladderWords.length - 2 === index;
                                     return (
-                                        <View key={`arrow-${index}`} style={[styles.rowStyle, {display: 'flex', justifyContent: 'center'}, this.state.ladderWords.length - 2 !== index && {marginLeft: 100}]}>                                               
-                                            {this.state.ladderWords.length - 2 === index && 
-                                                <Text style={{marginRight:'auto', paddingRight: 20, marginTop: 25 ,fontSize: 20, marginLeft: (Platform.OS === 'ios' ? 42 : 38)}}>
-                                                    {"->"}
-                                                </Text>
-                                            }
-                                            <LadderStepWord
-                                                key={`ladderWord-${index}`}
-                                                word={ladderWord}
-                                                level={level}
-                                                size={this.state.ladderWords.length - 2 === index ? 62 : 50}
-                                                fontSize={this.state.ladderWords.length - 2 === index ? 44 : 32}
-                                            />
+                                        <View key={`arrow-${index}`} style={[styles.rowStyle, { display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', width: '100%' }]}>                                               
+                                            <View style={{ width: 60, alignItems: 'flex-end', paddingRight: 10 }}>
+                                                {isLastWord && 
+                                                    <Text style={{ fontSize: 20 }}>
+                                                        {"->"}
+                                                    </Text>
+                                                }
+                                            </View>
+                                            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                                                <LadderStepWord
+                                                    key={`ladderWord-${index}`}
+                                                    word={ladderWord}
+                                                    level={level}
+                                                    size={isLastWord ? 62 : 50}
+                                                    fontSize={isLastWord ? 44 : 32}
+                                                />
+                                            </View>
+                                            <View style={{ width: 60 }} />
                                         </View>
                                     )
                                 })}

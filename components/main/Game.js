@@ -11,7 +11,7 @@ const rewardedInterstitialAd = RewardedInterstitialAd.createForAdRequest(TestIds
     requestNonPersonalizedAdsOnly: true
   });
 
-export default function Game({ navigation, level }) {
+export default function Game({ navigation, level, route }) {
     const dispatch = useDispatch();
     const currentUser = useSelector((state) => {return state.userState.currentUser});
     const [adWatched, setAdWatched] = useState(false)
@@ -82,7 +82,10 @@ export default function Game({ navigation, level }) {
         if(level.toLowerCase() === "two" && !adWatched){
             rewardedInterstitialAd.show().then(() => {StatusBar.setStatusBarHidden(true)});
         } else {
-            navigation.navigate('Play', {level});
+            navigation.navigate('Play', {
+                level,
+                onShowRules: () => setHowToOpen(level)
+            });
         }
     }
 
