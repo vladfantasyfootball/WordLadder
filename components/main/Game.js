@@ -97,6 +97,20 @@ export default function Game({ navigation, level, route }) {
         setHowToOpen(level)
     }
     
+    const getButtonText = (level) => {
+        const levelData = currentUser?.wordLadder[level.toLowerCase()];
+        const isCompleted = levelData?.currentWordLadder?.completed;
+        const hasStarted = levelData?.currentWordLadder?.currentAttempt?.length > 1;
+        
+        if (isCompleted) {
+            return 'View Solution';
+        }
+        if (hasStarted) {
+            return `Resume Level ${level}`;
+        }
+        return `Play Level ${level}`;
+    }
+
     const determineLevelDisabled = (level) => {
         if(level.toLowerCase() === "two"){
             return (currentUser?.wordLadder['one'].currentWordLadder.completed === false || (!adLoaded && !adWatched))
@@ -164,7 +178,7 @@ export default function Game({ navigation, level, route }) {
                         </ScrollView>
                     : 
                         <>
-                            <FlatButton text={`Play Level ${level}`} onPress={() => {onPressPlay(level)}} width='60' disabled={determineLevelDisabled(level)}/>
+                            <FlatButton text={getButtonText(level)} onPress={() => {onPressPlay(level)}} width='60' disabled={determineLevelDisabled(level)}/>
                             {/* {level === 'Two' && 
                                 <FlatButton text={`Unlock Level Two`} onPress={onPressUnlock} width='50' disabled={false}/> 
                             } */}

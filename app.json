@@ -4,7 +4,7 @@
     "slug": "wordladder",
     "version": "2",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/WL.png",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
