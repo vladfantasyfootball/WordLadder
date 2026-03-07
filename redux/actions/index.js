@@ -9,11 +9,8 @@ export function fetchUser(auth) {
                 let userData = response.data;
                 dispatch({ type: USER_STATE_CHANGE, currentUser: userData })
             }).catch((e) => {
-                console.log(e)
+                console.error('Error fetching user:', e)
             })
-        }
-        else {
-            console.log('does not exist'); 
         }
     })
 }
@@ -26,7 +23,7 @@ export function getWordLadders() {
                 wordLadder: { "one": response.data.one, "two": response.data.two }
             })
         }).catch((e) => {
-            console.log(e)
+            console.error('Error fetching puzzles:', e)
         })
     })
 }

@@ -22,7 +22,7 @@ export class MainScreen extends Component {
 
     render() {
         return (
-            <Tab.Navigator initialRouteName='Home'>
+            <Tab.Navigator initialRouteName='Word Ladder'>
                 <Tab.Screen
                     name={"Word Ladder"}
                     component={Home}

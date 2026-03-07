@@ -39,7 +39,8 @@
             "deploymentTarget": "15.1"
           }
         }
-      ]
+      ],
+      "expo-font"
     ],
     "android": {
       "googleServicesFile": "./google-services.json",

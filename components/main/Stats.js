@@ -11,7 +11,7 @@ export class Stats extends Component {
   componentDidMount() { }
   render() {
     return (
-      <Tab.Navigator initialRouteName='Stats'>
+      <Tab.Navigator initialRouteName='Level One'>
         <Tab.Screen
           name={"Level One"}
           options={{

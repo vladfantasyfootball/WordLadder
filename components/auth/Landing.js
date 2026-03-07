@@ -1,14 +1,11 @@
 import React, { useEffect } from 'react'
-import { Text, View, Button, Platform } from 'react-native'
+import { Text, View, Button, Platform, TouchableOpacity, StyleSheet } from 'react-native'
 import { AppleButton, appleAuth } from '@invertase/react-native-apple-authentication';
 import { getAuth, signInWithCredential, GoogleAuthProvider, OAuthProvider } from 'firebase/auth';
 import config from '../../config';
 
-// Only import GoogleSignin on Android to avoid iOS native module errors
+// Platform-specific imports
 const GoogleSignin = Platform.OS === 'android' ? require('@react-native-google-signin/google-signin').GoogleSignin : null;
-
-console.log('CONFIG GOOGLE_WEB_CLIENT_ID (startup):', config.GOOGLE_WEB_CLIENT_ID);
-console.log('CONFIG ANDROID_CLIENT_ID (startup):', config.ANDROID_CLIENT_ID);
 
 export default function LandingScreen({ navigation }) {
 
@@ -35,15 +32,11 @@ export default function LandingScreen({ navigation }) {
     }
   }
 
-  // ...existing code...
-
   async function onAppleButtonPress() {
     try {
       // Start the sign-in request
       const appleAuthRequestResponse = await appleAuth.performRequest({
         requestedOperation: appleAuth.Operation.LOGIN,
-        // As per the FAQ of react-native-apple-authentication, the name should come first in the following array.
-        // See: https://github.com/invertase/react-native-apple-authentication#faqs
         requestedScopes: [appleAuth.Scope.FULL_NAME, appleAuth.Scope.EMAIL],
       });
 
@@ -81,12 +74,12 @@ export default function LandingScreen({ navigation }) {
           width: 160,
           height: 45,
         }}
-        onPress={() => onAppleButtonPress().then(() => console.log('Apple sign-in complete!'))}
+        onPress={() => onAppleButtonPress()}
       />}
       {Platform.OS === 'android' &&
       <Button
         title="Sign in with Google"
-        onPress={() => onGoogleButtonPress().then(() => console.log('Google sign-in complete!'))}
+        onPress={() => onGoogleButtonPress()}
       />}
     </View>
   )

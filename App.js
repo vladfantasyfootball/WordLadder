@@ -15,9 +15,6 @@ import { wordLadder } from './redux/reducers/wordLadder';
 import config from './config';
 import { Alert, View, Text } from 'react-native';
 
-console.log('=== APP.JS LOADING ===');
-console.log('Config object:', config);
-
 let app, auth;
 let initError = null;
 
@@ -33,14 +30,6 @@ try {
     measurementId: config.MEASUREMENT_ID
   };
 
-  console.log('=== ENV VARIABLES CHECK ===');
-  console.log('API_KEY:', config.API_KEY ? `${String(config.API_KEY).substring(0, 10)}...` : 'MISSING');
-  console.log('AUTH_DOMAIN:', config.AUTH_DOMAIN || 'MISSING');
-  console.log('PROJECT_ID:', config.PROJECT_ID || 'MISSING');
-  console.log('BACKEND:', config.WORD_LADDER_BACKEND || 'MISSING');
-  console.log('DEV MODE:', __DEV__);
-  console.log('===========================');
-
   if (!config.API_KEY) {
     throw new Error('API_KEY is missing from config');
   }
@@ -49,8 +38,6 @@ try {
   auth = initializeAuth(app, {
     persistence: getReactNativePersistence(AsyncStorage)
   });
-  
-  console.log('Firebase initialized successfully');
 } catch (error) {
   console.error('Firebase initialization error:', error);
   initError = error.message;
@@ -104,7 +91,9 @@ function App() {
   // Handle user state changes
   function handleAuthStateChanged(user) {
     setUser(user);
-    if (initializing) setInitializing(false);
+    if (initializing) {
+      setInitializing(false);
+    }
   }
 
   useEffect(() => {
@@ -112,7 +101,9 @@ function App() {
     return subscriber; // unsubscribe on unmount
   }, []);
 
-  if (initializing) return null;
+  if (initializing) {
+    return null;
+  }
 
   if(!user){
     return (
@@ -126,7 +117,7 @@ function App() {
 
   return (
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Landing">
+        <Stack.Navigator initialRouteName="Main">
           <Stack.Screen name="Main" component={MainScreen} options={{headerShown: false}}/>
           <Stack.Screen name="Play" component={Play} options={({ route, navigation }) => {return { headerTitleAlign: "center", headerTitle: `Level ${route.params.level}`}}}/>
           <Stack.Screen name="ProfilePage" component={ProfilePage} options={({ route, navigation }) => {return { headerTitleAlign: "center", headerTitle: `Profile`}}}/>
