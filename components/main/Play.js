@@ -1,14 +1,14 @@
 import React, { Component } from 'react';
-import { SafeAreaView, Keyboard, View, Text, StyleSheet, Platform, KeyboardAvoidingView, ScrollView } from 'react-native'
+import { SafeAreaView, View, Text, StyleSheet, Platform, ScrollView } from 'react-native'
 import { levelColorScheme } from '../../redux/constants/colorScheme';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { fetchUser, getWordLadders, updateUser } from '../../redux/actions';
 import LadderStepWord from '../shared/LadderStepWord'
-import { TextInput } from 'react-native';
 import FlatButton from '../shared/button';
 import { validateWord, validateLevelOneWord, validateExtraLevelTwoRule } from '../../utils/validations';
 import LevelCompleteScreen, { completionBonusMap } from '../shared/LevelCompleteScreen';
+import CustomKeyboard from '../shared/CustomKeyboard';
 
 export class Play extends Component {
     constructor(props) {
@@ -21,7 +21,17 @@ export class Play extends Component {
     }
 
     onChangeNextWord = (nextWord) => {
-        this.setState({ nextWord: nextWord })
+        // Only allow letters
+        const lettersOnly = nextWord.replace(/[^a-zA-Z]/g, '');
+        this.setState({ nextWord: lettersOnly.toUpperCase() })
+    }
+
+    handleKeyPress = (key) => {
+        if (key === 'BACKSPACE') {
+            this.setState({ nextWord: this.state.nextWord.slice(0, -1) });
+        } else {
+            this.setState({ nextWord: this.state.nextWord + key.toUpperCase() });
+        }
     }
 
     onPress = async (level) => {
@@ -125,23 +135,24 @@ export class Play extends Component {
 
     renderInput = () => {
         return (
-            <View
-                style={{
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                }}>
-                <TextInput
-                    style={styles.nextWordInput}
-                    value={this.state.nextWord}
-                    onChangeText={(e) => { this.onChangeNextWord(e.toUpperCase()) }}
-                    placeholder={'Next Word'}
-                    textAlign='center'
-                    autoCapitalize='characters'
-                    editable={!this.state.gameCompleted}
+            <View style={{ paddingBottom: 10 }}>
+                <View style={styles.inputContainer}>
+                    <View style={styles.wordDisplay}>
+                        <Text style={[
+                            styles.wordDisplayText,
+                            !this.state.nextWord && styles.placeholderText
+                        ]}>
+                            {this.state.nextWord || 'Next word'}
+                        </Text>
+                    </View>
+                </View>
+                <CustomKeyboard 
+                    onKeyPress={this.handleKeyPress}
+                    onSubmit={() => { this.onPress(this.props.route.params.level) }}
+                    disabled={this.state.gameCompleted}
+                    submitDisabled={this.state.nextWord.length === 0}
+                    levelColor={levelColorScheme[this.props.route.params.level]}
                 />
-                <FlatButton text={'GO'} onPress={() => { this.onPress(this.props.route.params.level) }} width='20' disabled={this.state.gameCompleted} />
             </View>
         )
     }
@@ -236,18 +247,10 @@ export class Play extends Component {
                                 marginTop: 'auto',
                             }}
                         />
-                        <View style={{ alignItems: 'center', paddingTop: 10 }}>
+                        <View style={{ alignItems: 'center', paddingTop: 10, paddingBottom: 10 }}>
                             <LadderStepWord word={wordLadder[level.toLowerCase()].endingWord} size={62} fontSize={44} />
                         </View>
-                        {Platform.OS === 'android' ? (
-                            this.renderInput()
-                        ) : (
-                            <KeyboardAvoidingView
-                                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                                keyboardVerticalOffset={Platform.select({ ios: 80, android: 500 })}>
-                                {this.renderInput()}
-                            </KeyboardAvoidingView>
-                        )}
+                        {this.renderInput()}
                     </View>
                 }
             </SafeAreaView>
@@ -261,14 +264,35 @@ const styles = StyleSheet.create({
         height: '100%',
         width: '100%',
     },
-    nextWordInput: {
-        borderWidth: 1,
+    inputContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        paddingVertical: 15,
+    },
+    wordDisplay: {
+        flex: 1,
         backgroundColor: 'white',
-        width: '70%',
-        fontSize: 26,
-        borderRadius: 15,
-        padding: 5,
-        textAlign: 'center',
+        borderWidth: 2,
+        borderColor: '#878A8C',
+        borderRadius: 8,
+        padding: 15,
+        minHeight: 60,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    wordDisplayText: {
+        fontSize: 24,
+        fontWeight: '600',
+        color: '#000000',
+        letterSpacing: 2,
+    },
+    placeholderText: {
+        fontStyle: 'italic',
+        fontWeight: '400',
+        color: '#999999',
+        letterSpacing: 0,
     },
     rowStyle: {
         display: 'flex',
