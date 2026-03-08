@@ -245,6 +245,8 @@ export class Play extends Component {
                             completeLadder={this.state.ladderWords} 
                             level={level}
                             shortestSolution={wordLadder[level.toLowerCase()].shortestSolution}
+                            timeStarted={this.props.currentUser.wordLadder[level.toLowerCase()].timeStarted}
+                            timeFinished={Date.now()}
                         />
                     </View>
                 }

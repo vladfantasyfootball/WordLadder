@@ -14,19 +14,28 @@ export const completionBonusMap = {
     three: 150,
 }
 
-export default function LevelCompleteScreen({ completeLadder, level, shortestSolution }) {
+export default function LevelCompleteScreen({ completeLadder, level, shortestSolution, timeStarted, timeFinished }) {
     const currentUser = useSelector((state) => {return state.userState.currentUser});
     const dispatch = useDispatch();
     const [showShortest, setShowShortest] = useState(false);
     
-    let timeTaken = Math.round((currentUser.wordLadder[level.toLowerCase()].timeFinished - currentUser.wordLadder[level.toLowerCase()].timeStarted) / 1000);
+    // Use props if provided, otherwise fallback to Redux state
+    const startTime = timeStarted || currentUser.wordLadder[level.toLowerCase()].timeStarted;
+    const endTime = timeFinished || currentUser.wordLadder[level.toLowerCase()].timeFinished;
+    
+    // Calculate time taken with safety checks
+    let timeTaken = 0;
+    if (startTime && endTime && endTime > startTime) {
+        timeTaken = Math.round((endTime - startTime) / 1000);
+    }
+    
     let timeFormattedTimeTaken = null;
     if(timeTaken <= 3600){
         timeFormattedTimeTaken = new Date(timeTaken * 1000).toISOString().substr(14, 5);
     } else {
         timeFormattedTimeTaken =  new Date(timeTaken * 1000).toISOString().substr(11, 8);
     }
-    const timeBonus = 180 - timeTaken > 0 ? 180 - timeTaken : 0;
+    const timeBonus = Math.max(0, 180 - timeTaken);
     const completionBonus = completionBonusMap[level.toLowerCase()];
     const shortestLength = shortestSolution.length;
     const userLength = completeLadder.length;
