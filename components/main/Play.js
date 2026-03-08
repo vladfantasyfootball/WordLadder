@@ -144,12 +144,10 @@ export class Play extends Component {
                                 [
                                     { text: 'OK', style: 'cancel' },
                                     { text: 'View Rules', onPress: () => {
-                                        const level = this.props.route.params.level;
-                                        const screenName = level === 'One' ? 'Level One' : 'Level Two';
-                                        this.props.navigation.navigate('Word Ladder', {
-                                            screen: screenName,
-                                            params: { showRules: true, level }
-                                        });
+                                        this.props.navigation.goBack();
+                                        setTimeout(() => {
+                                            this.props.route.params?.onShowRules?.();
+                                        }, 100);
                                     }}
                                 ]
                             )
@@ -161,12 +159,10 @@ export class Play extends Component {
                             [
                                 { text: 'OK', style: 'cancel' },
                                 { text: 'View Rules', onPress: () => {
-                                    const level = this.props.route.params.level;
-                                    const screenName = level === 'One' ? 'Level One' : 'Level Two';
-                                    this.props.navigation.navigate('Word Ladder', {
-                                        screen: screenName,
-                                        params: { showRules: true, level }
-                                    });
+                                    this.props.navigation.goBack();
+                                    setTimeout(() => {
+                                        this.props.route.params?.onShowRules?.();
+                                    }, 100);
                                 }}
                             ]
                         )

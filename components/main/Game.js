@@ -79,27 +79,18 @@ export default function Game({ navigation, level, route }) {
         }
         const unsubscribeRewardedInterstitial = loadRewardedInterstitial()
 
-        // Listen for navigation events to show rules
-        const unsubscribeFocus = navigation.addListener('focus', () => {
-            if (route.params?.showRules) {
-                setHowToOpen(route.params.level);
-                // Clear the param after handling
-                navigation.setParams({ showRules: undefined });
-            }
-        });
-
         return () => {
             unsubscribeRewardedInterstitial();
-            unsubscribeFocus();
         }
-    },[currentUser, navigation, route.params])
+    },[currentUser])
 
     const onPressPlay = ( level ) => {
         if(level.toLowerCase() === "two" && !adWatched){
             rewardedInterstitialAd.show().then(() => {StatusBar.setStatusBarHidden(true)});
         } else {
             navigation.navigate('Play', {
-                level
+                level,
+                onShowRules: () => setHowToOpen(level)
             });
         }
     }
