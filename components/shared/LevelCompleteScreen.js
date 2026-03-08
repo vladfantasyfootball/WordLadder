@@ -180,7 +180,7 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                     style={styles.shareButton}
                     onPress={handleShare}
                 >
-                    <Text style={styles.shareButtonText}>📤 Share Achievement</Text>
+                    <Text style={styles.shareButtonText}>Share with Friends</Text>
                 </TouchableOpacity>
             </Animatable.View>
         </View>
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     shareButton: {
-        backgroundColor: '#007AFF',
+        backgroundColor: '#34C759',
         paddingVertical: 14,
         paddingHorizontal: 20,
         borderRadius: 10,
