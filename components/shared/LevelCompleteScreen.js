@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share, Alert } from 'react-native'
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { levelColorScheme } from '../../redux/constants/colorScheme';
 import LadderStepWord from './LadderStepWord';
 import * as Animatable from 'react-native-animatable';
+import { registerForPushNotificationsAsync } from '../../utils/notifications';
+import { updateUser } from '../../redux/actions';
+import { getAuth } from 'firebase/auth';
 
 export const completionBonusMap = {
     one: 50,
@@ -13,6 +16,7 @@ export const completionBonusMap = {
 
 export default function LevelCompleteScreen({ completeLadder, level, shortestSolution }) {
     const currentUser = useSelector((state) => {return state.userState.currentUser});
+    const dispatch = useDispatch();
     const [showShortest, setShowShortest] = useState(false);
     
     let timeTaken = Math.round((currentUser.wordLadder[level.toLowerCase()].timeFinished - currentUser.wordLadder[level.toLowerCase()].timeStarted) / 1000);
@@ -30,6 +34,97 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
     const totalScore = completionBonus + wordBonus + timeBonus;
     
     const displayLadder = showShortest ? shortestSolution : completeLadder;
+
+    // Check if user hasn't been asked about notifications yet
+    useEffect(() => {
+        const hasBeenAsked = currentUser?.notifications?.hasBeenAskedForNotifications;
+        const notificationsEnabled = currentUser?.notifications?.enabled;
+        
+        // Only show prompt if: not asked before and notifications not already enabled
+        if (!hasBeenAsked && !notificationsEnabled) {
+            // Delay to show after score animations
+            setTimeout(() => {
+                showNotificationPrompt();
+            }, 4500);
+        }
+    }, []);
+
+    const showNotificationPrompt = () => {
+        Alert.alert(
+            "🎉 Great Job!",
+            "Would you like to receive daily notifications when new puzzles are available?",
+            [
+                {
+                    text: "Not Now",
+                    style: "cancel",
+                    onPress: async () => {
+                        // Mark as asked so we don't show again
+                        await markAsAsked();
+                    }
+                },
+                {
+                    text: "Yes, Notify Me!",
+                    onPress: async () => {
+                        await enableNotifications();
+                    }
+                }
+            ]
+        );
+    };
+
+    const markAsAsked = async () => {
+        try {
+            const auth = getAuth();
+            const updatedUser = {
+                ...currentUser,
+                notifications: {
+                    ...currentUser.notifications,
+                    hasBeenAskedForNotifications: true
+                }
+            };
+            await dispatch(updateUser(currentUser.id, updatedUser, auth));
+        } catch (error) {
+            console.error('Error marking notification prompt as shown:', error);
+        }
+    };
+
+    const enableNotifications = async () => {
+        try {
+            const token = await registerForPushNotificationsAsync();
+            
+            if (token) {
+                const auth = getAuth();
+                const updatedUser = {
+                    ...currentUser,
+                    notifications: {
+                        enabled: true,
+                        expoPushToken: token,
+                        hasBeenAskedForNotifications: true
+                    }
+                };
+                
+                await dispatch(updateUser(currentUser.id, updatedUser, auth));
+                
+                Alert.alert(
+                    "✅ Notifications Enabled",
+                    "You'll receive a daily reminder if you haven't played today's puzzle!"
+                );
+            } else {
+                // Permission denied or failed
+                Alert.alert(
+                    "Notifications Blocked",
+                    "Please enable notifications in Settings to receive daily puzzle reminders.",
+                    [
+                        { text: "OK", onPress: async () => await markAsAsked() }
+                    ]
+                );
+            }
+        } catch (error) {
+            console.error('Error enabling notifications:', error);
+            Alert.alert("Error", "Failed to enable notifications. You can try again from the Profile page.");
+            await markAsAsked();
+        }
+    };
 
     const handleShare = async () => {
         try {
