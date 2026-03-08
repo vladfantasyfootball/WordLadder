@@ -47,7 +47,7 @@ export function updateUser(id, userUpdate, auth) {
             ).then((response) => {
                 dispatch({
                     type: USER_STATE_CHANGE,
-                    currentUser: userUpdate
+                    currentUser: response.data
                 })
             }).catch((e) => {
                 console.error('Error updating user:', e)
