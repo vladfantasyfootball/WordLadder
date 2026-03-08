@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, Switch, StyleSheet, Alert } from 'react-native'
+import { View, Text, Switch, StyleSheet, Alert, Linking } from 'react-native'
 import LogoutButton from '../shared/logoutButton'
 import { getAuth } from 'firebase/auth';
 import { connect } from 'react-redux';
@@ -51,11 +51,25 @@ function ProfilePage({ navigation, level, currentUser, updateUser }) {
                                     if (token) {
                                         await updateNotificationSettings(true, token);
                                     } else {
+                                        // Permission was denied, offer to open settings
                                         Alert.alert(
-                                            "Permission Required",
-                                            "Please enable notifications in your device settings to receive daily puzzle reminders."
+                                            "Notifications Blocked",
+                                            "Please enable notifications in Settings to receive daily puzzle reminders.",
+                                            [
+                                                {
+                                                    text: "Cancel",
+                                                    style: "cancel",
+                                                    onPress: () => setIsLoading(false)
+                                                },
+                                                {
+                                                    text: "Open Settings",
+                                                    onPress: () => {
+                                                        Linking.openSettings();
+                                                        setIsLoading(false);
+                                                    }
+                                                }
+                                            ]
                                         );
-                                        setIsLoading(false);
                                     }
                                 }
                             }
