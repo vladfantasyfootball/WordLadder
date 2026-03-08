@@ -6,9 +6,9 @@
     "orientation": "portrait",
     "icon": "./assets/WL.png",
     "splash": {
-      "image": "./assets/WL.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#4CAF50"
+      "backgroundColor": "#ffffff"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
@@ -38,6 +38,14 @@
             "useFrameworks": "static",
             "deploymentTarget": "15.1"
           }
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#ffffff",
+          "image": "./assets/splash.png",
+          "resizeMode": "contain"
         }
       ],
       "expo-font",
