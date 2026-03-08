@@ -6,9 +6,9 @@
     "orientation": "portrait",
     "icon": "./assets/WL.png",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/WL.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#4CAF50"
     },
     "updates": {
       "fallbackToCacheTimeout": 0

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share, Alert } from 'react-native'
 import { useSelector } from 'react-redux';
 import { levelColorScheme } from '../../redux/constants/colorScheme';
 import LadderStepWord from './LadderStepWord';
@@ -27,8 +27,33 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
     const shortestLength = shortestSolution.length;
     const userLength = completeLadder.length;
     const wordBonus = Math.max(0, 100 - (userLength - shortestLength) * 5);
+    const totalScore = completionBonus + wordBonus + timeBonus;
     
     const displayLadder = showShortest ? shortestSolution : completeLadder;
+
+    const handleShare = async () => {
+        try {
+            const startWord = completeLadder[0];
+            const endWord = completeLadder[completeLadder.length - 1];
+            const message = `🎉 I just completed a Level ${level} Word Ladder puzzle!\n\n${startWord.toUpperCase()} → ${endWord.toUpperCase()}\n⏱️ Time: ${timeFormattedTimeTaken}\n📊 Score: ${totalScore}\n🪜 ${userLength} words\n\nCan you beat my score? Download Word Ladder now:\nhttps://testflight.apple.com/join/JxNSA5rZ`;
+            
+            const result = await Share.share({
+                message: message,
+            });
+
+            if (result.action === Share.sharedAction) {
+                if (result.activityType) {
+                    // shared with activity type of result.activityType
+                } else {
+                    // shared
+                }
+            } else if (result.action === Share.dismissedAction) {
+                // dismissed
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Unable to share. Please try again.');
+        }
+    };
     
     return (
         <View>
@@ -138,11 +163,26 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                     </Text>
                     <Animatable.View style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }} animation="bounceInRight" duration={2000} delay={3500}>
                         <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 10, fontSize: 18  }}>
-                            {`${completionBonus + wordBonus + timeBonus}`}
+                            {`${totalScore}`}
                         </Text>
                     </Animatable.View>
                 </View>
             </View>
+            
+            {/* Share Button */}
+            <Animatable.View 
+                animation="bounceIn" 
+                duration={1500} 
+                delay={4000}
+                style={styles.shareButtonContainer}
+            >
+                <TouchableOpacity 
+                    style={styles.shareButton}
+                    onPress={handleShare}
+                >
+                    <Text style={styles.shareButtonText}>📤 Share Achievement</Text>
+                </TouchableOpacity>
+            </Animatable.View>
         </View>
     )
 }
@@ -172,5 +212,31 @@ const styles = StyleSheet.create({
     },
     activeTabText: {
         color: '#000',
+    },
+    shareButtonContainer: {
+        marginTop: 20,
+        marginHorizontal: 20,
+        marginBottom: 10,
+    },
+    shareButton: {
+        backgroundColor: '#007AFF',
+        paddingVertical: 14,
+        paddingHorizontal: 20,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    shareButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 })
