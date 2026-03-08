@@ -66,10 +66,12 @@ export class Play extends Component {
                             }
                             newUser.wordLadder[level.toLowerCase()].lastSolved = newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle;
                             let timeTaken = Math.round((newUser.wordLadder[level.toLowerCase()].timeFinished - newUser.wordLadder[level.toLowerCase()].timeStarted) / 1000);
-    
+
                         const timeBonus = 180 - timeTaken > 0 ? 180 - timeTaken : 0;
                         const completionBonus = completionBonusMap[level.toLowerCase()];
-                        const wordBonus = Math.floor(180 - this.state.ladderWords.length * 10) > 0 ? Math.floor(180 - this.state.ladderWords.length * 10) : 0;
+                        const shortestLength = this.props.wordLadder[level.toLowerCase()].shortestSolution.length;
+                        const userLength = this.state.ladderWords.length;
+                        const wordBonus = Math.max(0, 100 - (userLength - shortestLength) * 5);
                         const totalRoundScore = timeBonus + completionBonus + wordBonus;
                             newUser.wordLadder[level.toLowerCase()].totalScore = newUser.wordLadder[level.toLowerCase()].totalScore + totalRoundScore;
                             if(totalRoundScore > newUser.wordLadder[level.toLowerCase()].highScore){
@@ -109,10 +111,12 @@ export class Play extends Component {
                                     }
                                     newUser.wordLadder[level.toLowerCase()].lastSolved = newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle;
                                     let timeTaken = Math.round((newUser.wordLadder[level.toLowerCase()].timeFinished - newUser.wordLadder[level.toLowerCase()].timeStarted) / 1000);
-    
+
                                 const timeBonus = 180 - timeTaken > 0 ? 180 - timeTaken : 0;
                                 const completionBonus = completionBonusMap[level.toLowerCase()];
-                                const wordBonus = Math.floor(180 - this.state.ladderWords.length * 10) > 0 ? Math.floor(180 - this.state.ladderWords.length * 10) : 0;
+                                const shortestLength = this.props.wordLadder[level.toLowerCase()].shortestSolution.length;
+                                const userLength = this.state.ladderWords.length;
+                                const wordBonus = Math.max(0, 100 - (userLength - shortestLength) * 5);
                                 const totalRoundScore = timeBonus + completionBonus + wordBonus;
                                     newUser.wordLadder[level.toLowerCase()].totalScore = newUser.wordLadder[level.toLowerCase()].totalScore + totalRoundScore;
                                     if(totalRoundScore > newUser.wordLadder[level.toLowerCase()].highScore){
@@ -236,7 +240,11 @@ export class Play extends Component {
             <SafeAreaView style={[styles.container, { backgroundColor: levelColorScheme[level] }]}>
                 {this.state.gameCompleted &&
                     <View>
-                        <LevelCompleteScreen completeLadder={this.state.ladderWords} level={level} />
+                        <LevelCompleteScreen 
+                            completeLadder={this.state.ladderWords} 
+                            level={level}
+                            shortestSolution={wordLadder[level.toLowerCase()].shortestSolution}
+                        />
                     </View>
                 }
 
