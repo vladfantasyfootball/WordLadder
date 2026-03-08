@@ -13,7 +13,7 @@ export const completionBonusMap = {
 
 export default function LevelCompleteScreen({ completeLadder, level }) {
     const currentUser = useSelector((state) => {return state.userState.currentUser});
-    let timeTaken = Math.round(Math.abs(((currentUser.wordLadder[level.toLowerCase()].timeFinished - currentUser.wordLadder[level.toLowerCase()].timeStarted)) / 1000));
+    let timeTaken = Math.round((currentUser.wordLadder[level.toLowerCase()].timeFinished - currentUser.wordLadder[level.toLowerCase()].timeStarted) / 1000);
     let timeFormattedTimeTaken = null;
     if(timeTaken <= 3600){
         timeFormattedTimeTaken = new Date(timeTaken * 1000).toISOString().substr(14, 5);
