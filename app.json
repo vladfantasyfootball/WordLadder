@@ -50,10 +50,6 @@
         }
       ]
     ],
-    "notification": {
-      "icon": "./assets/WL.png",
-      "color": "#ffffff"
-    },
     "android": {
       "googleServicesFile": "./google-services.json",
       "package": "com.vlad.wordLadderAndroid",
@@ -61,7 +57,10 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
-      }
+      },
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
