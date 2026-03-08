@@ -22,7 +22,7 @@ export default function LevelCompleteScreen({ completeLadder, level }) {
     }
     const timeBonus = 180 - timeTaken > 0 ? 180 - timeTaken : 0;
     const completionBonus = completionBonusMap[level.toLowerCase()];
-    const wordBonus = Math.floor(200 - completeLadder.length * 10) > 0 ? Math.floor(180 - completeLadder.length * 10) : 0;
+    const wordBonus = Math.floor(180 - completeLadder.length * 10) > 0 ? Math.floor(180 - completeLadder.length * 10) : 0;
     return (
         <View>
             <Animatable.View style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }} animation="bounceInLeft" duration={2000}>

@@ -38,14 +38,14 @@ export const validateExtraLevelTwoRule = (prevWord, nextWord) => {
     const prevWordArray = [...prevWord]
     const nextWordArray = [...nextWord]
 
-    prevWordArray.forEach((letter) => {
+    for (const letter of prevWordArray) {
         const index = nextWordArray.findIndex(a => a === letter);
         if(index > -1){
             nextWordArray.splice(index, 1);
         }
         else{
-            return false
+            return false;
         }
-    })
+    }
     return nextWordArray.length === 0;
 }

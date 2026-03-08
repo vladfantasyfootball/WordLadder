@@ -37,7 +37,18 @@ export class Play extends Component {
 
     onPress = async (level) => {
         if (level.toLowerCase() === "one" || level.toLowerCase() === "two") {
-            const validWord = await validateWord(this.state.nextWord.toLowerCase())
+            const currentWord = this.state.nextWord.toLowerCase();
+            const startingWord = this.props.wordLadder[level.toLowerCase()].startingWord.toLowerCase();
+            const expectedLength = startingWord.length;
+            
+            // Check word length first (fast check)
+            if (currentWord.length !== expectedLength) {
+                Alert.alert('', `Word must be ${expectedLength} letters long.`);
+                this.setState({ nextWord: '' });
+                return;
+            }
+            
+            const validWord = await validateWord(currentWord)
             if (validWord) {
                 if (validateLevelOneWord(this.state.ladderWords.length > 1 ?
                     this.state.ladderWords[this.state.ladderWords.length - 1].toLowerCase() :
@@ -56,10 +67,10 @@ export class Play extends Component {
                             newUser.wordLadder[level.toLowerCase()].lastSolved = newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle;
                             let timeTaken = Math.round(Math.abs(((newUser.wordLadder[level.toLowerCase()].timeFinished - newUser.wordLadder[level.toLowerCase()].timeStarted)) / 1000));
     
-                            const timeBonus = 180 - timeTaken > 0 ? 180 - timeTaken : 0;
-                            const completionBonus = completionBonusMap[level.toLowerCase()];
-                            const wordBonus = Math.floor(200 - this.state.ladderWords.length * 10) > 0 ? Math.floor(180 - this.state.ladderWords.length * 10) : 0;
-                            const totalRoundScore = timeBonus + completionBonus + wordBonus;
+                        const timeBonus = 180 - timeTaken > 0 ? 180 - timeTaken : 0;
+                        const completionBonus = completionBonusMap[level.toLowerCase()];
+                        const wordBonus = Math.floor(180 - this.state.ladderWords.length * 10) > 0 ? Math.floor(180 - this.state.ladderWords.length * 10) : 0;
+                        const totalRoundScore = timeBonus + completionBonus + wordBonus;
                             newUser.wordLadder[level.toLowerCase()].totalScore = newUser.wordLadder[level.toLowerCase()].totalScore + totalRoundScore;
                             if(totalRoundScore > newUser.wordLadder[level.toLowerCase()].highScore){
                                 newUser.wordLadder[level.toLowerCase()].highScore = totalRoundScore;
@@ -99,10 +110,10 @@ export class Play extends Component {
                                     newUser.wordLadder[level.toLowerCase()].lastSolved = newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle;
                                     let timeTaken = Math.round(Math.abs(((newUser.wordLadder[level.toLowerCase()].timeFinished - newUser.wordLadder[level.toLowerCase()].timeStarted)) / 1000));
     
-                                    const timeBonus = 180 - timeTaken > 0 ? 180 - timeTaken : 0;
-                                    const completionBonus = completionBonusMap[level.toLowerCase()];
-                                    const wordBonus = Math.floor(200 - this.state.ladderWords.length * 10) > 0 ? Math.floor(180 - this.state.ladderWords.length * 10) : 0;
-                                    const totalRoundScore = timeBonus + completionBonus + wordBonus;
+                                const timeBonus = 180 - timeTaken > 0 ? 180 - timeTaken : 0;
+                                const completionBonus = completionBonusMap[level.toLowerCase()];
+                                const wordBonus = Math.floor(180 - this.state.ladderWords.length * 10) > 0 ? Math.floor(180 - this.state.ladderWords.length * 10) : 0;
+                                const totalRoundScore = timeBonus + completionBonus + wordBonus;
                                     newUser.wordLadder[level.toLowerCase()].totalScore = newUser.wordLadder[level.toLowerCase()].totalScore + totalRoundScore;
                                     if(totalRoundScore > newUser.wordLadder[level.toLowerCase()].highScore){
                                         newUser.wordLadder[level.toLowerCase()].highScore = totalRoundScore;
