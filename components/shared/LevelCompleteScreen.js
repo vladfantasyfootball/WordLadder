@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share, Alert } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share, Alert, Linking } from 'react-native'
 import { useSelector, useDispatch } from 'react-redux';
 import { levelColorScheme } from '../../redux/constants/colorScheme';
 import LadderStepWord from './LadderStepWord';
 import * as Animatable from 'react-native-animatable';
-import { registerForPushNotificationsAsync } from '../../utils/notifications';
+import { registerForPushNotificationsAsync, checkNotificationPermissions } from '../../utils/notifications';
 import { updateUser } from '../../redux/actions';
 import { getAuth } from 'firebase/auth';
 
@@ -106,6 +106,7 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
 
     const enableNotifications = async () => {
         try {
+            const hasPermission = await checkNotificationPermissions();
             const token = await registerForPushNotificationsAsync();
             
             if (token) {
@@ -126,12 +127,25 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                     "You'll receive a daily reminder if you haven't played today's puzzle!"
                 );
             } else {
-                // Permission denied or failed
+                // Permission denied/blocked or token retrieval failed
                 Alert.alert(
                     "Notifications Blocked",
-                    "Please enable notifications in Settings to receive daily puzzle reminders.",
+                    hasPermission
+                        ? "Failed to register for notifications right now. Please try again from the Profile page."
+                        : "Please enable notifications in Settings to receive daily puzzle reminders.",
                     [
-                        { text: "OK", onPress: async () => await markAsAsked() }
+                        {
+                            text: "Cancel",
+                            style: "cancel",
+                            onPress: async () => await markAsAsked()
+                        },
+                        {
+                            text: "Open Settings",
+                            onPress: async () => {
+                                await Linking.openSettings();
+                                await markAsAsked();
+                            }
+                        }
                     ]
                 );
             }
