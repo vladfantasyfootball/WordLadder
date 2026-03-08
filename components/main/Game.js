@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { updateUser } from '../../redux/actions';
 import {RewardedInterstitialAd, TestIds, RewardedAdEventType, AdEventType} from 'react-native-google-mobile-ads'
 import * as StatusBar from 'expo-status-bar';
+import { getAuth } from 'firebase/auth';
 
 const rewardedInterstitialAd = RewardedInterstitialAd.createForAdRequest(TestIds.REWARDED_INTERSTITIAL, {
     requestNonPersonalizedAdsOnly: true
@@ -61,7 +62,7 @@ export default function Game({ navigation, level, route }) {
                         adWatched: true,
                         dateWatched: new Date().toLocaleString().split(',')[0]
                     }
-                }
+                }, getAuth()
             ))
         }
     },[adWatched])

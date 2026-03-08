@@ -17,7 +17,7 @@ export class MainScreen extends Component {
     componentDidMount() {
         const auth = getAuth()
         this.props.fetchUser(auth);
-        this.props.getWordLadder();
+        this.props.getWordLadder(auth);
     }
 
     render() {

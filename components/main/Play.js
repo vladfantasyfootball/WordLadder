@@ -9,6 +9,7 @@ import FlatButton from '../shared/button';
 import { validateWord, validateLevelOneWord, validateExtraLevelTwoRule } from '../../utils/validations';
 import LevelCompleteScreen, { completionBonusMap } from '../shared/LevelCompleteScreen';
 import CustomKeyboard from '../shared/CustomKeyboard';
+import { getAuth } from 'firebase/auth';
 
 export class Play extends Component {
     constructor(props) {
@@ -65,7 +66,7 @@ export class Play extends Component {
                             }
     
                             this.props.updateUser(
-                                this.props.currentUser.id, newUser
+                                this.props.currentUser.id, newUser, getAuth()
                             )
                         })
                     }
@@ -74,7 +75,7 @@ export class Play extends Component {
                             const newUser = JSON.parse(JSON.stringify(this.props.currentUser))
                             newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentAttempt = this.state.ladderWords;
                             this.props.updateUser(
-                                this.props.currentUser.id, newUser
+                                this.props.currentUser.id, newUser, getAuth()
                             )
                         })
                     }
@@ -107,7 +108,7 @@ export class Play extends Component {
                                         newUser.wordLadder[level.toLowerCase()].highScore = totalRoundScore;
                                     }
                                     this.props.updateUser(
-                                        this.props.currentUser.id, newUser
+                                        this.props.currentUser.id, newUser, getAuth()
                                     )
                                 })
                             }
@@ -116,7 +117,7 @@ export class Play extends Component {
                                     const newUser = JSON.parse(JSON.stringify(this.props.currentUser))
                                     newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentAttempt = this.state.ladderWords;
                                     this.props.updateUser(
-                                        this.props.currentUser.id, newUser
+                                        this.props.currentUser.id, newUser, getAuth()
                                     )
                                 })
                             }
@@ -205,14 +206,14 @@ export class Play extends Component {
                 this.setState({ ladderWords: [this.props.wordLadder[level].startingWord]}, () => {
                     newUser.wordLadder[level].currentWordLadder.currentAttempt = [this.props.wordLadder[level].startingWord];
                     this.props.updateUser(
-                        this.props.currentUser.id, newUser
+                        this.props.currentUser.id, newUser, getAuth()
                     )
                 })
             }
         } else {
             // Update user even if ladderWords already exist (to set timeStarted and currentPuzzle)
             this.props.updateUser(
-                this.props.currentUser.id, newUser
+                this.props.currentUser.id, newUser, getAuth()
             )
         }
     }
