@@ -35,7 +35,14 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
     } else {
         timeFormattedTimeTaken =  new Date(timeTaken * 1000).toISOString().substr(11, 8);
     }
-    const timeBonus = Math.max(0, 180 - timeTaken);
+    
+    // Time bonus: Start at 100 points, lose 5 points for every 30 seconds after 1 minute
+    let timeBonus = 100;
+    if (timeTaken > 60) {
+        const secondsOver = timeTaken - 60;
+        const thirtySecondIntervals = Math.floor(secondsOver / 30);
+        timeBonus = Math.max(0, 100 - (thirtySecondIntervals * 5));
+    }
     const completionBonus = completionBonusMap[level.toLowerCase()];
     const shortestLength = shortestSolution.length;
     const userLength = completeLadder.length;

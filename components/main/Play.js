@@ -68,7 +68,13 @@ export class Play extends Component {
                             newUser.wordLadder[level.toLowerCase()].lastSolved = newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle;
                             let timeTaken = Math.round((newUser.wordLadder[level.toLowerCase()].timeFinished - newUser.wordLadder[level.toLowerCase()].timeStarted) / 1000);
 
-                        const timeBonus = 180 - timeTaken > 0 ? 180 - timeTaken : 0;
+                        // Time bonus: Start at 100 points, lose 5 points for every 30 seconds after 1 minute
+                        let timeBonus = 100;
+                        if (timeTaken > 60) {
+                            const secondsOver = timeTaken - 60;
+                            const thirtySecondIntervals = Math.floor(secondsOver / 30);
+                            timeBonus = Math.max(0, 100 - (thirtySecondIntervals * 5));
+                        }
                         const completionBonus = completionBonusMap[level.toLowerCase()];
                         const shortestLength = this.props.wordLadder[level.toLowerCase()].shortestSolution.length;
                         const userLength = this.state.ladderWords.length;
@@ -113,7 +119,13 @@ export class Play extends Component {
                                     newUser.wordLadder[level.toLowerCase()].lastSolved = newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle;
                                     let timeTaken = Math.round((newUser.wordLadder[level.toLowerCase()].timeFinished - newUser.wordLadder[level.toLowerCase()].timeStarted) / 1000);
 
-                                const timeBonus = 180 - timeTaken > 0 ? 180 - timeTaken : 0;
+                                // Time bonus: Start at 100 points, lose 5 points for every 30 seconds after 1 minute
+                                let timeBonus = 100;
+                                if (timeTaken > 60) {
+                                    const secondsOver = timeTaken - 60;
+                                    const thirtySecondIntervals = Math.floor(secondsOver / 30);
+                                    timeBonus = Math.max(0, 100 - (thirtySecondIntervals * 5));
+                                }
                                 const completionBonus = completionBonusMap[level.toLowerCase()];
                                 const shortestLength = this.props.wordLadder[level.toLowerCase()].shortestSolution.length;
                                 const userLength = this.state.ladderWords.length;
