@@ -40,8 +40,20 @@
           }
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/WL.png",
+          "color": "#ffffff",
+          "sounds": []
+        }
+      ]
     ],
+    "notification": {
+      "icon": "./assets/WL.png",
+      "color": "#ffffff"
+    },
     "android": {
       "googleServicesFile": "./google-services.json",
       "package": "com.vlad.wordLadderAndroid",
