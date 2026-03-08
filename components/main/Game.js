@@ -79,9 +79,20 @@ export default function Game({ navigation, level, route }) {
         }
         const unsubscribeRewardedInterstitial = loadRewardedInterstitial()
 
+        // Listen for navigation events to show rules
+        const unsubscribeFocus = navigation.addListener('focus', () => {
+            if (route.params?.showRules) {
+                setHowToOpen(route.params.level);
+                // Clear the param after handling
+                navigation.setParams({ showRules: undefined });
+            }
+        });
 
-        return unsubscribeRewardedInterstitial
-    },[currentUser])
+        return () => {
+            unsubscribeRewardedInterstitial();
+            unsubscribeFocus();
+        }
+    },[currentUser, navigation, route.params])
 
     const onPressPlay = ( level ) => {
         if(level.toLowerCase() === "two" && !adWatched){
@@ -89,7 +100,7 @@ export default function Game({ navigation, level, route }) {
         } else {
             navigation.navigate('Play', {
                 level,
-                onShowRules: () => setHowToOpen(level)
+                parentScreen: 'Game'
             });
         }
     }

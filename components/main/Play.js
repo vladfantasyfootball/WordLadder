@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import { SafeAreaView, View, Text, StyleSheet, Platform, ScrollView, Alert } from 'react-native'
+import { View, Text, StyleSheet, Platform, ScrollView, Alert } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { levelColorScheme } from '../../redux/constants/colorScheme';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
@@ -143,10 +144,11 @@ export class Play extends Component {
                                 [
                                     { text: 'OK', style: 'cancel' },
                                     { text: 'View Rules', onPress: () => {
-                                        this.props.navigation.goBack();
-                                        setTimeout(() => {
-                                            this.props.route.params?.onShowRules?.();
-                                        }, 100);
+                                        const level = this.props.route.params.level;
+                                        this.props.navigation.navigate('Game', {
+                                            level,
+                                            showRules: true
+                                        });
                                     }}
                                 ]
                             )
@@ -158,10 +160,11 @@ export class Play extends Component {
                             [
                                 { text: 'OK', style: 'cancel' },
                                 { text: 'View Rules', onPress: () => {
-                                    this.props.navigation.goBack();
-                                    setTimeout(() => {
-                                        this.props.route.params?.onShowRules?.();
-                                    }, 100);
+                                    const level = this.props.route.params.level;
+                                    this.props.navigation.navigate('Game', {
+                                        level,
+                                        showRules: true
+                                    });
                                 }}
                             ]
                         )
