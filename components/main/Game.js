@@ -56,11 +56,13 @@ export default function Game({ navigation, level, route }) {
 
     useEffect(() => {
         if(currentUser && adWatched){
+            // Use UTC date format (YYYY-MM-DD) for consistent timezone handling
+            const currentUTCDate = new Date().toISOString().split('T')[0];
             dispatch(updateUser(
                 currentUser.id, {...currentUser, 
                     ad: {
                         adWatched: true,
-                        dateWatched: new Date().toLocaleString().split(',')[0]
+                        dateWatched: currentUTCDate
                     }
                 }, getAuth()
             ))
@@ -69,7 +71,9 @@ export default function Game({ navigation, level, route }) {
     
     useEffect(() => {
         if(currentUser){
-            if(currentUser?.ad?.dateWatched === new Date().toLocaleString().split(',')[0] && currentUser?.ad?.adWatched){
+            // Use UTC date format (YYYY-MM-DD) for consistent timezone handling
+            const currentUTCDate = new Date().toISOString().split('T')[0];
+            if(currentUser?.ad?.dateWatched === currentUTCDate && currentUser?.ad?.adWatched){
                 setAdWatched(true)
             }
         }
