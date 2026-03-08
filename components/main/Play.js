@@ -145,9 +145,10 @@ export class Play extends Component {
                                     { text: 'OK', style: 'cancel' },
                                     { text: 'View Rules', onPress: () => {
                                         const level = this.props.route.params.level;
-                                        this.props.navigation.navigate('Game', {
-                                            level,
-                                            showRules: true
+                                        const screenName = level === 'One' ? 'Level One' : 'Level Two';
+                                        this.props.navigation.navigate('Word Ladder', {
+                                            screen: screenName,
+                                            params: { showRules: true, level }
                                         });
                                     }}
                                 ]
@@ -161,9 +162,10 @@ export class Play extends Component {
                                 { text: 'OK', style: 'cancel' },
                                 { text: 'View Rules', onPress: () => {
                                     const level = this.props.route.params.level;
-                                    this.props.navigation.navigate('Game', {
-                                        level,
-                                        showRules: true
+                                    const screenName = level === 'One' ? 'Level One' : 'Level Two';
+                                    this.props.navigation.navigate('Word Ladder', {
+                                        screen: screenName,
+                                        params: { showRules: true, level }
                                     });
                                 }}
                             ]
@@ -240,7 +242,7 @@ export class Play extends Component {
         const { route, wordLadder } = this.props;
         const level = route.params.level;
         return (
-            <SafeAreaView style={[styles.container, { backgroundColor: levelColorScheme[level] }]}>
+            <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: levelColorScheme[level] }]}>
                 {this.state.gameCompleted &&
                     <View>
                         <LevelCompleteScreen 

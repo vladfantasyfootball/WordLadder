@@ -99,8 +99,7 @@ export default function Game({ navigation, level, route }) {
             rewardedInterstitialAd.show().then(() => {StatusBar.setStatusBarHidden(true)});
         } else {
             navigation.navigate('Play', {
-                level,
-                parentScreen: 'Game'
+                level
             });
         }
     }
