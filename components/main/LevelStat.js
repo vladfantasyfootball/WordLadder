@@ -3,6 +3,7 @@ import { View, StyleSheet, Text, ScrollView } from 'react-native'
 import { levelColorScheme } from '../../redux/constants/colorScheme';
 import { useSelector } from 'react-redux';
 import * as Animatable from 'react-native-animatable';
+import { useIsFocused } from '@react-navigation/native';
 
 const RANKS = [
     { label: 'Novice',     minScore: 0,    minStreak: 0,  color: '#9E9E9E', emoji: '📖' },
@@ -31,14 +32,14 @@ function getNextRank(totalScore, currentStreak) {
     return { ...next, needsScore, needsStreak };
 }
 
-function AnimatedNumber({ value, style }) {
+function AnimatedNumber({ value, style, trigger }) {
     const [displayed, setDisplayed] = useState(0);
     const rafRef = useRef(null);
 
     useEffect(() => {
-        const duration = 1000;
+        setDisplayed(0);
+        const duration = 2000;
         const start = Date.now();
-        const from = 0;
         const to = value;
 
         const tick = () => {
@@ -46,24 +47,25 @@ function AnimatedNumber({ value, style }) {
             const progress = Math.min(elapsed / duration, 1);
             // ease-out
             const eased = 1 - Math.pow(1 - progress, 3);
-            setDisplayed(Math.round(from + (to - from) * eased));
+            setDisplayed(Math.round(to * eased));
             if (progress < 1) {
                 rafRef.current = requestAnimationFrame(tick);
             }
         };
+        cancelAnimationFrame(rafRef.current);
         rafRef.current = requestAnimationFrame(tick);
         return () => cancelAnimationFrame(rafRef.current);
-    }, [value]);
+    }, [value, trigger]);
 
     return <Text style={style}>{displayed}</Text>;
 }
 
-function StatCard({ icon, label, value, delay, accentColor }) {
+function StatCard({ icon, label, value, delay, accentColor, trigger }) {
     return (
-        <Animatable.View animation="fadeInUp" duration={500} delay={delay} style={styles.card}>
+        <Animatable.View animation="fadeInUp" duration={600} delay={delay} style={styles.card}>
             <Text style={styles.cardIcon}>{icon}</Text>
             <Text style={styles.cardLabel}>{label}</Text>
-            <AnimatedNumber value={value} style={[styles.cardValue, { color: accentColor }]} />
+            <AnimatedNumber value={value} trigger={trigger} style={[styles.cardValue, { color: accentColor }]} />
         </Animatable.View>
     );
 }
@@ -71,6 +73,14 @@ function StatCard({ icon, label, value, delay, accentColor }) {
 export default function LevelStat({ navigation, level }) {
     const currentUser = useSelector((state) => state.userState.currentUser);
     const levelData = currentUser?.wordLadder[level.toLowerCase()];
+    const isFocused = useIsFocused();
+    const [animKey, setAnimKey] = useState(0);
+
+    useEffect(() => {
+        if (isFocused) {
+            setAnimKey(k => k + 1);
+        }
+    }, [isFocused]);
 
     const currentStreak = levelData?.currentStreak ?? 0;
     const longestStreak = levelData?.longestStreak ?? 0;
@@ -87,7 +97,7 @@ export default function LevelStat({ navigation, level }) {
         <ScrollView contentContainerStyle={[styles.container, { backgroundColor: bgColor }]}>
 
             {/* Rank Badge */}
-            <Animatable.View animation="bounceIn" duration={800} delay={100} style={[styles.rankBadge, { borderColor: rank.color }]}>
+            <Animatable.View key={animKey} animation="bounceIn" duration={800} delay={100} style={[styles.rankBadge, { borderColor: rank.color }]}>
                 <Text style={styles.rankEmoji}>{rank.emoji}</Text>
                 <Text style={[styles.rankLabel, { color: rank.color }]}>{rank.label}</Text>
                 {nextRank && (
@@ -108,6 +118,7 @@ export default function LevelStat({ navigation, level }) {
                     value={currentStreak}
                     delay={150}
                     accentColor="#E65100"
+                    trigger={animKey}
                 />
                 <StatCard
                     icon="🏅"
@@ -115,6 +126,7 @@ export default function LevelStat({ navigation, level }) {
                     value={longestStreak}
                     delay={250}
                     accentColor="#1565C0"
+                    trigger={animKey}
                 />
             </View>
 
@@ -126,6 +138,7 @@ export default function LevelStat({ navigation, level }) {
                     value={totalScore}
                     delay={350}
                     accentColor="#2E7D32"
+                    trigger={animKey}
                 />
                 <StatCard
                     icon="🏆"
@@ -133,6 +146,7 @@ export default function LevelStat({ navigation, level }) {
                     value={highScore}
                     delay={450}
                     accentColor="#6A1B9A"
+                    trigger={animKey}
                 />
             </View>
 
