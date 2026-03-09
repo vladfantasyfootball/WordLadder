@@ -16,18 +16,11 @@ function ProfilePage({ navigation, level, currentUser, updateUser }) {
         if (currentUser?.notifications) {
             setNotificationsEnabled(currentUser.notifications.enabled || false);
         }
-        
-        // Temporary: Log Firebase token for testing notifications
-        auth.currentUser?.getIdToken().then(token => {
-            console.log('=== FIREBASE TOKEN FOR TESTING ===');
-            console.log(token);
-            console.log('==================================');
-        });
     }, [currentUser]);
 
     const logoutFunction = async () => {
         await auth.signOut().catch((e) => {
-            console.log(e)
+            console.error('Error signing out:', e)
         })
     }
 
