@@ -68,7 +68,6 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
         if (isNewHighScore) phases.push(1);
         if (streakIncreased) phases.push(2);
         phases.push(3); // total score delta always shown
-        phases.push(4); // done — show share button
 
         let i = 0;
         // Start first phase after score animations finish
@@ -82,11 +81,11 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                     if (deltaRef.current) {
                         deltaRef.current.animate({ 0: { opacity: 1 }, 1: { opacity: 0 } }, 400).then(() => {
                             setDeltaPhase(phases[i]);
-                            if (phases[i] !== 4) cycle();
+                            if (i < phases.length - 1) cycle();
                         });
                     } else {
                         setDeltaPhase(phases[i]);
-                        if (phases[i] !== 4) cycle();
+                        if (i < phases.length - 1) cycle();
                     }
                 }, 2000); // each card visible for 2s
             };
@@ -339,6 +338,21 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                 </View>
             </View>
 
+            {/* Share Button — always visible after score animations */}
+            <Animatable.View 
+                animation="bounceIn" 
+                duration={1500} 
+                delay={4000}
+                style={styles.shareButtonContainer}
+            >
+                <TouchableOpacity 
+                    style={styles.shareButton}
+                    onPress={handleShare}
+                >
+                    <Text style={styles.shareButtonText}>Share with Friends</Text>
+                </TouchableOpacity>
+            </Animatable.View>
+
             {/* Stat Delta Carousel — cycles through high score, streak, total score */}
             {prevStats != null && (
                 <View style={{ width: '100%', alignItems: 'center', marginTop: 4, minHeight: 52, justifyContent: 'center' }}>
@@ -383,23 +397,6 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                         </Animatable.View>
                     )}
                 </View>
-            )}
-
-            {/* Share Button — shown immediately if no prevStats, else after carousel finishes */}
-            {(prevStats == null || deltaPhase === 4) && (
-            <Animatable.View 
-                animation="bounceIn" 
-                duration={1500} 
-                delay={prevStats == null ? 4000 : 0}
-                style={styles.shareButtonContainer}
-            >
-                <TouchableOpacity 
-                    style={styles.shareButton}
-                    onPress={handleShare}
-                >
-                    <Text style={styles.shareButtonText}>Share with Friends</Text>
-                </TouchableOpacity>
-            </Animatable.View>
             )}
         </View>
     )
