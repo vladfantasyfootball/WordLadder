@@ -93,11 +93,14 @@ export default function LevelStat({ navigation, level }) {
     const totalSolved = levelData?.totalSolved ?? 0;
     const winRate = totalAttempted > 0 ? Math.round((totalSolved / totalAttempted) * 100) : 0;
 
-    // Color scale: 0% = icy blue, 60% = yellow, 100% = green
+    // Color scale: 0-30% = icy blue, 30-60% = yellow, 60-100% = green
     const getWinRateColor = (pct) => {
-        if (pct <= 60) {
+        if (pct <= 30) {
+            // Icy blue (#64B5F6) — flat
+            return `rgb(100,181,246)`;
+        } else if (pct <= 60) {
             // Icy blue (#64B5F6) → Yellow (#FFC107)
-            const t = pct / 60;
+            const t = (pct - 30) / 30;
             const r = Math.round(100 + (255 - 100) * t);
             const g = Math.round(181 + (193 - 181) * t);
             const b = Math.round(246 + (7 - 246) * t);
