@@ -70,9 +70,8 @@ export class Play extends Component {
                                 newUser.wordLadder[level.toLowerCase()].longestStreak = newUser.wordLadder[level.toLowerCase()].currentStreak
                             }
                             newUser.wordLadder[level.toLowerCase()].lastSolved = newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle;
+                            newUser.wordLadder[level.toLowerCase()].totalSolved = (newUser.wordLadder[level.toLowerCase()].totalSolved || 0) + 1;
                             let timeTaken = Math.round((newUser.wordLadder[level.toLowerCase()].timeFinished - newUser.wordLadder[level.toLowerCase()].timeStarted) / 1000);
-
-                        // Time bonus: Start at 100 points, lose 5 points for every 30 seconds after 1 minute
                         let timeBonus = 100;
                         if (timeTaken > 60) {
                             const secondsOver = timeTaken - 60;
@@ -122,6 +121,7 @@ export class Play extends Component {
                                         newUser.wordLadder[level.toLowerCase()].longestStreak = newUser.wordLadder[level.toLowerCase()].currentStreak
                                     }
                                     newUser.wordLadder[level.toLowerCase()].lastSolved = newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle;
+                                    newUser.wordLadder[level.toLowerCase()].totalSolved = (newUser.wordLadder[level.toLowerCase()].totalSolved || 0) + 1;
                                     let timeTaken = Math.round((newUser.wordLadder[level.toLowerCase()].timeFinished - newUser.wordLadder[level.toLowerCase()].timeStarted) / 1000);
 
                                 // Time bonus: Start at 100 points, lose 5 points for every 30 seconds after 1 minute
@@ -223,6 +223,8 @@ export class Play extends Component {
         // Set timeStarted when user opens puzzle for the first time
         if (!newUser.wordLadder[level].timeStarted) {
             newUser.wordLadder[level].timeStarted = Date.now();
+            // Increment totalAttempted on first open of each new puzzle
+            newUser.wordLadder[level].totalAttempted = (newUser.wordLadder[level].totalAttempted || 0) + 1;
         }
         
         // Set currentPuzzle ID when puzzle is first loaded

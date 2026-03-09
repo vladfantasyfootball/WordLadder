@@ -60,12 +60,15 @@ function AnimatedNumber({ value, style, trigger }) {
     return <Text style={style}>{displayed}</Text>;
 }
 
-function StatCard({ icon, label, value, delay, accentColor, trigger }) {
+function StatCard({ icon, label, value, delay, accentColor, trigger, suffix }) {
     return (
         <Animatable.View animation="fadeInUp" duration={600} delay={delay} style={styles.card}>
             <Text style={styles.cardIcon}>{icon}</Text>
             <Text style={styles.cardLabel}>{label}</Text>
-            <AnimatedNumber value={value} trigger={trigger} style={[styles.cardValue, { color: accentColor }]} />
+            <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+                <AnimatedNumber value={value} trigger={trigger} style={[styles.cardValue, { color: accentColor }]} />
+                {suffix && <Text style={[styles.cardValue, { color: accentColor, fontSize: 24, paddingBottom: 3 }]}>{suffix}</Text>}
+            </View>
         </Animatable.View>
     );
 }
@@ -86,6 +89,9 @@ export default function LevelStat({ navigation, level }) {
     const longestStreak = levelData?.longestStreak ?? 0;
     const totalScore = levelData?.totalScore ?? 0;
     const highScore = levelData?.highScore ?? 0;
+    const totalAttempted = levelData?.totalAttempted ?? 0;
+    const totalSolved = levelData?.totalSolved ?? 0;
+    const winRate = totalAttempted > 0 ? Math.round((totalSolved / totalAttempted) * 100) : 0;
 
     const rank = getRank(totalScore, currentStreak);
     const nextRank = getNextRank(totalScore, currentStreak);
@@ -146,6 +152,27 @@ export default function LevelStat({ navigation, level }) {
                     value={highScore}
                     delay={450}
                     accentColor="#6A1B9A"
+                    trigger={animKey}
+                />
+            </View>
+
+            {/* Win Rate */}
+            <View style={styles.row}>
+                <StatCard
+                    icon="🎯"
+                    label="Win Rate"
+                    value={winRate}
+                    delay={550}
+                    accentColor="#C62828"
+                    trigger={animKey}
+                    suffix="%"
+                />
+                <StatCard
+                    icon="🗓️"
+                    label="Puzzles Played"
+                    value={totalAttempted}
+                    delay={650}
+                    accentColor="#00695C"
                     trigger={animKey}
                 />
             </View>
