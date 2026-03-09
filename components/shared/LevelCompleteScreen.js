@@ -57,6 +57,45 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
     
     const displayLadder = showShortest ? shortestSolution : completeLadder;
 
+    // Sequenced stat delta carousel: 0=hidden, 1=highScore, 2=streak, 3=totalScore, 4=done(show share)
+    const [deltaPhase, setDeltaPhase] = useState(0);
+    const deltaRef = React.useRef(null);
+
+    useEffect(() => {
+        if (prevStats == null) return;
+        // Build the sequence of phases that have content
+        const phases = [];
+        if (isNewHighScore) phases.push(1);
+        if (streakIncreased) phases.push(2);
+        phases.push(3); // total score delta always shown
+        phases.push(4); // done — show share button
+
+        let i = 0;
+        // Start first phase after score animations finish
+        const firstDelay = setTimeout(() => {
+            setDeltaPhase(phases[i]);
+            const cycle = () => {
+                i++;
+                if (i >= phases.length) return;
+                // Fade out current, then switch to next
+                setTimeout(() => {
+                    if (deltaRef.current) {
+                        deltaRef.current.animate({ 0: { opacity: 1 }, 1: { opacity: 0 } }, 400).then(() => {
+                            setDeltaPhase(phases[i]);
+                            if (phases[i] !== 4) cycle();
+                        });
+                    } else {
+                        setDeltaPhase(phases[i]);
+                        if (phases[i] !== 4) cycle();
+                    }
+                }, 2000); // each card visible for 2s
+            };
+            if (phases.length > 1) cycle();
+        }, 4000);
+
+        return () => clearTimeout(firstDelay);
+    }, []);
+
     // Check if user hasn't been asked about notifications yet
     useEffect(() => {
         const hasBeenAsked = currentUser?.notifications?.hasBeenAskedForNotifications;
@@ -300,28 +339,26 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                 </View>
             </View>
 
-            {/* Stat Deltas — only shown on fresh completion */}
+            {/* Stat Delta Carousel — cycles through high score, streak, total score */}
             {prevStats != null && (
-                <View style={{ width: '100%', alignItems: 'center', marginTop: 4, gap: 6 }}>
-
-                    {/* New High Score Banner */}
-                    {isNewHighScore && (
+                <View style={{ width: '100%', alignItems: 'center', marginTop: 4, minHeight: 52, justifyContent: 'center' }}>
+                    {deltaPhase === 1 && (
                         <Animatable.View
+                            ref={deltaRef}
+                            key="highscore"
                             animation="bounceIn"
-                            duration={1000}
-                            delay={4200}
+                            duration={700}
                             style={styles.highScoreBanner}
                         >
                             <Text style={styles.highScoreBannerText}>🏆 New High Score!</Text>
                         </Animatable.View>
                     )}
-
-                    {/* Streak increase */}
-                    {streakIncreased && (
+                    {deltaPhase === 2 && (
                         <Animatable.View
+                            ref={deltaRef}
+                            key="streak"
                             animation="fadeInUp"
-                            duration={600}
-                            delay={4400}
+                            duration={500}
                             style={styles.statDeltaRow}
                         >
                             <Text style={styles.statDeltaText}>
@@ -329,29 +366,31 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                             </Text>
                         </Animatable.View>
                     )}
-
-                    {/* Total score delta */}
-                    <Animatable.View
-                        animation="fadeInUp"
-                        duration={600}
-                        delay={4600}
-                        style={styles.statDeltaRow}
-                    >
-                        <Text style={styles.statDeltaText}>
-                            {'Total Score: '}{prevStats.totalScore}{' → '}
-                            <Text style={{ color: '#34C759', fontWeight: '800' }}>{newTotalScore}</Text>
-                            {'  '}
-                            <Text style={{ color: '#34C759', fontWeight: '700' }}>(+{totalScore})</Text>
-                        </Text>
-                    </Animatable.View>
+                    {deltaPhase === 3 && (
+                        <Animatable.View
+                            ref={deltaRef}
+                            key="totalscore"
+                            animation="fadeInUp"
+                            duration={500}
+                            style={styles.statDeltaRow}
+                        >
+                            <Text style={styles.statDeltaText}>
+                                {'Total Score: '}{prevStats.totalScore}{' → '}
+                                <Text style={{ color: '#34C759', fontWeight: '800' }}>{newTotalScore}</Text>
+                                {'  '}
+                                <Text style={{ color: '#34C759', fontWeight: '700' }}>(+{totalScore})</Text>
+                            </Text>
+                        </Animatable.View>
+                    )}
                 </View>
             )}
-            
-            {/* Share Button */}
+
+            {/* Share Button — shown immediately if no prevStats, else after carousel finishes */}
+            {(prevStats == null || deltaPhase === 4) && (
             <Animatable.View 
                 animation="bounceIn" 
                 duration={1500} 
-                delay={prevStats != null ? 5000 : 4000}
+                delay={prevStats == null ? 4000 : 0}
                 style={styles.shareButtonContainer}
             >
                 <TouchableOpacity 
@@ -361,6 +400,7 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                     <Text style={styles.shareButtonText}>Share with Friends</Text>
                 </TouchableOpacity>
             </Animatable.View>
+            )}
         </View>
     )
 }
