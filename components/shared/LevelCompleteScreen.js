@@ -189,7 +189,7 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
     return (
         <View>
             <Animatable.View style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }} animation="bounceInLeft" duration={2000}>
-                <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 20, fontSize: 24 }}>
+                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingTop: 10, paddingBottom: 6, fontSize: 24 }}>
                     {`Congratulations!`}
                 </Text>
             </Animatable.View>
@@ -302,7 +302,7 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
 
             {/* Stat Deltas — only shown on fresh completion */}
             {prevStats != null && (
-                <View style={{ width: '100%', alignItems: 'center', marginTop: 8, gap: 8 }}>
+                <View style={{ width: '100%', alignItems: 'center', marginTop: 4, gap: 6 }}>
 
                     {/* New High Score Banner */}
                     {isNewHighScore && (
@@ -422,9 +422,9 @@ const styles = StyleSheet.create({
         color: '#000',
     },
     shareButtonContainer: {
-        marginTop: 20,
+        marginTop: 10,
         marginHorizontal: 20,
-        marginBottom: 10,
+        marginBottom: 30,
     },
     shareButton: {
         backgroundColor: '#34C759',
