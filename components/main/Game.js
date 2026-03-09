@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { View, StyleSheet, Text, ScrollView} from 'react-native'
 import FlatButton from '../shared/button';
 import { levelColorScheme } from '../../redux/constants/colorScheme';
@@ -103,19 +103,14 @@ export default function Game({ navigation, level, route }) {
         setHowToOpen(level)
     }
     
-    const getButtonText = (level) => {
+    const buttonText = useMemo(() => {
         const levelData = currentUser?.wordLadder[level.toLowerCase()];
         const isCompleted = levelData?.currentWordLadder?.completed;
         const hasStarted = levelData?.currentWordLadder?.currentAttempt?.length > 1;
-        
-        if (isCompleted) {
-            return 'View Solution';
-        }
-        if (hasStarted) {
-            return `Resume Level ${level}`;
-        }
+        if (isCompleted) return 'View Solution';
+        if (hasStarted) return `Resume Level ${level}`;
         return `Play Level ${level}`;
-    }
+    }, [currentUser, level]);
 
     const determineLevelDisabled = (level) => {
         if(level.toLowerCase() === "two"){
@@ -184,7 +179,7 @@ export default function Game({ navigation, level, route }) {
                         </ScrollView>
                     : 
                         <>
-                            <FlatButton text={getButtonText(level)} onPress={() => {onPressPlay(level)}} width='60' disabled={determineLevelDisabled(level)}/>
+                            <FlatButton text={buttonText} onPress={() => {onPressPlay(level)}} width='60' disabled={determineLevelDisabled(level)}/>
                             {/* {level === 'Two' && 
                                 <FlatButton text={`Unlock Level Two`} onPress={onPressUnlock} width='50' disabled={false}/> 
                             } */}
