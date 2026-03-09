@@ -23,7 +23,9 @@ export class Play extends Component {
                 ? this.props.currentUser.wordLadder[this.props.route.params.level.toLowerCase()].timeFinished
                 : null,
             prevStats: null,
-        }
+        };
+        // Prevents mid-game step saves from racing with / overwriting the completion save
+        this._completing = false;
     }
 
     onChangeNextWord = (nextWord) => {
@@ -66,7 +68,8 @@ export class Play extends Component {
                             highScore: this.props.currentUser.wordLadder[level.toLowerCase()].highScore || 0,
                             currentStreak: this.props.currentUser.wordLadder[level.toLowerCase()].currentStreak || 0,
                         };
-                        this.setState({ gameCompleted: true, timeFinished: completionTime, prevStats, ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, () => {
+                        this._completing = true;
+                        this.setState({ gameCompleted: true, timeFinished: completionTime, prevStats, ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, async () => {
                             const newUser = JSON.parse(JSON.stringify(this.props.currentUser))
                             newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentAttempt = this.state.ladderWords;
                             newUser.wordLadder[level.toLowerCase()].timeFinished = completionTime;
@@ -94,13 +97,14 @@ export class Play extends Component {
                                 newUser.wordLadder[level.toLowerCase()].highScore = totalRoundScore;
                             }
     
-                            this.props.updateUser(
+                            await this.props.updateUser(
                                 this.props.currentUser.id, newUser, getAuth()
-                            )
+                            );
                         })
                     }
                     else {
                         this.setState({ ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, () => {
+                            if (this._completing) return;
                             const newUser = JSON.parse(JSON.stringify(this.props.currentUser))
                             newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentAttempt = this.state.ladderWords;
                             this.props.updateUser(
@@ -122,7 +126,8 @@ export class Play extends Component {
                                     highScore: this.props.currentUser.wordLadder[level.toLowerCase()].highScore || 0,
                                     currentStreak: this.props.currentUser.wordLadder[level.toLowerCase()].currentStreak || 0,
                                 };
-                                this.setState({ gameCompleted: true, timeFinished: completionTime, prevStats, ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, () => {
+                                this._completing = true;
+                                this.setState({ gameCompleted: true, timeFinished: completionTime, prevStats, ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, async () => {
                                     const newUser = JSON.parse(JSON.stringify(this.props.currentUser))
                                     newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentAttempt = this.state.ladderWords;
                                     newUser.wordLadder[level.toLowerCase()].timeFinished = completionTime;
@@ -151,13 +156,14 @@ export class Play extends Component {
                                     if(totalRoundScore > newUser.wordLadder[level.toLowerCase()].highScore){
                                         newUser.wordLadder[level.toLowerCase()].highScore = totalRoundScore;
                                     }
-                                    this.props.updateUser(
+                                    await this.props.updateUser(
                                         this.props.currentUser.id, newUser, getAuth()
-                                    )
+                                    );
                                 })
                             }
                             else {
                                 this.setState({ ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, () => {
+                                    if (this._completing) return;
                                     const newUser = JSON.parse(JSON.stringify(this.props.currentUser))
                                     newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentAttempt = this.state.ladderWords;
                                     this.props.updateUser(
