@@ -93,6 +93,26 @@ export default function LevelStat({ navigation, level }) {
     const totalSolved = levelData?.totalSolved ?? 0;
     const winRate = totalAttempted > 0 ? Math.round((totalSolved / totalAttempted) * 100) : 0;
 
+    // Color scale: 0% = blue, 50% = yellow, 100% = green
+    const getWinRateColor = (pct) => {
+        if (pct <= 50) {
+            // Blue (#2196F3) → Yellow (#FFC107)
+            const t = pct / 50;
+            const r = Math.round(33 + (255 - 33) * t);
+            const g = Math.round(150 + (193 - 150) * t);
+            const b = Math.round(243 + (7 - 243) * t);
+            return `rgb(${r},${g},${b})`;
+        } else {
+            // Yellow (#FFC107) → Green (#2E7D32)
+            const t = (pct - 50) / 50;
+            const r = Math.round(255 + (46 - 255) * t);
+            const g = Math.round(193 + (125 - 193) * t);
+            const b = Math.round(7 + (50 - 7) * t);
+            return `rgb(${r},${g},${b})`;
+        }
+    };
+    const winRateColor = getWinRateColor(winRate);
+
     const rank = getRank(totalScore, currentStreak);
     const nextRank = getNextRank(totalScore, currentStreak);
 
@@ -163,7 +183,7 @@ export default function LevelStat({ navigation, level }) {
                     label="Win Rate"
                     value={winRate}
                     delay={550}
-                    accentColor="#C62828"
+                    accentColor={winRateColor}
                     trigger={animKey}
                     suffix="%"
                 />
