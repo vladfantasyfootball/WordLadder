@@ -125,7 +125,11 @@ function App() {
                 <Ionicons name="chevron-back" size={28} color="#000" />
               </TouchableOpacity>
             ) }}}/>
-          <Stack.Screen name="ProfilePage" component={ProfilePage} options={({ route, navigation }) => {return { headerTitleAlign: "center", headerTitle: `Profile`}}}/>
+          <Stack.Screen name="ProfilePage" component={ProfilePage} options={({ route, navigation }) => {return { headerTitleAlign: "center", headerTitle: `Profile`, headerLeft: () => (
+              <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginLeft: 12 }}>
+                <Ionicons name="chevron-back" size={28} color="#000" />
+              </TouchableOpacity>
+            ) }}}/>
           {/* <Stack.Screen name="Paywall" component={PayWall} options={{headerShown: false, presentation: 'modal'}}/> */}
         </Stack.Navigator>
       </NavigationContainer>
