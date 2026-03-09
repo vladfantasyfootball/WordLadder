@@ -14,7 +14,7 @@ export const completionBonusMap = {
     three: 150,
 }
 
-export default function LevelCompleteScreen({ completeLadder, level, shortestSolution, timeStarted, timeFinished }) {
+export default function LevelCompleteScreen({ completeLadder, level, shortestSolution, timeStarted, timeFinished, prevStats }) {
     const currentUser = useSelector((state) => {return state.userState.currentUser});
     const dispatch = useDispatch();
     const [showShortest, setShowShortest] = useState(false);
@@ -48,6 +48,12 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
     const userLength = completeLadder.length;
     const wordBonus = Math.max(0, 100 - (userLength - shortestLength) * 5);
     const totalScore = completionBonus + wordBonus + timeBonus;
+
+    // Stat deltas (only available on fresh completion, not when revisiting)
+    const newTotalScore = prevStats != null ? prevStats.totalScore + totalScore : null;
+    const isNewHighScore = prevStats != null ? totalScore > prevStats.highScore : false;
+    const newStreak = prevStats != null ? prevStats.currentStreak + 1 : null;
+    const streakIncreased = prevStats != null && newStreak > prevStats.currentStreak;
     
     const displayLadder = showShortest ? shortestSolution : completeLadder;
 
@@ -284,7 +290,7 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                 />
                 <View style={{ display: 'flex', flexDirection: "row", justifyContent: 'center', alignItems: 'center', fontSize: 18 }}>
                     <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 10, fontSize: 18 }}>
-                        {`Total Score: `}
+                        {`Round Score: `}
                     </Text>
                     <Animatable.View style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }} animation="bounceInRight" duration={2000} delay={3500}>
                         <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 10, fontSize: 18  }}>
@@ -293,12 +299,59 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                     </Animatable.View>
                 </View>
             </View>
+
+            {/* Stat Deltas — only shown on fresh completion */}
+            {prevStats != null && (
+                <View style={{ width: '100%', alignItems: 'center', marginTop: 8, gap: 8 }}>
+
+                    {/* New High Score Banner */}
+                    {isNewHighScore && (
+                        <Animatable.View
+                            animation="bounceIn"
+                            duration={1000}
+                            delay={4200}
+                            style={styles.highScoreBanner}
+                        >
+                            <Text style={styles.highScoreBannerText}>🏆 New High Score!</Text>
+                        </Animatable.View>
+                    )}
+
+                    {/* Streak increase */}
+                    {streakIncreased && (
+                        <Animatable.View
+                            animation="fadeInUp"
+                            duration={600}
+                            delay={4400}
+                            style={styles.statDeltaRow}
+                        >
+                            <Text style={styles.statDeltaText}>
+                                🔥 Streak: {prevStats.currentStreak} → <Text style={{ color: '#FF6B35', fontWeight: '800' }}>{newStreak}</Text>
+                            </Text>
+                        </Animatable.View>
+                    )}
+
+                    {/* Total score delta */}
+                    <Animatable.View
+                        animation="fadeInUp"
+                        duration={600}
+                        delay={4600}
+                        style={styles.statDeltaRow}
+                    >
+                        <Text style={styles.statDeltaText}>
+                            {'Total Score: '}{prevStats.totalScore}{' → '}
+                            <Text style={{ color: '#34C759', fontWeight: '800' }}>{newTotalScore}</Text>
+                            {'  '}
+                            <Text style={{ color: '#34C759', fontWeight: '700' }}>(+{totalScore})</Text>
+                        </Text>
+                    </Animatable.View>
+                </View>
+            )}
             
             {/* Share Button */}
             <Animatable.View 
                 animation="bounceIn" 
                 duration={1500} 
-                delay={4000}
+                delay={prevStats != null ? 5000 : 4000}
                 style={styles.shareButtonContainer}
             >
                 <TouchableOpacity 
@@ -313,6 +366,36 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
 }
 
 const styles = StyleSheet.create({
+    highScoreBanner: {
+        backgroundColor: '#FFD700',
+        paddingVertical: 8,
+        paddingHorizontal: 24,
+        borderRadius: 20,
+        shadowColor: '#B8860B',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.4,
+        shadowRadius: 4,
+        elevation: 4,
+    },
+    highScoreBannerText: {
+        fontSize: 17,
+        fontWeight: '800',
+        color: '#5A3E00',
+        letterSpacing: 0.4,
+    },
+    statDeltaRow: {
+        backgroundColor: '#F2F2F7',
+        paddingVertical: 7,
+        paddingHorizontal: 20,
+        borderRadius: 12,
+        minWidth: '70%',
+        alignItems: 'center',
+    },
+    statDeltaText: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#333',
+    },
     tabContainer: {
         flexDirection: 'row',
         backgroundColor: '#E0E0E0',
