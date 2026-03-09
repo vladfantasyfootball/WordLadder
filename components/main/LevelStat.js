@@ -93,10 +93,9 @@ export default function LevelStat({ navigation, level }) {
     const totalSolved = levelData?.totalSolved ?? 0;
     const winRate = totalAttempted > 0 ? Math.round((totalSolved / totalAttempted) * 100) : 0;
 
-    // Color scale: 0-30% = icy blue, 30-60% = yellow, 60-100% = green
+    // Color scale: 0-30% = icy blue, 30-60% = yellow, 60-100% = green (accelerated)
     const getWinRateColor = (pct) => {
         if (pct <= 30) {
-            // Icy blue (#64B5F6) — flat
             return `rgb(100,181,246)`;
         } else if (pct <= 60) {
             // Icy blue (#64B5F6) → Yellow (#FFC107)
@@ -106,11 +105,11 @@ export default function LevelStat({ navigation, level }) {
             const b = Math.round(246 + (7 - 246) * t);
             return `rgb(${r},${g},${b})`;
         } else {
-            // Yellow (#FFC107) → Green (#2E7D32)
-            const t = (pct - 60) / 40;
-            const r = Math.round(255 + (46 - 255) * t);
-            const g = Math.round(193 + (125 - 193) * t);
-            const b = Math.round(7 + (50 - 7) * t);
+            // Yellow (#FFC107) → Green (#1B8C2E) — exponential so 70% looks mostly green
+            const t = Math.pow((pct - 60) / 40, 0.4);
+            const r = Math.round(255 + (27 - 255) * t);
+            const g = Math.round(193 + (140 - 193) * t);
+            const b = Math.round(7 + (46 - 7) * t);
             return `rgb(${r},${g},${b})`;
         }
     };
