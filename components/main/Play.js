@@ -19,6 +19,9 @@ export class Play extends Component {
             nextWord: '',
             ladderWords: this.props.currentUser.wordLadder[this.props.route.params.level.toLowerCase()].currentWordLadder.currentAttempt,
             gameCompleted: this.props.currentUser.wordLadder[this.props.route.params.level.toLowerCase()].currentWordLadder.completed,
+            timeFinished: this.props.currentUser.wordLadder[this.props.route.params.level.toLowerCase()].currentWordLadder.completed
+                ? this.props.currentUser.wordLadder[this.props.route.params.level.toLowerCase()].timeFinished
+                : null,
         }
     }
 
@@ -56,10 +59,11 @@ export class Play extends Component {
                     this.props.wordLadder[level.toLowerCase()].startingWord.toLowerCase(),
                     this.state.nextWord.toLowerCase())) {
                     if (this.state.nextWord.toLowerCase() === this.props.wordLadder[level.toLowerCase()].endingWord.toLowerCase()) {
-                        this.setState({ gameCompleted: true, ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, () => {
+                        const completionTime = Date.now();
+                        this.setState({ gameCompleted: true, timeFinished: completionTime, ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, () => {
                             const newUser = JSON.parse(JSON.stringify(this.props.currentUser))
                             newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentAttempt = this.state.ladderWords;
-                            newUser.wordLadder[level.toLowerCase()].timeFinished = Date.now();
+                            newUser.wordLadder[level.toLowerCase()].timeFinished = completionTime;
                             newUser.wordLadder[level.toLowerCase()].currentWordLadder.completed = true;
                             newUser.wordLadder[level.toLowerCase()].currentStreak = newUser.wordLadder[level.toLowerCase()].currentStreak + 1;
                             if(newUser.wordLadder[level.toLowerCase()].currentStreak > newUser.wordLadder[level.toLowerCase()].longestStreak){
@@ -107,10 +111,11 @@ export class Play extends Component {
                             this.props.wordLadder[level.toLowerCase()].startingWord.toLowerCase(),
                             this.state.nextWord.toLowerCase())) {
                             if (this.state.nextWord.toLowerCase() === this.props.wordLadder[level.toLowerCase()].endingWord.toLowerCase()) {
-                                this.setState({ gameCompleted: true, ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, () => {
+                                const completionTime = Date.now();
+                                this.setState({ gameCompleted: true, timeFinished: completionTime, ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, () => {
                                     const newUser = JSON.parse(JSON.stringify(this.props.currentUser))
                                     newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentAttempt = this.state.ladderWords;
-                                    newUser.wordLadder[level.toLowerCase()].timeFinished = Date.now();
+                                    newUser.wordLadder[level.toLowerCase()].timeFinished = completionTime;
                                     newUser.wordLadder[level.toLowerCase()].currentWordLadder.completed = true;
                                     newUser.wordLadder[level.toLowerCase()].currentStreak = newUser.wordLadder[level.toLowerCase()].currentStreak + 1;
                                     if(newUser.wordLadder[level.toLowerCase()].currentStreak > newUser.wordLadder[level.toLowerCase()].longestStreak){
@@ -258,7 +263,7 @@ export class Play extends Component {
                             level={level}
                             shortestSolution={wordLadder[level.toLowerCase()].shortestSolution}
                             timeStarted={this.props.currentUser.wordLadder[level.toLowerCase()].timeStarted}
-                            timeFinished={Date.now()}
+                            timeFinished={this.state.timeFinished}
                         />
                     </View>
                 }
