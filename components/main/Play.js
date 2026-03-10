@@ -236,37 +236,28 @@ export class Play extends Component {
     componentDidMount() {
         const level = this.props.route.params.level.toLowerCase();
         const newUser = JSON.parse(JSON.stringify(this.props.currentUser));
-        
-        // Set timeStarted when user opens puzzle for the first time
-        if (!newUser.wordLadder[level].timeStarted) {
+
+        // timeStarted is null when: first ever open, or backend reset it for a new puzzle day.
+        // It is only ever set here, so this is a reliable "first open of this puzzle" guard.
+        // Backgrounding and reopening won't re-increment because timeStarted will already be set.
+        const isFirstOpen = !newUser.wordLadder[level].timeStarted;
+
+        if (isFirstOpen) {
             newUser.wordLadder[level].timeStarted = Date.now();
-            // Increment totalAttempted on first open of each new puzzle
             newUser.wordLadder[level].totalAttempted = (newUser.wordLadder[level].totalAttempted || 0) + 1;
         }
-        
-        // Set currentPuzzle ID when puzzle is first loaded
-        if (this.props.wordLadder && this.props.wordLadder[level] && this.props.wordLadder[level].id) {
-            if (!newUser.wordLadder[level].currentWordLadder.currentPuzzle) {
-                newUser.wordLadder[level].currentWordLadder.currentPuzzle = this.props.wordLadder[level].id;
-            }
-        }
-        
-        if(this.state.ladderWords.length === 0 ){
-            if(
-                this.props.wordLadder && this.props.wordLadder[level]
-            ){
-                this.setState({ ladderWords: [this.props.wordLadder[level].startingWord]}, () => {
-                    newUser.wordLadder[level].currentWordLadder.currentAttempt = [this.props.wordLadder[level].startingWord];
-                    this.props.updateUser(
-                        this.props.currentUser.id, newUser, getAuth()
-                    )
-                })
+
+        if (isFirstOpen || this.state.ladderWords.length === 0) {
+            if (this.props.wordLadder && this.props.wordLadder[level]) {
+                const startingWord = this.props.wordLadder[level].startingWord;
+                newUser.wordLadder[level].currentWordLadder.currentAttempt = [startingWord];
+                this.setState({ ladderWords: [startingWord], gameCompleted: false }, () => {
+                    this.props.updateUser(this.props.currentUser.id, newUser, getAuth());
+                });
             }
         } else {
-            // Update user even if ladderWords already exist (to set timeStarted and currentPuzzle)
-            this.props.updateUser(
-                this.props.currentUser.id, newUser, getAuth()
-            )
+            // Returning to an in-progress or completed puzzle — persist timeStarted if it was just set
+            this.props.updateUser(this.props.currentUser.id, newUser, getAuth());
         }
     }
 
