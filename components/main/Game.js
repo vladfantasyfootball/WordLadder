@@ -136,55 +136,50 @@ export default function Game({ navigation, level, route }) {
             <View style={[styles.container, {backgroundColor: levelColorScheme[level]}]}>
                 {howToOpen !== null 
                     ? 
-                        <ScrollView persistentScrollbar={true} contentContainerStyle={{backgroundColor: levelColorScheme[level], width: '100%', maxHeight: '750px', display: 'flex', justifyContent: 'center', alignItems: 'center', paddingTop: 5 }}>
-                            <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 10, paddingLeft: 15, fontSize: 24, color: '#5B5A53' }}>
-                                {`Level ${level} Rules:`}
+                        <ScrollView persistentScrollbar={true} contentContainerStyle={{backgroundColor: levelColorScheme[level], width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', paddingTop: 10, paddingBottom: 20, paddingHorizontal: 20 }}>
+                            <Text style={{ fontWeight: '800', textAlign: 'center', paddingBottom: 16, fontSize: 22, color: '#5B5A53' }}>
+                                {`Level ${level} Rules`}
                             </Text>
-                            {level.toLowerCase() === "one" && 
-                                <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 10, paddingLeft: 15, fontSize: 14, color: '#5B5A53' }}>
-                                    {`Your goal is to get from the starting word(top of page) to the ending word(bottom of page) one step at a time.`}
-                                </Text>
-                            }
-                            <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 10, paddingLeft: 15, fontSize: 14, color: '#5B5A53' }}>
-                                {`For Level ${level}, you have the following operations available to you:`}
-                            </Text>
-                            {level.toLowerCase() === "one" ? 
-                                <>
-                                    <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 40, paddingRight: 15, paddingBottom: 10, fontSize: 14, color: '#5B5A53' }}>
-                                        {`1.Change one letter at a time (i.e. from bike you can make bake)`}
+                            {level.toLowerCase() === "one" ? <>
+                                    <Text style={{ textAlign: 'center', paddingBottom: 16, fontSize: 15, color: '#5B5A53', lineHeight: 22 }}>
+                                        {`Change one letter at a time to get from the top word to the bottom word.`}
                                     </Text>
-                                    <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 15, paddingRight: 15, paddingBottom: 10, fontSize: 14, color: '#5B5A53' }}>
-                                        {`So an example of a completed Level One word ladder with starting word "coat" and ending word "lake" would be:`}
-                                    </Text>
-                                    <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 40, paddingRight: 40, paddingBottom: 10, fontSize: 14, color: '#5B5A53' }}>
-                                        {`coat -> cost -> cast -> case -> cake -> lake`}
-                                    </Text>
-                                    <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 15, paddingRight: 15, paddingBottom: 10, fontSize: 14, color: '#5B5A53' }}>
-                                        {`All words have to be real words. And you are scored on how many words you use as well as how long it takes you to complete!`}
+                                    <View style={{ backgroundColor: 'white', borderRadius: 14, paddingVertical: 16, paddingHorizontal: 20, width: '100%', alignItems: 'center', marginBottom: 16, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } }}>
+                                        <Text style={{ fontSize: 28, paddingBottom: 6 }}>✏️</Text>
+                                        <Text style={{ fontWeight: '800', fontSize: 17, color: '#5B5A53', paddingBottom: 4 }}>
+                                            {`Change one letter`}
+                                        </Text>
+                                        <Text style={{ fontSize: 14, color: '#5B5A53', textAlign: 'center', lineHeight: 20, paddingBottom: 10 }}>
+                                            {`Swap exactly one letter to make a new word`}
+                                        </Text>
+                                        <Text style={{ fontWeight: '700', fontSize: 16, color: '#5B5A53', letterSpacing: 1 }}>
+                                            {`bike → bake`}
+                                        </Text>
+                                    </View>
+                                    <Text style={{ fontWeight: '700', fontSize: 14, color: '#5B5A53', textAlign: 'center', paddingTop: 4 }}>
+                                        {`⚡ Fewer words & faster time = higher score`}
                                     </Text>
                                 </>
-                            : level.toLowerCase() === "two" && 
-                                <>
-                                    <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 40, paddingRight: 15, paddingBottom: 10, fontSize: 14, color: '#5B5A53' }}>
-                                        {`1.Change one letter at a time (i.e. from bike you can make bake)`}
+                            : level.toLowerCase() === "two" && <>
+                                    <Text style={{ textAlign: 'center', paddingBottom: 16, fontSize: 15, color: '#5B5A53', lineHeight: 22 }}>
+                                        {`All the same rules as Level One — plus one new move:`}
                                     </Text>
-                                    <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 40, paddingRight: 15, paddingBottom: 10, fontSize: 14, color: '#5B5A53' }}>
-                                        {`or`}
-                                    </Text>
-                                    <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 40, paddingRight: 15, paddingBottom: 10, fontSize: 14, color: '#5B5A53' }}>
-                                        {`2.Rearrange all letters in word to change to different word. (i.e. from "bake" you can make "beak")`}
-                                    </Text>
-                                    <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 15, paddingRight: 15, paddingBottom: 10, fontSize: 14, color: '#5B5A53' }}>
-                                        {`So an example of a completed Level Two word ladder with starting word "safe" and ending word "open" would be:`}
-                                    </Text>
-                                    <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 40, paddingRight: 40, paddingBottom: 10, fontSize: 14, color: '#5B5A53' }}>
-                                        {`safe -> sale -> sole -> sore -> rose -> nose -> nope -> open`}
-                                    </Text>
-                                    <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingLeft: 15, paddingRight: 15, paddingBottom: 10, fontSize: 14, color: '#5B5A53' }}>
-                                        {`All words have to be real words. And you are scored on how many words you use as well as how long it takes you to complete!`}
+                                    <View style={{ backgroundColor: 'white', borderRadius: 14, paddingVertical: 16, paddingHorizontal: 20, width: '100%', alignItems: 'center', marginBottom: 16, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } }}>
+                                        <Text style={{ fontSize: 28, paddingBottom: 6 }}>🔀</Text>
+                                        <Text style={{ fontWeight: '800', fontSize: 17, color: '#5B5A53', paddingBottom: 4 }}>
+                                            {`Anagram`}
+                                        </Text>
+                                        <Text style={{ fontSize: 14, color: '#5B5A53', textAlign: 'center', lineHeight: 20, paddingBottom: 10 }}>
+                                            {`Rearrange all the letters to make a new word`}
+                                        </Text>
+                                        <Text style={{ fontWeight: '700', fontSize: 16, color: '#5B5A53', letterSpacing: 1 }}>
+                                            {`bake → beak`}
+                                        </Text>
+                                    </View>
+                                    <Text style={{ fontWeight: '700', fontSize: 14, color: '#5B5A53', textAlign: 'center', paddingTop: 4 }}>
+                                        {`⚡ Fewer words & faster time = higher score`}
                                     </Text>
                                 </>
-                                
                             }
                             
                             {firstTimeLevel !== null
