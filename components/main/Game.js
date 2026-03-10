@@ -57,8 +57,9 @@ export default function Game({ navigation, level, route }) {
 
     useEffect(() => {
         if(currentUser && adWatched){
-            // Use UTC date format (YYYY-MM-DD) for consistent timezone handling
-            const currentUTCDate = new Date().toISOString().split('T')[0];
+            // Shift by 7h so day boundary matches puzzle reset (UTC 07:00 = 11 PM PT)
+            const now = new Date();
+            const currentUTCDate = new Date(now.getTime() - 7 * 60 * 60 * 1000).toISOString().split('T')[0];
             dispatch(updateUser(
                 currentUser.id, {...currentUser, 
                     ad: {
@@ -72,8 +73,9 @@ export default function Game({ navigation, level, route }) {
     
     useEffect(() => {
         if(currentUser){
-            // Use UTC date format (YYYY-MM-DD) for consistent timezone handling
-            const currentUTCDate = new Date().toISOString().split('T')[0];
+            // Shift by 7h so day boundary matches puzzle reset (UTC 07:00 = 11 PM PT)
+            const now = new Date();
+            const currentUTCDate = new Date(now.getTime() - 7 * 60 * 60 * 1000).toISOString().split('T')[0];
             if(currentUser?.ad?.dateWatched === currentUTCDate && currentUser?.ad?.adWatched){
                 setAdWatched(true)
             }
