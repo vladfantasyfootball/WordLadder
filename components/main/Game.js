@@ -21,6 +21,7 @@ export default function Game({ navigation, level, route }) {
 
     const wordLadder = useSelector((state) => state.wordLadderState.wordLadder);
     const [howToOpen, setHowToOpen] = useState(null);
+    const [firstTimeLevel, setFirstTimeLevel] = useState(null);
 
     const loadRewardedInterstitial = () => {
         const unsubscribeLoaded = rewardedInterstitialAd.addAdEventListener(
@@ -84,7 +85,7 @@ export default function Game({ navigation, level, route }) {
         }
     },[currentUser])
 
-    const onPressPlay = ( level ) => {
+    const navigateToPlay = (level) => {
         if(level.toLowerCase() === "two" && !adWatched){
             rewardedInterstitialAd.show().then(() => {StatusBar.setStatusBarHidden(true)});
         } else {
@@ -92,6 +93,17 @@ export default function Game({ navigation, level, route }) {
                 level,
                 onShowRules: () => setHowToOpen(level)
             });
+        }
+    }
+
+    const onPressPlay = (level) => {
+        const hasEverPlayed = (currentUser?.wordLadder[level.toLowerCase()]?.totalAttempted ?? 0) > 0;
+        if (!hasEverPlayed) {
+            // First time — show rules, with a play button at the bottom
+            setFirstTimeLevel(level);
+            setHowToOpen(level);
+        } else {
+            navigateToPlay(level);
         }
     }
 
@@ -175,7 +187,10 @@ export default function Game({ navigation, level, route }) {
                                 
                             }
                             
-                            <FlatButton text='Close Rules' onPress={() => onPressHowTo(null)} width='40' disabled={false}/>
+                            {firstTimeLevel !== null
+                                ? <FlatButton text="Got it, Let's Play!" onPress={() => { setHowToOpen(null); setFirstTimeLevel(null); navigateToPlay(level); }} width='60' disabled={false}/>
+                                : <FlatButton text='Close Rules' onPress={() => onPressHowTo(null)} width='40' disabled={false}/>
+                            }
                         </ScrollView>
                     : 
                         <>
