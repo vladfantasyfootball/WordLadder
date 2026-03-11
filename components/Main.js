@@ -8,7 +8,7 @@ import Stats from './main/Stats';
 import Leaderboards from './main/Leaderboards';
 import { MaterialCommunityIcons, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Profile from './main/Profile';
-import { getAuth } from '@react-native-firebase/auth';
+import { getAuth } from 'firebase/auth';
 
 
 const Tab = createBottomTabNavigator();
@@ -17,12 +17,12 @@ export class MainScreen extends Component {
     componentDidMount() {
         const auth = getAuth()
         this.props.fetchUser(auth);
-        this.props.getWordLadder();
+        this.props.getWordLadder(auth);
     }
 
     render() {
         return (
-            <Tab.Navigator initialRouteName='Home'>
+            <Tab.Navigator initialRouteName='Word Ladder'>
                 <Tab.Screen
                     name={"Word Ladder"}
                     component={Home}

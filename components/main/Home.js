@@ -11,20 +11,20 @@ export class Home extends Component {
   componentDidMount() { }
   render() {
     return (
-      <Tab.Navigator initialRouteName='Home'>
+      <Tab.Navigator initialRouteName='Level One'>
         <Tab.Screen
           name={"Level One"}
           options={{
             headerTitleAlign: 'center',
           }}>
-          {props => <Game {...props} level={'One'} />}
+          {props => <Game {...props} level={'One'} route={props.route} />}
         </Tab.Screen>
         <Tab.Screen
           name={"Level Two"}
           options={{
             headerTitleAlign: 'center',
           }}>
-          {props => <Game {...props} level={'Two'} />}
+          {props => <Game {...props} level={'Two'} route={props.route} />}
         </Tab.Screen>
         {/* <Tab.Screen
           name={"Level Three"}

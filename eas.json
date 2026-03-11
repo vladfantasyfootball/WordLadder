@@ -1,6 +1,7 @@
 {
   "cli": {
-    "version": ">= 7.5.0"
+    "version": ">= 7.5.0",
+    "appVersionSource": "local"
   },
   "build": {
     "development": {
@@ -8,12 +9,27 @@
       "distribution": "internal",
       "ios": {
         "simulator": true
+      },
+      "env": {
+        "GOOGLE_SERVICES_INFO_PLIST": "./GoogleService-Info.plist",
+        "GOOGLE_SERVICES_JSON": "./google-services.json"
       }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "GOOGLE_SERVICES_INFO_PLIST": "./GoogleService-Info.plist",
+        "GOOGLE_SERVICES_JSON": "./google-services.json"
+      }
     },
-    "production": {}
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "GOOGLE_SERVICES_INFO_PLIST": "./GoogleService-Info.plist",
+        "GOOGLE_SERVICES_JSON": "./google-services.json",
+        "REANIMATED_PLUGIN_TESTS": "0"
+      }
+    }
   },
   "submit": {
     "production": {}
