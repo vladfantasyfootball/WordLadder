@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share, Alert, Linking } from 'react-native'
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share, Alert, Linking, Animated, Modal } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useSelector, useDispatch } from 'react-redux';
 import { levelColorScheme } from '../../redux/constants/colorScheme';
 import LadderStepWord from './LadderStepWord';
@@ -12,135 +13,135 @@ export const completionBonusMap = {
     one: 50,
     two: 100,
     three: 150,
-}
+};
 
 export default function LevelCompleteScreen({ completeLadder, level, shortestSolution, timeStarted, timeFinished, prevStats }) {
-    const currentUser = useSelector((state) => {return state.userState.currentUser});
+    const currentUser = useSelector((state) => state.userState.currentUser);
     const dispatch = useDispatch();
-    const [showShortest, setShowShortest] = useState(false);
-    
-    // Use props if provided, otherwise fallback to Redux state
+
+    // ─── Computed Values ─────────────────────────────────────────────────────
     const startTime = timeStarted || currentUser.wordLadder[level.toLowerCase()].timeStarted;
     const endTime = timeFinished || currentUser.wordLadder[level.toLowerCase()].timeFinished;
-    
-    // Calculate time taken with safety checks
+
     let timeTaken = 0;
     if (startTime && endTime && endTime > startTime) {
         timeTaken = Math.round((endTime - startTime) / 1000);
     }
-    
-    let timeFormattedTimeTaken = null;
-    if(timeTaken <= 3600){
-        timeFormattedTimeTaken = new Date(timeTaken * 1000).toISOString().substr(14, 5);
-    } else {
-        timeFormattedTimeTaken =  new Date(timeTaken * 1000).toISOString().substr(11, 8);
-    }
-    
-    // Time bonus: Start at 100 points, lose 5 points for every 30 seconds after 1 minute
+
+    const timeFormattedTimeTaken = timeTaken <= 3600
+        ? new Date(timeTaken * 1000).toISOString().substr(14, 5)
+        : new Date(timeTaken * 1000).toISOString().substr(11, 8);
+
     let timeBonus = 100;
     if (timeTaken > 60) {
-        const secondsOver = timeTaken - 60;
-        const thirtySecondIntervals = Math.floor(secondsOver / 30);
-        timeBonus = Math.max(0, 100 - (thirtySecondIntervals * 5));
+        timeBonus = Math.max(0, 100 - Math.floor((timeTaken - 60) / 30) * 5);
     }
+
     const completionBonus = completionBonusMap[level.toLowerCase()];
     const shortestLength = shortestSolution.length;
     const userLength = completeLadder.length;
     const wordBonus = Math.max(0, 100 - (userLength - shortestLength) * 5);
     const totalScore = completionBonus + wordBonus + timeBonus;
 
-    // Stat deltas (only available on fresh completion, not when revisiting)
-    const newTotalScore = prevStats != null ? prevStats.totalScore + totalScore : null;
-    const isNewHighScore = prevStats != null ? totalScore > prevStats.highScore : false;
-    const newStreak = prevStats != null ? prevStats.currentStreak + 1 : null;
-    const streakIncreased = prevStats != null && newStreak > prevStats.currentStreak;
-    
-    const displayLadder = showShortest ? shortestSolution : completeLadder;
+    const isFirstCompletion = prevStats != null;
+    const newTotalScore = isFirstCompletion ? prevStats.totalScore + totalScore : null;
+    const isNewHighScore = isFirstCompletion && totalScore > (prevStats.highScore ?? 0);
+    const newStreak = isFirstCompletion ? prevStats.currentStreak + 1 : null;
+    const streakIncreased = isFirstCompletion && newStreak > prevStats.currentStreak;
+    const isOptimalPath = userLength === shortestLength;
 
-    // Sequenced stat delta carousel: 0=hidden, 1=highScore, 2=streak, 3=totalScore, 4=done(show share)
-    const [deltaPhase, setDeltaPhase] = useState(0);
-    const deltaRef = React.useRef(null);
+    const levelColor = levelColorScheme[level] ?? '#9ADBFA';
+
+    // ─── Achievements (first completion only) ────────────────────────────────
+    const achievements = [];
+    if (isFirstCompletion) {
+        achievements.push({
+            icon: 'checkmark-circle',
+            color: '#34C759',
+            title: 'Level Complete!',
+            description: `Finished in ${timeFormattedTimeTaken}`,
+        });
+        if (isNewHighScore) achievements.push({
+            icon: 'trophy',
+            color: '#FFD700',
+            title: 'New High Score!',
+            description: `You scored ${totalScore} points!`,
+        });
+        if (streakIncreased) achievements.push({
+            icon: 'flame',
+            color: '#FF6B35',
+            title: 'Streak Extended!',
+            description: `${prevStats.currentStreak} → ${newStreak} days`,
+        });
+        if (isOptimalPath) achievements.push({
+            icon: 'star',
+            color: '#AF52DE',
+            title: 'Optimal Path!',
+            description: 'You found the shortest solution!',
+        });
+        achievements.push({
+            icon: 'stats-chart',
+            color: '#007AFF',
+            title: 'Total Score',
+            description: `${prevStats.totalScore} → ${newTotalScore}  (+${totalScore})`,
+        });
+    }
+
+    // ─── Overlay Animation ────────────────────────────────────────────────────
+    const [carouselIndex, setCarouselIndex] = useState(0);
+    const [overlayVisible, setOverlayVisible] = useState(isFirstCompletion);
+    const overlayAnim = useRef(new Animated.Value(isFirstCompletion ? 1 : 0)).current;
+    const cardScale = useRef(new Animated.Value(0.85)).current;
+    const cardOpacity = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        if (prevStats == null) return;
-        // Build the sequence of phases that have content
-        const phases = [];
-        if (isNewHighScore) phases.push(1);
-        if (streakIncreased) phases.push(2);
-        phases.push(3); // total score delta always shown
+        if (!overlayVisible) return;
 
-        let i = 0;
-        // Start first phase after score animations finish
-        const firstDelay = setTimeout(() => {
-            setDeltaPhase(phases[i]);
-            const cycle = () => {
-                i++;
-                if (i >= phases.length) return;
-                // Fade out current, then switch to next
-                setTimeout(() => {
-                    if (deltaRef.current) {
-                        deltaRef.current.animate({ 0: { opacity: 1 }, 1: { opacity: 0 } }, 400).then(() => {
-                            setDeltaPhase(phases[i]);
-                            if (i < phases.length - 1) cycle();
-                        });
-                    } else {
-                        setDeltaPhase(phases[i]);
-                        if (i < phases.length - 1) cycle();
-                    }
-                }, 2000); // each card visible for 2s
-            };
-            if (phases.length > 1) cycle();
-        }, 4000);
+        if (carouselIndex < achievements.length) {
+            // Animate card in
+            cardScale.setValue(0.85);
+            cardOpacity.setValue(0);
+            Animated.parallel([
+                Animated.spring(cardScale, { toValue: 1, useNativeDriver: true, tension: 120, friction: 8 }),
+                Animated.timing(cardOpacity, { toValue: 1, duration: 250, useNativeDriver: true }),
+            ]).start();
 
-        return () => clearTimeout(firstDelay);
-    }, []);
+            // Hold, then fade card out and advance
+            const hold = setTimeout(() => {
+                Animated.parallel([
+                    Animated.timing(cardScale, { toValue: 0.9, duration: 200, useNativeDriver: true }),
+                    Animated.timing(cardOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+                ]).start(() => setCarouselIndex(i => i + 1));
+            }, 1700);
 
-    // Check if user hasn't been asked about notifications yet
+            return () => clearTimeout(hold);
+        } else {
+            // All cards shown — fade out overlay
+            Animated.timing(overlayAnim, { toValue: 0, duration: 500, useNativeDriver: true }).start(() => {
+                setOverlayVisible(false);
+            });
+        }
+    }, [carouselIndex, overlayVisible]);
+
+    // ─── Solution Tab ─────────────────────────────────────────────────────────
+    const [showShortest, setShowShortest] = useState(false);
+    const displayLadder = showShortest ? shortestSolution : completeLadder;
+
+    // ─── Notification Prompt ──────────────────────────────────────────────────
     useEffect(() => {
         const hasBeenAsked = currentUser?.notifications?.hasBeenAskedForNotifications;
         const notificationsEnabled = currentUser?.notifications?.enabled;
-        
-        // Only show prompt if: not asked before and notifications not already enabled
         if (!hasBeenAsked && !notificationsEnabled) {
-            // Delay to show after score animations
-            setTimeout(() => {
-                showNotificationPrompt();
-            }, 4500);
+            setTimeout(showNotificationPrompt, isFirstCompletion ? 4500 : 500);
         }
     }, []);
-
-    const showNotificationPrompt = () => {
-        Alert.alert(
-            "🎉 Great Job!",
-            "Would you like to receive daily notifications when new puzzles are available?",
-            [
-                {
-                    text: "Not Now",
-                    style: "cancel",
-                    onPress: async () => {
-                        // Mark as asked so we don't show again
-                        await markAsAsked();
-                    }
-                },
-                {
-                    text: "Yes, Notify Me!",
-                    onPress: async () => {
-                        await enableNotifications();
-                    }
-                }
-            ]
-        );
-    };
 
     const markAsAsked = async () => {
         try {
             const auth = getAuth();
             const updatedUser = {
                 ...currentUser,
-                notifications: {
-                    ...currentUser.notifications,
-                    hasBeenAskedForNotifications: true
-                }
+                notifications: { ...currentUser.notifications, hasBeenAskedForNotifications: true },
             };
             await dispatch(updateUser(currentUser.id, updatedUser, auth));
         } catch (error) {
@@ -148,54 +149,44 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
         }
     };
 
+    const showNotificationPrompt = () => {
+        Alert.alert(
+            '🎉 Great Job!',
+            'Would you like to receive daily notifications when new puzzles are available?',
+            [
+                { text: 'Not Now', style: 'cancel', onPress: markAsAsked },
+                { text: 'Yes, Notify Me!', onPress: enableNotifications },
+            ]
+        );
+    };
+
     const enableNotifications = async () => {
         try {
             const hasPermission = await checkNotificationPermissions();
             const token = await registerForPushNotificationsAsync();
-            
             if (token) {
                 const auth = getAuth();
                 const updatedUser = {
                     ...currentUser,
-                    notifications: {
-                        enabled: true,
-                        expoPushToken: token,
-                        hasBeenAskedForNotifications: true
-                    }
+                    notifications: { enabled: true, expoPushToken: token, hasBeenAskedForNotifications: true },
                 };
-                
                 await dispatch(updateUser(currentUser.id, updatedUser, auth));
-                
-                Alert.alert(
-                    "✅ Notifications Enabled",
-                    "You'll receive a daily reminder if you haven't played today's puzzle!"
-                );
+                Alert.alert('✅ Notifications Enabled', "You'll receive a daily reminder if you haven't played today's puzzle!");
             } else {
-                // Permission denied/blocked or token retrieval failed
                 Alert.alert(
-                    "Notifications Blocked",
+                    'Notifications Blocked',
                     hasPermission
-                        ? "Failed to register for notifications right now. Please try again from the Profile page."
-                        : "Please enable notifications in Settings to receive daily puzzle reminders.",
+                        ? 'Failed to register for notifications. Please try again from the Profile page.'
+                        : 'Please enable notifications in Settings to receive daily puzzle reminders.',
                     [
-                        {
-                            text: "Cancel",
-                            style: "cancel",
-                            onPress: async () => await markAsAsked()
-                        },
-                        {
-                            text: "Open Settings",
-                            onPress: async () => {
-                                await Linking.openSettings();
-                                await markAsAsked();
-                            }
-                        }
+                        { text: 'Cancel', style: 'cancel', onPress: markAsAsked },
+                        { text: 'Open Settings', onPress: async () => { await Linking.openSettings(); await markAsAsked(); } },
                     ]
                 );
             }
         } catch (error) {
             console.error('Error enabling notifications:', error);
-            Alert.alert("Error", "Failed to enable notifications. You can try again from the Profile page.");
+            Alert.alert('Error', 'Failed to enable notifications. You can try again from the Profile page.');
             await markAsAsked();
         }
     };
@@ -204,284 +195,358 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
         try {
             const startWord = completeLadder[0];
             const endWord = completeLadder[completeLadder.length - 1];
-            const message = `🎉 I just completed a Level ${level} Word Ladder puzzle!\n\n${startWord.toUpperCase()} → ${endWord.toUpperCase()}\n⏱️ Time: ${timeFormattedTimeTaken}\n📊 Score: ${totalScore}\n🪜 ${userLength} words\n\nCan you beat my score? Download Word Ladder now:\nhttps://testflight.apple.com/join/JxNSA5rZ`;
-            
-            const result = await Share.share({
-                message: message,
-            });
-
-            if (result.action === Share.sharedAction) {
-                if (result.activityType) {
-                    // shared with activity type of result.activityType
-                } else {
-                    // shared
-                }
-            } else if (result.action === Share.dismissedAction) {
-                // dismissed
-            }
-        } catch (error) {
+            const message = `🎉 I just completed a Level ${level} Word Ladder!\n\n${startWord.toUpperCase()} → ${endWord.toUpperCase()}\n⏱️ Time: ${timeFormattedTimeTaken}\n📊 Score: ${totalScore}\n🪜 ${userLength} words\n\nCan you beat my score?\nhttps://testflight.apple.com/join/JxNSA5rZ`;
+            await Share.share({ message });
+        } catch {
             Alert.alert('Error', 'Unable to share. Please try again.');
         }
     };
-    
+
+    // ─── Render ───────────────────────────────────────────────────────────────
     return (
-        <View>
-            <Animatable.View style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }} animation="bounceInLeft" duration={2000}>
-                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingTop: 10, paddingBottom: 6, fontSize: 24 }}>
-                    {`Congratulations!`}
-                </Text>
-            </Animatable.View>
-            <Animatable.View style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }} animation="bounceInRight" duration={2000} delay={1000}>
-                <Text style={{ fontWeight: 'bold', alignItems: 'center', paddingBottom: 10  }}>
-                    {`Time Taken: ${timeFormattedTimeTaken}`}
-                </Text>
-            </Animatable.View>
-            
-            {/* Segmented Control for tabs */}
-            <View style={styles.tabContainer}>
-                <TouchableOpacity 
-                    style={[styles.tab, !showShortest && styles.activeTab]}
-                    onPress={() => setShowShortest(false)}
-                >
-                    <Text style={[styles.tabText, !showShortest && styles.activeTabText]}>Your Solution</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                    style={[styles.tab, showShortest && styles.activeTab]}
-                    onPress={() => setShowShortest(true)}
-                >
-                    <Text style={[styles.tabText, showShortest && styles.activeTabText]}>Shortest Solution</Text>
-                </TouchableOpacity>
+        <View style={[styles.root, { backgroundColor: levelColor }]}>
+
+            {/* ── Celebration Overlay ── */}
+            <Modal
+                visible={overlayVisible}
+                transparent
+                animationType="none"
+                statusBarTranslucent
+            >
+                <Animated.View style={[styles.overlay, { opacity: overlayAnim, backgroundColor: levelColor + 'AA' }]}>
+                    {carouselIndex < achievements.length && (
+                        <Animated.View style={[styles.achievementCard, {
+                            opacity: cardOpacity,
+                            transform: [{ scale: cardScale }],
+                        }]}>
+                            <Ionicons
+                                name={achievements[carouselIndex].icon}
+                                size={68}
+                                color={achievements[carouselIndex].color}
+                                style={styles.achievementIcon}
+                            />
+                            <Text style={[styles.achievementTitle, { color: achievements[carouselIndex].color }]}>
+                                {achievements[carouselIndex].title}
+                            </Text>
+                            <Text style={styles.achievementDesc}>
+                                {achievements[carouselIndex].description}
+                            </Text>
+                            <View style={styles.dotsRow}>
+                                {achievements.map((_, i) => (
+                                    <View key={i} style={[styles.dot, i === carouselIndex && styles.dotActive]} />
+                                ))}
+                            </View>
+                        </Animated.View>
+                    )}
+                </Animated.View>
+            </Modal>
+
+            {/* ── Header ── */}
+            <View style={styles.header}>
+                <Text style={styles.headerTitle}>Level Complete</Text>
             </View>
-            
-            <View
-                style={{
-                    borderTopColor: 'black',
-                    borderTopWidth: 2,
-                }}
-            />
-            <View style={{ height: 300 }}>
-                <ScrollView
-                    contentContainerStyle={{ alignItems: 'center', paddingTop: 10, marginTop: 5, paddingBottom: 5, backgroundColor: `${levelColorScheme[level]}` }}
-                    persistentScrollbar={true}>
-                    {displayLadder.map((ladderWord, index) => {
-                        return (
+
+            {/* ── Score Card ── */}
+            <View style={styles.card}>
+                <Text style={styles.cardTitle}>Score Breakdown</Text>
+                <View style={styles.divider} />
+                <Animatable.View animation="fadeInRight" delay={400} style={styles.scoreRow}>
+                    <Text style={styles.scoreLabel}>Completion Bonus</Text>
+                    <Text style={styles.scoreValue}>+{completionBonus}</Text>
+                </Animatable.View>
+                <Animatable.View animation="fadeInRight" delay={800} style={styles.scoreRow}>
+                    <Text style={styles.scoreLabel}>Word Bonus</Text>
+                    <Text style={styles.scoreValue}>+{wordBonus}</Text>
+                </Animatable.View>
+                <Animatable.View animation="fadeInRight" delay={1200} style={styles.scoreRow}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={styles.scoreLabel}>Time Bonus</Text>
+                        <Text style={styles.scoreSubLabel}>  {timeFormattedTimeTaken}</Text>
+                    </View>
+                    <Text style={styles.scoreValue}>+{timeBonus}</Text>
+                </Animatable.View>
+                <View style={styles.divider} />
+                <Animatable.View animation="bounceIn" delay={1600} style={styles.totalRow}>
+                    <Text style={styles.totalLabel}>Round Score</Text>
+                    <Text style={styles.totalValue}>{totalScore}</Text>
+                </Animatable.View>
+            </View>
+
+            {/* ── Solution Viewer (fills remaining space) ── */}
+            <View style={styles.solutionSection}>
+                <View style={[styles.card, { flex: 1 }]}>
+                    {isOptimalPath ? (
+                        <View style={styles.optimalBanner}>
+                            <Ionicons name="star" size={16} color="#AF52DE" style={{ marginRight: 6 }} />
+                            <Text style={styles.optimalBannerText}>Shortest possible solution!</Text>
+                            <Ionicons name="star" size={16} color="#AF52DE" style={{ marginLeft: 6 }} />
+                        </View>
+                    ) : (
+                        <View style={styles.tabBar}>
+                            <TouchableOpacity
+                                style={[styles.tab, !showShortest && styles.tabActive]}
+                                onPress={() => setShowShortest(false)}
+                            >
+                                <Text style={[styles.tabText, !showShortest && styles.tabTextActive]}>Your Solution</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.tab, showShortest && styles.tabActive]}
+                                onPress={() => setShowShortest(true)}
+                            >
+                                <Text style={[styles.tabText, showShortest && styles.tabTextActive]}>Shortest</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                    <ScrollView
+                        contentContainerStyle={{ alignItems: 'center', paddingVertical: 8 }}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        {displayLadder.map((word, index) => (
                             <LadderStepWord
                                 key={index}
-                                word={ladderWord}
+                                word={word}
                                 level={(index === 0 || index === displayLadder.length - 1) ? null : level}
                                 size={50}
                                 fontSize={32}
                             />
-                        )
-                    })}
-                </ScrollView>
-            </View>
-
-            <View style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', borderColor: 'black', borderWidth: 2 }}>
-                <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 10 }}>
-                    {`Your Score:`}
-                </Text>
-                
-                <View 
-                    style={{
-                        borderTopColor: 'black',
-                        borderTopWidth: 2,
-                        width: '50%',
-                    }} 
-                />
-                <View style={{ display: 'flex', flexDirection: "row", justifyContent: 'center', alignItems: 'center' }}>
-                    <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 3 }}>
-                        {`Completion Bonus: `}
-                    </Text>
-                    <Animatable.View style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }} animation="bounceInRight" duration={2000} delay={2000}>
-                        <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 3 }}>
-                            {`${completionBonus}`}
-                        </Text>
-                    </Animatable.View>
-                </View>
-                <View style={{ display: 'flex', flexDirection: "row", justifyContent: 'center', alignItems: 'center' }}>
-                    <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 3 }}>
-                        {`Word Bonus: `}
-                    </Text>
-                    <Animatable.View style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }} animation="bounceInRight" duration={2000} delay={2500}>
-                        <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 3 }}>
-                            {`${wordBonus}`}
-                        </Text>
-                    </Animatable.View>
-                </View>
-                <View style={{ display: 'flex', flexDirection: "row", justifyContent: 'center', alignItems: 'center' }}>
-                    <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 3 }}>
-                        {`Time Bonus: `}
-                    </Text>
-                    <Animatable.View style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }} animation="bounceInRight" duration={2000} delay={3000}>
-                        <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 3 }}>
-                            {`${timeBonus}`}
-                        </Text>
-                    </Animatable.View>
-                </View>
-                <View 
-                    style={{
-                        borderTopColor: 'black',
-                        borderTopWidth: 2,
-                        width: '50%',
-                    }}
-                />
-                <View style={{ display: 'flex', flexDirection: "row", justifyContent: 'center', alignItems: 'center', fontSize: 18 }}>
-                    <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 10, fontSize: 18 }}>
-                        {`Round Score: `}
-                    </Text>
-                    <Animatable.View style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }} animation="bounceInRight" duration={2000} delay={3500}>
-                        <Text style={{ fontWeight: 'bold', alignItems: 'center', padding: 10, fontSize: 18  }}>
-                            {`${totalScore}`}
-                        </Text>
-                    </Animatable.View>
+                        ))}
+                    </ScrollView>
                 </View>
             </View>
 
-            {/* Share Button — always visible after score animations */}
-            <Animatable.View 
-                animation="bounceIn" 
-                duration={1500} 
-                delay={4000}
-                style={styles.shareButtonContainer}
-            >
-                <TouchableOpacity 
-                    style={styles.shareButton}
-                    onPress={handleShare}
-                >
-                    <Text style={styles.shareButtonText}>Share with Friends</Text>
+            {/* ── Share Button (pinned to bottom) ── */}
+            <Animatable.View animation="fadeInUp" delay={2200} style={styles.shareWrapper}>
+                <TouchableOpacity style={styles.shareBtn} onPress={handleShare} activeOpacity={0.8}>
+                    <Ionicons name="share-outline" size={20} color="white" style={{ marginRight: 8 }} />
+                    <Text style={styles.shareBtnText}>Share with Friends</Text>
                 </TouchableOpacity>
             </Animatable.View>
 
-            {/* Stat Delta Carousel — cycles through high score, streak, total score */}
-            {prevStats != null && (
-                <View style={{ width: '100%', alignItems: 'center', marginTop: 4, minHeight: 52, justifyContent: 'center' }}>
-                    {deltaPhase === 1 && (
-                        <Animatable.View
-                            ref={deltaRef}
-                            key="highscore"
-                            animation="bounceIn"
-                            duration={700}
-                            style={styles.highScoreBanner}
-                        >
-                            <Text style={styles.highScoreBannerText}>🏆 New High Score!</Text>
-                        </Animatable.View>
-                    )}
-                    {deltaPhase === 2 && (
-                        <Animatable.View
-                            ref={deltaRef}
-                            key="streak"
-                            animation="fadeInUp"
-                            duration={500}
-                            style={styles.statDeltaRow}
-                        >
-                            <Text style={styles.statDeltaText}>
-                                🔥 Streak: {prevStats.currentStreak} → <Text style={{ color: '#FF6B35', fontWeight: '800' }}>{newStreak}</Text>
-                            </Text>
-                        </Animatable.View>
-                    )}
-                    {deltaPhase === 3 && (
-                        <Animatable.View
-                            ref={deltaRef}
-                            key="totalscore"
-                            animation="fadeInUp"
-                            duration={500}
-                            style={styles.statDeltaRow}
-                        >
-                            <Text style={styles.statDeltaText}>
-                                {'Total Score: '}{prevStats.totalScore}{' → '}
-                                <Text style={{ color: '#34C759', fontWeight: '800' }}>{newTotalScore}</Text>
-                                {'  '}
-                                <Text style={{ color: '#34C759', fontWeight: '700' }}>(+{totalScore})</Text>
-                            </Text>
-                        </Animatable.View>
-                    )}
-                </View>
-            )}
         </View>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
-    highScoreBanner: {
-        backgroundColor: '#FFD700',
-        paddingVertical: 8,
-        paddingHorizontal: 24,
-        borderRadius: 20,
-        shadowColor: '#B8860B',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.4,
-        shadowRadius: 4,
-        elevation: 4,
+    root: {
+        flex: 1,
     },
-    highScoreBannerText: {
-        fontSize: 17,
+
+    // ── Overlay ──
+    overlay: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    achievementCard: {
+        backgroundColor: '#fff',
+        borderRadius: 28,
+        paddingVertical: 44,
+        paddingHorizontal: 40,
+        alignItems: 'center',
+        width: '82%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 20,
+        elevation: 20,
+    },
+    achievementIcon: {
+        marginBottom: 16,
+    },
+    achievementTitle: {
+        fontSize: 30,
         fontWeight: '800',
-        color: '#5A3E00',
-        letterSpacing: 0.4,
+        textAlign: 'center',
+        letterSpacing: 0.3,
+        marginBottom: 8,
     },
-    statDeltaRow: {
-        backgroundColor: '#F2F2F7',
-        paddingVertical: 7,
-        paddingHorizontal: 20,
-        borderRadius: 12,
-        minWidth: '70%',
+    achievementDesc: {
+        fontSize: 19,
+        color: '#444',
+        textAlign: 'center',
+        fontWeight: '500',
+        marginBottom: 24,
+    },
+    dotsRow: {
+        flexDirection: 'row',
+        gap: 7,
+    },
+    dot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#DDD',
+    },
+    dotActive: {
+        backgroundColor: '#555',
+        width: 22,
+        borderRadius: 4,
+    },
+
+    // ── Header ──
+    header: {
+        paddingTop: 20,
+        paddingBottom: 16,
+        paddingHorizontal: 24,
         alignItems: 'center',
     },
-    statDeltaText: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#333',
+    headerTitle: {
+        fontSize: 26,
+        fontWeight: '800',
+        color: '#111',
+        letterSpacing: 0.5,
+        marginBottom: 2,
     },
-    tabContainer: {
+    headerSub: {
+        fontSize: 14,
+        color: '#333',
+        fontWeight: '500',
+    },
+
+    // ── Score Card ──
+    card: {
+        backgroundColor: '#fff',
+        borderRadius: 18,
+        marginHorizontal: 16,
+        overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 3,
+    },
+    cardTitle: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: '#888',
+        paddingHorizontal: 20,
+        paddingTop: 14,
+        paddingBottom: 8,
+        textTransform: 'uppercase',
+        letterSpacing: 0.8,
+    },
+    divider: {
+        height: 1,
+        backgroundColor: '#EBEBEB',
+        marginHorizontal: 16,
+        marginVertical: 2,
+    },
+    scoreRow: {
         flexDirection: 'row',
-        backgroundColor: '#E0E0E0',
-        borderRadius: 8,
-        padding: 4,
-        marginHorizontal: 20,
-        marginVertical: 10,
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 8,
+    },
+    scoreLabel: {
+        fontSize: 15,
+        color: '#555',
+        fontWeight: '500',
+    },
+    scoreSubLabel: {
+        fontSize: 13,
+        color: '#999',
+        fontWeight: '400',
+    },
+    scoreValue: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#111',
+    },
+    totalRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+    },
+    totalLabel: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#111',
+    },
+    totalValue: {
+        fontSize: 22,
+        fontWeight: '800',
+        color: '#007AFF',
+    },
+
+    // ── Solution Section ──
+    solutionSection: {
+        flex: 1,
+        marginTop: 14,
+    },
+    optimalBanner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#F3E8FF',
+        marginHorizontal: 12,
+        marginTop: 12,
+        marginBottom: 6,
+        paddingVertical: 8,
+        borderRadius: 10,
+    },
+    optimalBannerText: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#AF52DE',
+        letterSpacing: 0.3,
+    },
+    tabBar: {
+        flexDirection: 'row',
+        backgroundColor: '#F0F0F0',
+        borderRadius: 10,
+        padding: 3,
+        margin: 12,
+        marginBottom: 6,
     },
     tab: {
         flex: 1,
         paddingVertical: 8,
         alignItems: 'center',
-        borderRadius: 6,
+        borderRadius: 8,
     },
-    activeTab: {
-        backgroundColor: 'white',
+    tabActive: {
+        backgroundColor: '#fff',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 2,
     },
     tabText: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#666',
+        color: '#888',
     },
-    activeTabText: {
-        color: '#000',
+    tabTextActive: {
+        color: '#111',
     },
-    shareButtonContainer: {
+
+    // ── Share Button ──
+    shareWrapper: {
+        marginHorizontal: 16,
         marginTop: 10,
-        marginHorizontal: 20,
-        marginBottom: 30,
+        marginBottom: 16,
     },
-    shareButton: {
+    shareBtn: {
         backgroundColor: '#34C759',
-        paddingVertical: 14,
-        paddingHorizontal: 20,
-        borderRadius: 10,
+        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
+        paddingVertical: 14,
+        borderRadius: 14,
+        shadowColor: '#34C759',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.35,
+        shadowRadius: 8,
         elevation: 5,
     },
-    shareButtonText: {
-        color: 'white',
+    shareBtnText: {
+        color: '#fff',
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: '700',
+        letterSpacing: 0.3,
     },
-})
+});
