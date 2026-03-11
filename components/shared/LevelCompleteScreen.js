@@ -195,7 +195,8 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
         try {
             const startWord = completeLadder[0];
             const endWord = completeLadder[completeLadder.length - 1];
-            const message = `🎉 I just completed a Level ${level} Word Ladder!\n\n${startWord.toUpperCase()} → ${endWord.toUpperCase()}\n⏱️ Time: ${timeFormattedTimeTaken}\n📊 Score: ${totalScore}\n🪜 ${userLength} words\n\nCan you beat my score?\nhttps://testflight.apple.com/join/JxNSA5rZ`;
+            const optimalLine = isOptimalPath ? '\n⭐ Found the shortest solution!' : '';
+            const message = `🎉 I just completed a Level ${level} Word Ladder!\n\n${startWord.toUpperCase()} → ${endWord.toUpperCase()}\n⏱️ Time: ${timeFormattedTimeTaken}\n📊 Score: ${totalScore}\n🪜 ${userLength} words${optimalLine}\n\nCan you beat my score?\nhttps://testflight.apple.com/join/JxNSA5rZ`;
             await Share.share({ message });
         } catch {
             Alert.alert('Error', 'Unable to share. Please try again.');
