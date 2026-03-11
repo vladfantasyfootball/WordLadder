@@ -245,6 +245,7 @@ export class Play extends Component {
         if (isFirstOpen) {
             newUser.wordLadder[level].timeStarted = Date.now();
             newUser.wordLadder[level].totalAttempted = (newUser.wordLadder[level].totalAttempted || 0) + 1;
+            newUser.wordLadder[level].lastAttempted = newUser.wordLadder[level].currentWordLadder.currentPuzzle;
         }
 
         if (isFirstOpen || this.state.ladderWords.length === 0) {
