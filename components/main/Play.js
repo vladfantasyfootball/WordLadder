@@ -249,7 +249,7 @@ export class Play extends Component {
 
         if (isFirstOpen || this.state.ladderWords.length === 0) {
             if (this.props.wordLadder && this.props.wordLadder[level]) {
-                const startingWord = this.props.wordLadder[level].startingWord;
+                const startingWord = this.props.wordLadder[level].startingWord.toLowerCase();
                 newUser.wordLadder[level].currentWordLadder.currentAttempt = [startingWord];
                 this.setState({ ladderWords: [startingWord], gameCompleted: false }, () => {
                     this.props.updateUser(this.props.currentUser.id, newUser, getAuth());
@@ -267,7 +267,7 @@ export class Play extends Component {
         return (
             <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: levelColorScheme[level] }]}>
                 {this.state.gameCompleted &&
-                    <View>
+                    <View style={{ flex: 1 }}>
                         <LevelCompleteScreen 
                             completeLadder={this.state.ladderWords} 
                             level={level}
@@ -295,6 +295,7 @@ export class Play extends Component {
                                 contentContainerStyle={{ alignItems: 'center', paddingTop: 10, marginTop: 5, paddingBottom: 5, backgroundColor: `${levelColorScheme[level]}`, justifyContent: 'center' }}
                                 ref={ref => { this.scrollView = ref }}
                                 onContentSizeChange={() => this.scrollView.scrollToEnd({ animated: true })}
+                                onLayout={() => this.scrollView && this.scrollView.scrollToEnd({ animated: false })}
                                 persistentScrollbar={true}>
                                 {this.state.ladderWords.slice(1).map((ladderWord, index) => {
                                     const isLastWord = this.state.ladderWords.length - 2 === index;
