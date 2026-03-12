@@ -43,14 +43,17 @@ export default function PaywallScreen({ navigation }) {
     const unlockPremiumInBackend = async () => {
         const auth = getAuth();
         const token = await auth.currentUser.getIdToken();
-        const response = await fetch(`${config.WORD_LADDER_BACKEND}/purchases/verify`, {
+        const response = await fetch(`${config.WORD_LADDER_BACKEND}/api/purchases/verify`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
             },
         });
-        if (!response.ok) throw new Error('Backend verification failed');
+        if (!response.ok) {
+            const body = await response.text();
+            throw new Error(`Backend verification failed (${response.status}): ${body}`);
+        }
         return await response.json();
     };
 
@@ -75,8 +78,8 @@ export default function PaywallScreen({ navigation }) {
             }
         } catch (error) {
             if (!error.userCancelled) {
-                console.error('Purchase error:', error);
-                Alert.alert('Purchase Failed', 'Something went wrong. Please try again.');
+                console.error('Purchase error:', error?.message ?? error);
+                Alert.alert('Purchase Failed', error?.message ?? 'Something went wrong. Please try again.');
             }
         } finally {
             setPurchasing(false);
