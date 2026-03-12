@@ -55,7 +55,13 @@ export default function PaywallScreen({ navigation }) {
     };
 
     const handlePurchase = async () => {
-        if (!offering?.availablePackages?.length) return;
+        if (!offering?.availablePackages?.length) {
+            Alert.alert(
+                'Not Available',
+                'In-app purchase is not available right now. Please try again later.'
+            );
+            return;
+        }
         try {
             setPurchasing(true);
             const { customerInfo } = await Purchases.purchasePackage(offering.availablePackages[0]);
