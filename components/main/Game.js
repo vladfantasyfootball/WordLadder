@@ -130,7 +130,7 @@ export default function Game({ navigation, level, route }) {
 
     const determineLevelDisabled = (level) => {
         if(level.toLowerCase() === "two"){
-            return (currentUser?.wordLadder['one'].currentWordLadder.completed === false || (!adLoaded && !adWatched))
+            return (currentUser?.wordLadder['one'].currentWordLadder.completed === false || (!adLoaded && !adWatched && !isPremium))
         } else {
             return false
         }
