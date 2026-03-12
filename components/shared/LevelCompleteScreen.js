@@ -15,9 +15,10 @@ export const completionBonusMap = {
     three: 150,
 };
 
-export default function LevelCompleteScreen({ completeLadder, level, shortestSolution, timeStarted, timeFinished, prevStats }) {
+export default function LevelCompleteScreen({ completeLadder, level, shortestSolution, timeStarted, timeFinished, prevStats, navigation }) {
     const currentUser = useSelector((state) => state.userState.currentUser);
     const dispatch = useDispatch();
+    const isPremium = currentUser?.purchases?.premium === true;
 
     // ─── Computed Values ─────────────────────────────────────────────────────
     const startTime = timeStarted || currentUser.wordLadder[level.toLowerCase()].timeStarted;
@@ -125,7 +126,7 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
 
     // ─── Solution Tab ─────────────────────────────────────────────────────────
     const [showShortest, setShowShortest] = useState(false);
-    const displayLadder = showShortest ? shortestSolution : completeLadder;
+    const displayLadder = (showShortest && isPremium) ? shortestSolution : completeLadder;
 
     // ─── Notification Prompt ──────────────────────────────────────────────────
     useEffect(() => {
@@ -292,8 +293,17 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.tab, showShortest && styles.tabActive]}
-                                onPress={() => setShowShortest(true)}
+                                onPress={() => {
+                                    if (isPremium) {
+                                        setShowShortest(true);
+                                    } else {
+                                        navigation.navigate('Paywall');
+                                    }
+                                }}
                             >
+                                {!isPremium && (
+                                    <Ionicons name="lock-closed" size={13} color={showShortest ? '#111' : '#888'} style={{ marginRight: 4 }} />
+                                )}
                                 <Text style={[styles.tabText, showShortest && styles.tabTextActive]}>Shortest</Text>
                             </TouchableOpacity>
                         </View>
@@ -507,6 +517,8 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         alignItems: 'center',
         borderRadius: 8,
+        flexDirection: 'row',
+        justifyContent: 'center',
     },
     tabActive: {
         backgroundColor: '#fff',

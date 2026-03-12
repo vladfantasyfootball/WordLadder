@@ -276,6 +276,7 @@ export class Play extends Component {
                             timeStarted={this.props.currentUser.wordLadder[level.toLowerCase()].timeStarted}
                             timeFinished={this.state.timeFinished}
                             prevStats={this.state.prevStats}
+                            navigation={this.props.navigation}
                         />
                     </View>
                 }

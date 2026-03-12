@@ -87,8 +87,10 @@ export default function Game({ navigation, level, route }) {
         }
     },[currentUser])
 
+    const isPremium = currentUser?.purchases?.premium === true;
+
     const navigateToPlay = (level) => {
-        if(level.toLowerCase() === "two" && !adWatched){
+        if(level.toLowerCase() === "two" && !adWatched && !isPremium){
             rewardedInterstitialAd.show().then(() => {StatusBar.setStatusBarHidden(true)});
         } else {
             navigation.navigate('Play', {

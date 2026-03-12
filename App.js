@@ -9,12 +9,14 @@ import { Provider } from 'react-redux';
 import MainScreen from './components/Main';
 import Play from './components/main/Play';
 import ProfilePage from './components/main/ProfilePage';
+import PaywallScreen from './components/main/PaywallScreen';
 import { configureStore } from '@reduxjs/toolkit'
 import { user } from './redux/reducers/user';
 import { wordLadder } from './redux/reducers/wordLadder';
 import config from './config';
 import { Alert, View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Purchases from 'react-native-purchases';
 
 let app, auth;
 let initError = null;
@@ -39,6 +41,9 @@ try {
   auth = initializeAuth(app, {
     persistence: getReactNativePersistence(AsyncStorage)
   });
+
+  // Initialize RevenueCat (iOS key only for now — add Android key when needed)
+  Purchases.configure({ apiKey: config.REVENUECAT_IOS_API_KEY });
 } catch (error) {
   console.error('Firebase initialization error:', error);
   initError = error.message;
@@ -131,6 +136,7 @@ function App() {
               </TouchableOpacity>
             ) }}}/>
           {/* <Stack.Screen name="Paywall" component={PayWall} options={{headerShown: false, presentation: 'modal'}}/> */}
+          <Stack.Screen name="Paywall" component={PaywallScreen} options={{headerShown: false, presentation: 'modal'}}/>
         </Stack.Navigator>
       </NavigationContainer>
   )
