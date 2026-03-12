@@ -95,8 +95,17 @@ function App() {
   const [user, setUser] = useState();
 
   // Handle user state changes
-  function handleAuthStateChanged(user) {
+  async function handleAuthStateChanged(user) {
     setUser(user);
+    if (user) {
+      // Link RevenueCat subscriber to the Firebase UID so purchases are
+      // associated with the correct user rather than an anonymous ID.
+      try {
+        await Purchases.logIn(user.uid);
+      } catch (e) {
+        console.warn('RevenueCat logIn failed:', e);
+      }
+    }
     if (initializing) {
       setInitializing(false);
     }
