@@ -139,9 +139,14 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
         const hasBeenAsked = currentUser?.notifications?.hasBeenAskedForNotifications;
         const notificationsEnabled = currentUser?.notifications?.enabled;
         if (!hasBeenAsked && !notificationsEnabled) {
-            setTimeout(showNotificationPrompt, isFirstCompletion ? 4500 : 500);
+            // Wait until the achievement carousel is done before prompting.
+            // overlayVisible starts true when there are achievements to show,
+            // and flips to false once the last card fades out. For non-first
+            // completions the overlay never shows so we prompt immediately.
+            if (overlayVisible) return; // carousel still running — wait for it
+            setTimeout(showNotificationPrompt, 500);
         }
-    }, []);
+    }, [overlayVisible]);
 
     const markAsAsked = async () => {
         try {
