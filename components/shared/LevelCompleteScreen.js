@@ -20,6 +20,12 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
     const dispatch = useDispatch();
     const isPremium = currentUser?.purchases?.premium === true;
 
+    // Always keep a ref to the latest currentUser so Alert callbacks (which
+    // close over the value at the time Alert.alert was called) don't use a
+    // stale snapshot if a completion save lands after the prompt fires.
+    const currentUserRef = useRef(currentUser);
+    useEffect(() => { currentUserRef.current = currentUser; }, [currentUser]);
+
     // ─── Computed Values ─────────────────────────────────────────────────────
     const startTime = timeStarted || currentUser.wordLadder[level.toLowerCase()].timeStarted;
     const endTime = timeFinished || currentUser.wordLadder[level.toLowerCase()].timeFinished;
@@ -140,11 +146,12 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
     const markAsAsked = async () => {
         try {
             const auth = getAuth();
+            const latest = currentUserRef.current;
             const updatedUser = {
-                ...currentUser,
-                notifications: { ...currentUser.notifications, hasBeenAskedForNotifications: true },
+                ...latest,
+                notifications: { ...latest.notifications, hasBeenAskedForNotifications: true },
             };
-            await dispatch(updateUser(currentUser.id, updatedUser, auth));
+            await dispatch(updateUser(latest.id, updatedUser, auth));
         } catch (error) {
             console.error('Error marking notification prompt as shown:', error);
         }
@@ -167,11 +174,12 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
             const token = await registerForPushNotificationsAsync();
             if (token) {
                 const auth = getAuth();
+                const latest = currentUserRef.current;
                 const updatedUser = {
-                    ...currentUser,
+                    ...latest,
                     notifications: { enabled: true, expoPushToken: token, hasBeenAskedForNotifications: true },
                 };
-                await dispatch(updateUser(currentUser.id, updatedUser, auth));
+                await dispatch(updateUser(latest.id, updatedUser, auth));
                 Alert.alert('✅ Notifications Enabled', "You'll receive a daily reminder if you haven't played today's puzzle!");
             } else {
                 Alert.alert(
