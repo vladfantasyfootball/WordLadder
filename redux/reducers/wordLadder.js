@@ -10,6 +10,11 @@ const initialState = {
             endingWord: "",
             id: "",
         },
+        "three": {
+            startingWord: "",
+            endingWord: "",
+            id: "",
+        },
     }
 }
 

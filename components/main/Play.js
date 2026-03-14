@@ -7,7 +7,7 @@ import { bindActionCreators } from 'redux';
 import { fetchUser, getWordLadders, updateUser } from '../../redux/actions';
 import LadderStepWord from '../shared/LadderStepWord'
 import FlatButton from '../shared/button';
-import { validateWord, validateLevelOneWord, validateExtraLevelTwoRule } from '../../utils/validations';
+import { validateWord, validateLevelOneWord, validateExtraLevelTwoRule, validateExtraLevelThreeRules } from '../../utils/validations';
 import LevelCompleteScreen, { completionBonusMap } from '../shared/LevelCompleteScreen';
 import CustomKeyboard from '../shared/CustomKeyboard';
 import { getAuth } from 'firebase/auth';
@@ -201,6 +201,91 @@ export class Play extends Component {
                             ]
                         )
                     }
+                }
+            } else {
+                Alert.alert('', 'Word does not exist.');
+                this.setState({ nextWord: '' });
+            }
+        } else if (level.toLowerCase() === "three") {
+            const currentWord = this.state.nextWord.toLowerCase();
+            const prevWord = (this.state.ladderWords.length > 1
+                ? this.state.ladderWords[this.state.ladderWords.length - 1]
+                : this.props.wordLadder[level.toLowerCase()].startingWord
+            ).toLowerCase();
+
+            // Level 3 words must be 4-6 letters
+            if (currentWord.length < 4 || currentWord.length > 6) {
+                Alert.alert('', 'Word must be 4 to 6 letters long.');
+                this.setState({ nextWord: '' });
+                return;
+            }
+
+            const validWord = await validateWord(currentWord);
+            if (validWord) {
+                const isSubstitution = validateLevelOneWord(prevWord, currentWord);
+                const isAnagram = validateExtraLevelTwoRule(prevWord, currentWord);
+                const isInsertionOrDeletion = validateExtraLevelThreeRules(prevWord, currentWord);
+
+                if (isSubstitution || isAnagram || isInsertionOrDeletion) {
+                    if (currentWord === this.props.wordLadder[level.toLowerCase()].endingWord.toLowerCase()) {
+                        const completionTime = Date.now();
+                        const prevStats = {
+                            totalScore: this.props.currentUser.wordLadder[level.toLowerCase()].totalScore || 0,
+                            highScore: this.props.currentUser.wordLadder[level.toLowerCase()].highScore || 0,
+                            currentStreak: this.props.currentUser.wordLadder[level.toLowerCase()].currentStreak || 0,
+                        };
+                        this._completing = true;
+                        this.setState({ gameCompleted: true, timeFinished: completionTime, prevStats, ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, async () => {
+                            const newUser = JSON.parse(JSON.stringify(this.props.currentUser));
+                            newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentAttempt = this.state.ladderWords;
+                            newUser.wordLadder[level.toLowerCase()].timeFinished = completionTime;
+                            newUser.wordLadder[level.toLowerCase()].currentWordLadder.completed = true;
+                            newUser.wordLadder[level.toLowerCase()].currentStreak = newUser.wordLadder[level.toLowerCase()].currentStreak + 1;
+                            if (newUser.wordLadder[level.toLowerCase()].currentStreak > newUser.wordLadder[level.toLowerCase()].longestStreak) {
+                                newUser.wordLadder[level.toLowerCase()].longestStreak = newUser.wordLadder[level.toLowerCase()].currentStreak;
+                            }
+                            newUser.wordLadder[level.toLowerCase()].lastSolved = newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle;
+                            newUser.wordLadder[level.toLowerCase()].totalSolved = (newUser.wordLadder[level.toLowerCase()].totalSolved || 0) + 1;
+                            let timeTaken = Math.round((newUser.wordLadder[level.toLowerCase()].timeFinished - newUser.wordLadder[level.toLowerCase()].timeStarted) / 1000);
+                            let timeBonus = 100;
+                            if (timeTaken > 60) {
+                                const secondsOver = timeTaken - 60;
+                                const thirtySecondIntervals = Math.floor(secondsOver / 30);
+                                timeBonus = Math.max(0, 100 - (thirtySecondIntervals * 5));
+                            }
+                            const completionBonus = completionBonusMap[level.toLowerCase()];
+                            const shortestLength = this.props.wordLadder[level.toLowerCase()].shortestSolution.length;
+                            const userLength = this.state.ladderWords.length;
+                            const wordBonus = Math.max(0, 100 - (userLength - shortestLength) * 5);
+                            const totalRoundScore = timeBonus + completionBonus + wordBonus;
+                            newUser.wordLadder[level.toLowerCase()].totalScore = newUser.wordLadder[level.toLowerCase()].totalScore + totalRoundScore;
+                            if (totalRoundScore > newUser.wordLadder[level.toLowerCase()].highScore) {
+                                newUser.wordLadder[level.toLowerCase()].highScore = totalRoundScore;
+                            }
+                            await this.props.updateUser(this.props.currentUser.id, newUser, getAuth());
+                        });
+                    } else {
+                        this.setState({ ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, () => {
+                            if (this._completing) return;
+                            const newUser = JSON.parse(JSON.stringify(this.props.currentUser));
+                            newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentAttempt = this.state.ladderWords;
+                            this.props.updateUser(this.props.currentUser.id, newUser, getAuth());
+                        });
+                    }
+                } else {
+                    Alert.alert(
+                        '',
+                        'Not a valid word transformation',
+                        [
+                            { text: 'OK', style: 'cancel' },
+                            { text: 'View Rules', onPress: () => {
+                                this.props.navigation.goBack();
+                                setTimeout(() => {
+                                    this.props.route.params?.onShowRules?.();
+                                }, 100);
+                            }}
+                        ]
+                    );
                 }
             } else {
                 Alert.alert('', 'Word does not exist.');
