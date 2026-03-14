@@ -28,7 +28,7 @@ export function getWordLadders(auth) {
             ).then((response) => {
                 dispatch({
                     type: WORD_LADDER_CHANGE,
-                    wordLadder: { "one": response.data.one, "two": response.data.two }
+                    wordLadder: { "one": response.data.one, "two": response.data.two, "three": response.data.three || null }
                 })
             }).catch((e) => {
                 console.error('Error fetching puzzles:', e)

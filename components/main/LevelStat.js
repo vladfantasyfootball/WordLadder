@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { View, StyleSheet, Text, ScrollView } from 'react-native'
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity } from 'react-native'
 import { levelColorScheme } from '../../redux/constants/colorScheme';
 import { useSelector } from 'react-redux';
 import * as Animatable from 'react-native-animatable';
 import { useIsFocused } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 const RANKS = [
     { label: 'Novice',     minScore: 0,    minStreak: 0,  color: '#9E9E9E', emoji: '📖' },
@@ -85,6 +86,30 @@ export default function LevelStat({ navigation, level }) {
         }
     }, [isFocused]);
 
+    const isPremium = currentUser?.purchases?.premium === true;
+    const bgColor = levelColorScheme[level];
+
+    if (level.toLowerCase() === 'three' && !isPremium) {
+        return (
+            <ScrollView contentContainerStyle={[styles.container, { backgroundColor: bgColor }]}>
+                <Animatable.View animation="fadeInUp" duration={600} style={styles.premiumGate}>
+                    <Ionicons name="lock-closed" size={48} color="#AF52DE" style={{ marginBottom: 16 }} />
+                    <Text style={styles.premiumGateTitle}>Level 3 is Premium</Text>
+                    <Text style={styles.premiumGateSubtitle}>
+                        {'Unlock Level 3 to see your stats here. Level 3 introduces add & remove a letter moves.'}
+                    </Text>
+                    <TouchableOpacity
+                        style={styles.premiumGateBtn}
+                        onPress={() => navigation.navigate('Paywall')}
+                        activeOpacity={0.85}
+                    >
+                        <Text style={styles.premiumGateBtnText}>Unlock Premium</Text>
+                    </TouchableOpacity>
+                </Animatable.View>
+            </ScrollView>
+        );
+    }
+
     const currentStreak = levelData?.currentStreak ?? 0;
     const longestStreak = levelData?.longestStreak ?? 0;
     const totalScore = levelData?.totalScore ?? 0;
@@ -119,7 +144,6 @@ export default function LevelStat({ navigation, level }) {
     const nextRank = getNextRank(totalScore, currentStreak);
 
     const streakIcon = currentStreak >= 3 ? '🔥' : currentStreak > 0 ? '✨' : '❄️';
-    const bgColor = levelColorScheme[level];
 
     return (
         <ScrollView contentContainerStyle={[styles.container, { backgroundColor: bgColor }]}>
@@ -244,6 +268,44 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         gap: 12,
         marginBottom: 12,
+    },
+    premiumGate: {
+        alignItems: 'center',
+        backgroundColor: 'white',
+        borderRadius: 20,
+        paddingVertical: 36,
+        paddingHorizontal: 28,
+        marginHorizontal: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        elevation: 5,
+    },
+    premiumGateTitle: {
+        fontSize: 22,
+        fontWeight: '800',
+        color: '#111',
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    premiumGateSubtitle: {
+        fontSize: 14,
+        color: '#555',
+        textAlign: 'center',
+        lineHeight: 21,
+        marginBottom: 24,
+    },
+    premiumGateBtn: {
+        backgroundColor: '#AF52DE',
+        borderRadius: 14,
+        paddingVertical: 14,
+        paddingHorizontal: 32,
+    },
+    premiumGateBtnText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '700',
     },
     card: {
         backgroundColor: 'white',

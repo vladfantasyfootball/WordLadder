@@ -26,13 +26,13 @@ export class Home extends Component {
           }}>
           {props => <Game {...props} level={'Two'} route={props.route} />}
         </Tab.Screen>
-        {/* <Tab.Screen
+        <Tab.Screen
           name={"Level Three"}
           options={{
             headerTitleAlign: 'center',
           }}>
-          {props => <Game {...props} level={'Three'} />}
-        </Tab.Screen> */}
+          {props => <Game {...props} level={'Three'} route={props.route} />}
+        </Tab.Screen>
       </Tab.Navigator>
     )
   }

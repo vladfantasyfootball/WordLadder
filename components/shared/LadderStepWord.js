@@ -4,7 +4,7 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 const ladderWordStyleScheme = {
     'One': '#CCE7F4',
     'Two': '#E5D8FF',
-    'Three': '#D4FCE0',
+    'Three': '#FFCF70',
 }
 
 const LadderStepWord = ({ word, level, size, fontSize }) => {

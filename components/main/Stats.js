@@ -26,6 +26,13 @@ export class Stats extends Component {
           }}>
           {props => <LevelStat {...props} level={'Two'} />}
         </Tab.Screen>
+        <Tab.Screen
+          name={"Level Three"}
+          options={{
+            headerTitleAlign: 'center',
+          }}>
+          {props => <LevelStat {...props} level={'Three'} />}
+        </Tab.Screen>
       </Tab.Navigator>
     )
   }

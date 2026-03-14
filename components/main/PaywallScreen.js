@@ -10,8 +10,9 @@ import config from '../../config';
 const ENTITLEMENT_ID = 'premium';
 
 const FEATURES = [
-    { icon: 'ban-outline', label: 'No ads between levels' },
+    { icon: 'lock-open-outline', label: 'Access Level 3 — with add & remove a letter moves' },
     { icon: 'analytics-outline', label: 'View the shortest solution after every puzzle' },
+    { icon: 'ban-outline', label: 'No ads between levels' },
     { icon: 'infinite-outline', label: 'One-time purchase, yours forever' },
 ];
 
