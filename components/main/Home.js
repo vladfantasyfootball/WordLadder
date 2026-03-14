@@ -32,7 +32,7 @@ export class Home extends Component {
             headerTitleAlign: 'center',
           }}>
           {props => <Game {...props} level={'Three'} route={props.route} />}
-        </Tab.Screen>}
+        </Tab.Screen>
       </Tab.Navigator>
     )
   }

@@ -7,7 +7,7 @@
     "icon": "./assets/WL.png",
     "splash": {
       "image": "./assets/splash.png",
-      "resizeMode": "contain",
+      "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
     "updates": {
@@ -45,7 +45,7 @@
         {
           "backgroundColor": "#ffffff",
           "image": "./assets/splash.png",
-          "resizeMode": "contain"
+          "resizeMode": "cover"
         }
       ],
       "expo-font",

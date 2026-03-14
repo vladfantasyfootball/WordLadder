@@ -294,9 +294,13 @@ export class Play extends Component {
         }
     }
 
+    getTileSize = (word, isActive) => {
+        return { size: isActive ? 50 : 44, fontSize: isActive ? 32 : 28 };
+    }
+
     renderInput = () => {
         return (
-            <View style={{ paddingBottom: 10 }}>
+            <View style={{ paddingBottom: 4 }}>
                 <View style={styles.inputContainer}>
                     <View style={styles.wordDisplay}>
                         <Text style={[
@@ -369,7 +373,7 @@ export class Play extends Component {
                 {!this.state.gameCompleted &&
                     <View style={[styles.container, { backgroundColor: levelColorScheme[level] }]}>
                         <View style={{ alignItems: 'center', marginTop: 5, marginBottom: 10 }}>
-                            <LadderStepWord word={wordLadder[level.toLowerCase()].startingWord} size={62} fontSize={44} />
+                            <LadderStepWord word={wordLadder[level.toLowerCase()].startingWord} size={this.getTileSize(wordLadder[level.toLowerCase()].startingWord, true).size} fontSize={this.getTileSize(wordLadder[level.toLowerCase()].startingWord, true).fontSize} />
                         </View>
                         <View
                             style={{
@@ -400,8 +404,8 @@ export class Play extends Component {
                                                     key={`ladderWord-${index}`}
                                                     word={ladderWord}
                                                     level={level}
-                                                    size={isLastWord ? 62 : 50}
-                                                    fontSize={isLastWord ? 44 : 32}
+                                                    size={this.getTileSize(ladderWord, isLastWord).size}
+                                                    fontSize={this.getTileSize(ladderWord, isLastWord).fontSize}
                                                 />
                                             </View>
                                             <View style={{ width: 60 }} />
@@ -417,8 +421,8 @@ export class Play extends Component {
                                 marginTop: 'auto',
                             }}
                         />
-                        <View style={{ alignItems: 'center', paddingTop: 10, paddingBottom: 10 }}>
-                            <LadderStepWord word={wordLadder[level.toLowerCase()].endingWord} size={62} fontSize={44} />
+                        <View style={{ alignItems: 'center', paddingTop: 5, paddingBottom: 5 }}>
+                            <LadderStepWord word={wordLadder[level.toLowerCase()].endingWord} size={this.getTileSize(wordLadder[level.toLowerCase()].endingWord, true).size} fontSize={this.getTileSize(wordLadder[level.toLowerCase()].endingWord, true).fontSize} />
                         </View>
                         {this.renderInput()}
                     </View>
@@ -439,7 +443,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 10,
-        paddingVertical: 15,
+        paddingVertical: 8,
     },
     wordDisplay: {
         flex: 1,

@@ -193,30 +193,24 @@ export default function Game({ navigation, level, route }) {
                                 </>
                             : level.toLowerCase() === "three" && <>
                                     <Text style={{ textAlign: 'center', paddingBottom: 16, fontSize: 15, color: '#5B5A53', lineHeight: 22 }}>
-                                        {`All the same rules as Level Two — plus two new moves:`}
+                                        {`All the same rules as Level Two — plus one new move:`}
                                     </Text>
-                                    <View style={{ backgroundColor: 'white', borderRadius: 14, paddingVertical: 16, paddingHorizontal: 20, width: '100%', alignItems: 'center', marginBottom: 12, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } }}>
-                                        <Text style={{ fontSize: 28, paddingBottom: 6 }}>➕</Text>
-                                        <Text style={{ fontWeight: '800', fontSize: 17, color: '#5B5A53', paddingBottom: 4 }}>
-                                            {`Add a Letter`}
-                                        </Text>
-                                        <Text style={{ fontSize: 14, color: '#5B5A53', textAlign: 'center', lineHeight: 20, paddingBottom: 10 }}>
-                                            {`Insert one letter anywhere to make a new word`}
-                                        </Text>
-                                        <Text style={{ fontWeight: '700', fontSize: 16, color: '#5B5A53', letterSpacing: 1 }}>
-                                            {`bake → brake`}
-                                        </Text>
-                                    </View>
                                     <View style={{ backgroundColor: 'white', borderRadius: 14, paddingVertical: 16, paddingHorizontal: 20, width: '100%', alignItems: 'center', marginBottom: 16, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } }}>
-                                        <Text style={{ fontSize: 28, paddingBottom: 6 }}>➖</Text>
+                                        <Text style={{ fontSize: 28, paddingBottom: 6 }}>➕➖</Text>
                                         <Text style={{ fontWeight: '800', fontSize: 17, color: '#5B5A53', paddingBottom: 4 }}>
-                                            {`Remove a Letter`}
+                                            {`Add or Remove a Letter`}
                                         </Text>
-                                        <Text style={{ fontSize: 14, color: '#5B5A53', textAlign: 'center', lineHeight: 20, paddingBottom: 10 }}>
-                                            {`Remove one letter to make a new word`}
+                                        <Text style={{ fontSize: 14, color: '#5B5A53', textAlign: 'center', lineHeight: 20, paddingBottom: 14 }}>
+                                            {`Insert or remove one letter anywhere to make a new word`}
                                         </Text>
-                                        <Text style={{ fontWeight: '700', fontSize: 16, color: '#5B5A53', letterSpacing: 1 }}>
-                                            {`brake → bake`}
+                                        <Text style={{ fontWeight: '700', fontSize: 15, color: '#5B5A53', letterSpacing: 0.5, paddingBottom: 6 }}>
+                                            {`rake ↔ brake`}
+                                        </Text>
+                                        <Text style={{ fontWeight: '700', fontSize: 15, color: '#5B5A53', letterSpacing: 0.5, paddingBottom: 6 }}>
+                                            {`bake ↔ brake`}
+                                        </Text>
+                                        <Text style={{ fontWeight: '700', fontSize: 15, color: '#5B5A53', letterSpacing: 0.5 }}>
+                                            {`bark ↔ barks`}
                                         </Text>
                                     </View>
                                     <Text style={{ fontWeight: '700', fontSize: 14, color: '#5B5A53', textAlign: 'center', paddingBottom: 8 }}>
