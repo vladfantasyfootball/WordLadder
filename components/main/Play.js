@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, Platform, ScrollView, Alert } from 'react-native'
+import { View, Text, StyleSheet, Platform, ScrollView, Alert, TouchableOpacity } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { levelColorScheme } from '../../redux/constants/colorScheme';
 import { connect } from 'react-redux';
@@ -11,6 +11,7 @@ import { validateWord, validateLevelOneWord, validateExtraLevelTwoRule, validate
 import LevelCompleteScreen, { completionBonusMap } from '../shared/LevelCompleteScreen';
 import CustomKeyboard from '../shared/CustomKeyboard';
 import { getAuth } from 'firebase/auth';
+import { Ionicons, SimpleLineIcons } from '@expo/vector-icons';
 
 export class Play extends Component {
     constructor(props) {
@@ -84,8 +85,7 @@ export class Play extends Component {
                         let timeBonus = 100;
                         if (timeTaken > 60) {
                             const secondsOver = timeTaken - 60;
-                            const thirtySecondIntervals = Math.floor(secondsOver / 30);
-                            timeBonus = Math.max(0, 100 - (thirtySecondIntervals * 5));
+                            timeBonus = Math.max(0, 100 - Math.floor(secondsOver / 6));
                         }
                         const completionBonus = completionBonusMap[level.toLowerCase()];
                         const shortestLength = this.props.wordLadder[level.toLowerCase()].shortestSolution.length;
@@ -140,12 +140,11 @@ export class Play extends Component {
                                     newUser.wordLadder[level.toLowerCase()].totalSolved = (newUser.wordLadder[level.toLowerCase()].totalSolved || 0) + 1;
                                     let timeTaken = Math.round((newUser.wordLadder[level.toLowerCase()].timeFinished - newUser.wordLadder[level.toLowerCase()].timeStarted) / 1000);
 
-                                // Time bonus: Start at 100 points, lose 5 points for every 30 seconds after 1 minute
+                                // Time bonus: Start at 100 points, lose 1 point every 6 seconds after 1 minute
                                 let timeBonus = 100;
                                 if (timeTaken > 60) {
                                     const secondsOver = timeTaken - 60;
-                                    const thirtySecondIntervals = Math.floor(secondsOver / 30);
-                                    timeBonus = Math.max(0, 100 - (thirtySecondIntervals * 5));
+                                    timeBonus = Math.max(0, 100 - Math.floor(secondsOver / 6));
                                 }
                                 const completionBonus = completionBonusMap[level.toLowerCase()];
                                 const shortestLength = this.props.wordLadder[level.toLowerCase()].shortestSolution.length;
@@ -250,8 +249,7 @@ export class Play extends Component {
                             let timeBonus = 100;
                             if (timeTaken > 60) {
                                 const secondsOver = timeTaken - 60;
-                                const thirtySecondIntervals = Math.floor(secondsOver / 30);
-                                timeBonus = Math.max(0, 100 - (thirtySecondIntervals * 5));
+                                timeBonus = Math.max(0, 100 - Math.floor(secondsOver / 6));
                             }
                             const completionBonus = completionBonusMap[level.toLowerCase()];
                             const shortestLength = this.props.wordLadder[level.toLowerCase()].shortestSolution.length;
@@ -295,7 +293,20 @@ export class Play extends Component {
     }
 
     getTileSize = (word, isActive) => {
-        return { size: isActive ? 50 : 44, fontSize: isActive ? 32 : 28 };
+        return { size: isActive ? 46 : 42, fontSize: isActive ? 30 : 26 };
+    }
+
+    undoLastWord = () => {
+        // Can't undo past the starting word
+        if (this.state.ladderWords.length <= 1) return;
+        const newLadderWords = this.state.ladderWords.slice(0, -1);
+        this.setState({ ladderWords: newLadderWords }, () => {
+            if (this._completing) return;
+            const newUser = JSON.parse(JSON.stringify(this.props.currentUser));
+            const level = this.props.route.params.level.toLowerCase();
+            newUser.wordLadder[level].currentWordLadder.currentAttempt = newLadderWords;
+            this.props.updateUser(this.props.currentUser.id, newUser, getAuth());
+        });
     }
 
     renderInput = () => {
@@ -383,7 +394,7 @@ export class Play extends Component {
                         />
                         {this.state.ladderWords.length > 1 &&
                             <ScrollView
-                                contentContainerStyle={{ alignItems: 'center', paddingTop: 10, marginTop: 5, paddingBottom: 5, backgroundColor: `${levelColorScheme[level]}`, justifyContent: 'center' }}
+                                contentContainerStyle={{ alignItems: 'center', paddingTop: 10, marginTop: 5, paddingBottom: 48, backgroundColor: `${levelColorScheme[level]}`, justifyContent: 'center' }}
                                 ref={ref => { this.scrollView = ref }}
                                 onContentSizeChange={() => this.scrollView.scrollToEnd({ animated: true })}
                                 onLayout={() => this.scrollView && this.scrollView.scrollToEnd({ animated: false })}
@@ -391,8 +402,8 @@ export class Play extends Component {
                                 {this.state.ladderWords.slice(1).map((ladderWord, index) => {
                                     const isLastWord = this.state.ladderWords.length - 2 === index;
                                     return (
-                                        <View key={`arrow-${index}`} style={[styles.rowStyle, { display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', width: '100%' }]}>                                               
-                                            <View style={{ width: 60, alignItems: 'flex-end', paddingRight: 10 }}>
+                        <View key={`arrow-${index}`} style={[styles.rowStyle, { display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', width: '100%' }]}>                                               
+                                            <View style={{ width: 52, alignItems: 'flex-end', paddingRight: 6 }}>
                                                 {isLastWord && 
                                                     <Text style={{ fontSize: 20 }}>
                                                         {"->"}
@@ -408,7 +419,17 @@ export class Play extends Component {
                                                     fontSize={this.getTileSize(ladderWord, isLastWord).fontSize}
                                                 />
                                             </View>
-                                            <View style={{ width: 60 }} />
+                                            <View style={{ width: 52, alignItems: 'flex-start', paddingLeft: 4, paddingRight: 10 }}>
+                                                {isLastWord && this.state.ladderWords.length > 1 &&
+                                                    <TouchableOpacity
+                                                        onPress={this.undoLastWord}
+                                                        style={{ padding: 6, backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: 20 }}
+                                                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                                    >
+                                                        <SimpleLineIcons name="action-undo" size={26} color="#333" />
+                                                    </TouchableOpacity>
+                                                }
+                                            </View>
                                         </View>
                                     )
                                 })}

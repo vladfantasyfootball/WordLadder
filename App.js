@@ -10,9 +10,12 @@ import MainScreen from './components/Main';
 import Play from './components/main/Play';
 import ProfilePage from './components/main/ProfilePage';
 import PaywallScreen from './components/main/PaywallScreen';
+import LeaderboardDetail from './components/main/LeaderboardDetail';
+import RankProgression from './components/main/RankProgression';
 import { configureStore } from '@reduxjs/toolkit'
 import { user } from './redux/reducers/user';
 import { wordLadder } from './redux/reducers/wordLadder';
+import { leaderboard } from './redux/reducers/leaderboard';
 import config from './config';
 import { Alert, View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -58,7 +61,8 @@ const AppWrapper = () => {
   // Automatically calls `combineReducers`
   reducer: {
     userState: user,
-    wordLadderState: wordLadder
+    wordLadderState: wordLadder,
+    leaderboardState: leaderboard,
   }
 })
 
@@ -146,6 +150,24 @@ function App() {
             ) }}}/>
           {/* <Stack.Screen name="Paywall" component={PayWall} options={{headerShown: false, presentation: 'modal'}}/> */}
           <Stack.Screen name="Paywall" component={PaywallScreen} options={{headerShown: false, presentation: 'modal'}}/>
+          <Stack.Screen name="LeaderboardDetail" component={LeaderboardDetail} options={({ route, navigation }) => ({
+            headerTitleAlign: 'center',
+            headerTitle: ({ ['totalScore']: 'Total Score', ['averageScore']: 'Average Score', ['currentStreak']: 'Current Streak', ['longestStreak']: 'Longest Streak', ['totalSolved']: 'Puzzles Solved' })[route.params?.category] || 'Leaderboard',
+            headerLeft: () => (
+              <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginLeft: 12 }}>
+                <Ionicons name="chevron-back" size={28} color="#000" />
+              </TouchableOpacity>
+            ),
+          })}/>
+          <Stack.Screen name="RankProgression" component={RankProgression} options={({ navigation }) => ({
+            headerTitleAlign: 'center',
+            headerTitle: 'Rank Progression',
+            headerLeft: () => (
+              <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginLeft: 12 }}>
+                <Ionicons name="chevron-back" size={28} color="#000" />
+              </TouchableOpacity>
+            ),
+          })}/>
         </Stack.Navigator>
       </NavigationContainer>
   )

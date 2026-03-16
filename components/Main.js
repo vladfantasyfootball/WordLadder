@@ -37,7 +37,7 @@ export class MainScreen extends Component {
                     }}
                 />
                 <Tab.Screen
-                    name="Stats"
+                    name="Leaderboard"
                     component={Stats}
                     options={{
                         headerTitleAlign: 'center',
@@ -45,7 +45,7 @@ export class MainScreen extends Component {
                             <Profile {...this.props}/>
                         ),
                         tabBarIcon: ({ color, size }) => (
-                            <Ionicons name="stats-chart" color={color} size={size} />
+                            <MaterialIcons name="leaderboard" color={color} size={size} />
                         ),
                     }}
                 />

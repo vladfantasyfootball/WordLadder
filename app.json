@@ -5,11 +5,6 @@
     "version": "2",
     "orientation": "portrait",
     "icon": "./assets/WL.png",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "cover",
-      "backgroundColor": "#ffffff"
-    },
     "updates": {
       "fallbackToCacheTimeout": 0
     },
@@ -24,7 +19,7 @@
     "ios": {
       "googleServicesFile": "./GoogleService-Info.plist",
       "bundleIdentifier": "com.vlad.wordLadder",
-      "buildNumber": "27",
+      "buildNumber": "31",
       "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -43,8 +38,8 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#ffffff",
           "image": "./assets/splash.png",
+          "imageWidth": 1200,
           "resizeMode": "cover"
         }
       ],

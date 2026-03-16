@@ -1,4 +1,4 @@
-import { USER_STATE_CHANGE, WORD_LADDER_CHANGE } from '../constants/index';
+import { USER_STATE_CHANGE, WORD_LADDER_CHANGE, LEADERBOARD_CHANGE } from '../constants/index';
 import axios from 'axios';
 import config from '../../config';
 
@@ -32,6 +32,28 @@ export function getWordLadders(auth) {
                 })
             }).catch((e) => {
                 console.error('Error fetching puzzles:', e)
+            })
+        }
+    })
+}
+
+export function fetchLeaderboard(level, category, auth) {
+    return (async (dispatch) => {
+        if (auth.currentUser) {
+            const token = await auth.currentUser.getIdToken();
+            await axios.post(
+                `${config.WORD_LADDER_BACKEND}/api/leaderboard?level=${level}&category=${category}`,
+                { userId: auth.currentUser.uid },
+                { headers: { Authorization: `Bearer ${token}` } }
+            ).then((response) => {
+                dispatch({
+                    type: LEADERBOARD_CHANGE,
+                    level,
+                    category,
+                    data: response.data
+                })
+            }).catch((e) => {
+                console.error('Error fetching leaderboard:', e)
             })
         }
     })

@@ -7,29 +7,29 @@ import { useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 const RANKS = [
-    { label: 'Novice',     minScore: 0,    minStreak: 0,  color: '#9E9E9E', emoji: '📖' },
-    { label: 'Apprentice', minScore: 100,  minStreak: 0,  color: '#66BB6A', emoji: '✏️' },
-    { label: 'Wordsmith',  minScore: 500,  minStreak: 0,  color: '#42A5F5', emoji: '🖊️' },
-    { label: 'Expert',     minScore: 1500, minStreak: 0,  color: '#AB47BC', emoji: '🧠' },
-    { label: 'Master',     minScore: 3000, minStreak: 7,  color: '#FFA726', emoji: '⚡' },
-    { label: 'Legend',     minScore: 6000, minStreak: 30, color: '#EF5350', emoji: '👑' },
+    { label: 'Novice',     minScore: 0,     minStreak: 0,  color: '#FF8A65', emoji: '📖' },
+    { label: 'Apprentice', minScore: 1000,  minStreak: 0,  color: '#66BB6A', emoji: '✏️' },
+    { label: 'Wordsmith',  minScore: 3000,  minStreak: 5,  color: '#42A5F5', emoji: '🖊️' },
+    { label: 'Expert',     minScore: 10000, minStreak: 10, color: '#AB47BC', emoji: '🧠' },
+    { label: 'Master',     minScore: 20000, minStreak: 15, color: '#FFA726', emoji: '⚡' },
+    { label: 'Legend',     minScore: 50000, minStreak: 30, color: '#EF5350', emoji: '👑' },
 ];
 
-function getRank(totalScore, currentStreak) {
+function getRank(totalScore, longestStreak) {
     let rank = RANKS[0];
     for (const r of RANKS) {
-        if (totalScore >= r.minScore && currentStreak >= r.minStreak) rank = r;
+        if (totalScore >= r.minScore && longestStreak >= r.minStreak) rank = r;
     }
     return rank;
 }
 
-function getNextRank(totalScore, currentStreak) {
-    const currentRank = getRank(totalScore, currentStreak);
+function getNextRank(totalScore, longestStreak) {
+    const currentRank = getRank(totalScore, longestStreak);
     const currentIndex = RANKS.indexOf(currentRank);
     if (currentIndex === RANKS.length - 1) return null;
     const next = RANKS[currentIndex + 1];
     const needsScore = Math.max(0, next.minScore - totalScore);
-    const needsStreak = Math.max(0, next.minStreak - currentStreak);
+    const needsStreak = Math.max(0, next.minStreak - longestStreak);
     return { ...next, needsScore, needsStreak };
 }
 
@@ -61,15 +61,34 @@ function AnimatedNumber({ value, style, trigger }) {
     return <Text style={style}>{displayed}</Text>;
 }
 
-function StatCard({ icon, label, value, delay, accentColor, trigger, suffix }) {
-    return (
-        <Animatable.View animation="fadeInUp" duration={600} delay={delay} style={styles.card}>
+function StatCard({ icon, label, value, delay, accentColor, trigger, suffix, onPress, locked, lockMessage }) {
+    const inner = (
+        <>
             <Text style={styles.cardIcon}>{icon}</Text>
             <Text style={styles.cardLabel}>{label}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
-                <AnimatedNumber value={value} trigger={trigger} style={[styles.cardValue, { color: accentColor }]} />
-                {suffix && <Text style={[styles.cardValue, { color: accentColor, fontSize: 24, paddingBottom: 3 }]}>{suffix}</Text>}
-            </View>
+            {locked ? (
+                <Text style={[styles.cardValue, { color: '#bbb', fontSize: 28 }]}>—</Text>
+            ) : (
+                <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+                    <AnimatedNumber value={value} trigger={trigger} style={[styles.cardValue, { color: accentColor }]} />
+                    {suffix && <Text style={[styles.cardValue, { color: accentColor, fontSize: 24, paddingBottom: 3 }]}>{suffix}</Text>}
+                </View>
+            )}
+            {locked && lockMessage && (
+                <Text style={styles.lockMessage}>{lockMessage}</Text>
+            )}
+            {!locked && onPress && (
+                <Text style={styles.rankingsHint}>View Rankings</Text>
+            )}
+        </>
+    );
+    return (
+        <Animatable.View animation="fadeInUp" duration={600} delay={delay} style={styles.card}>
+            {!locked && onPress ? (
+                <TouchableOpacity onPress={onPress} activeOpacity={0.75} style={{ alignItems: 'center', width: '100%' }}>
+                    {inner}
+                </TouchableOpacity>
+            ) : inner}
         </Animatable.View>
     );
 }
@@ -117,6 +136,7 @@ export default function LevelStat({ navigation, level }) {
     const totalAttempted = levelData?.totalAttempted ?? 0;
     const totalSolved = levelData?.totalSolved ?? 0;
     const winRate = totalAttempted > 0 ? Math.round((totalSolved / totalAttempted) * 100) : 0;
+    const avgScore = totalSolved >= 7 ? Math.round(totalScore / totalSolved) : null;
 
     // Color scale: 0-30% = icy blue, 30-60% = yellow, 60-100% = green (accelerated)
     const getWinRateColor = (pct) => {
@@ -140,8 +160,8 @@ export default function LevelStat({ navigation, level }) {
     };
     const winRateColor = getWinRateColor(winRate);
 
-    const rank = getRank(totalScore, currentStreak);
-    const nextRank = getNextRank(totalScore, currentStreak);
+    const rank = getRank(totalScore, longestStreak);
+    const nextRank = getNextRank(totalScore, longestStreak);
 
     const streakIcon = currentStreak >= 3 ? '🔥' : currentStreak > 0 ? '✨' : '❄️';
 
@@ -149,77 +169,85 @@ export default function LevelStat({ navigation, level }) {
         <ScrollView contentContainerStyle={[styles.container, { backgroundColor: bgColor }]}>
 
             {/* Rank Badge */}
-            <Animatable.View key={animKey} animation="bounceIn" duration={800} delay={100} style={[styles.rankBadge, { borderColor: rank.color }]}>
-                <Text style={styles.rankEmoji}>{rank.emoji}</Text>
-                <Text style={[styles.rankLabel, { color: rank.color }]}>{rank.label}</Text>
-                {nextRank && (
-                    <Text style={styles.rankNext}>
-                        {[
-                            nextRank.needsScore > 0 ? `${nextRank.needsScore} pts` : null,
-                            nextRank.needsStreak > 0 ? `${nextRank.needsStreak}-day streak` : null,
-                        ].filter(Boolean).join(' + ') + ` to ${nextRank.label}`}
-                    </Text>
-                )}
+            <Animatable.View key={animKey} animation="bounceIn" duration={800} delay={100}>
+                <TouchableOpacity
+                    onPress={() => navigation.navigate('RankProgression', { level })}
+                    activeOpacity={0.8}
+                    style={[styles.rankBadge, { borderColor: rank.color }]}
+                >
+                    <Text style={styles.rankEmoji}>{rank.emoji}</Text>
+                    <Text style={[styles.rankLabel, { color: rank.color }]}>{rank.label}</Text>
+                    <Text style={styles.rankTap}>Tap to see progression</Text>
+                </TouchableOpacity>
             </Animatable.View>
 
-            {/* Streak Cards */}
+            {/* Top row: Avg Score | Total Score */}
+            <View style={styles.row}>
+                {avgScore !== null ? (
+                    <StatCard
+                        icon="📈"
+                        label="Avg Score"
+                        value={avgScore}
+                        delay={150}
+                        accentColor="#F57C00"
+                        trigger={animKey}
+                        onPress={() => navigation.navigate('LeaderboardDetail', { level: level.toLowerCase(), category: 'averageScore' })}
+                    />
+                ) : (
+                    <StatCard
+                        icon="📈"
+                        label="Avg Score"
+                        value={0}
+                        delay={150}
+                        accentColor="#F57C00"
+                        trigger={animKey}
+                        locked
+                        lockMessage={`${totalSolved}/7 to unlock`}
+                    />
+                )}
+                <StatCard
+                    icon="📊"
+                    label="Total Score"
+                    value={totalScore}
+                    delay={250}
+                    accentColor="#2E7D32"
+                    trigger={animKey}
+                    onPress={() => navigation.navigate('LeaderboardDetail', { level: level.toLowerCase(), category: 'totalScore' })}
+                />
+            </View>
+
+            {/* Middle row: Current Streak | Longest Streak */}
             <View style={styles.row}>
                 <StatCard
                     icon={streakIcon}
                     label="Current Streak"
                     value={currentStreak}
-                    delay={150}
+                    delay={350}
                     accentColor="#E65100"
                     trigger={animKey}
+                    onPress={() => navigation.navigate('LeaderboardDetail', { level: level.toLowerCase(), category: 'currentStreak' })}
                 />
                 <StatCard
                     icon="🏅"
                     label="Longest Streak"
                     value={longestStreak}
-                    delay={250}
+                    delay={450}
                     accentColor="#1565C0"
                     trigger={animKey}
+                    onPress={() => navigation.navigate('LeaderboardDetail', { level: level.toLowerCase(), category: 'longestStreak' })}
                 />
             </View>
 
-            {/* Score Cards */}
-            <View style={styles.row}>
-                <StatCard
-                    icon="📊"
-                    label="Total Score"
-                    value={totalScore}
-                    delay={350}
-                    accentColor="#2E7D32"
-                    trigger={animKey}
-                />
-                <StatCard
-                    icon="🏆"
-                    label="High Score"
-                    value={highScore}
-                    delay={450}
-                    accentColor="#6A1B9A"
-                    trigger={animKey}
-                />
-            </View>
-
-            {/* Win Rate */}
-            <View style={styles.row}>
-                <StatCard
-                    icon="🎯"
-                    label="Win Rate"
-                    value={winRate}
-                    delay={550}
-                    accentColor={winRateColor}
-                    trigger={animKey}
-                    suffix="%"
-                />
+            {/* Bottom: Puzzles Solved centered */}
+            <View style={[styles.row, { justifyContent: 'center' }]}>
                 <StatCard
                     icon="🗓️"
-                    label="Puzzles Played"
-                    value={totalAttempted}
-                    delay={650}
+                    label="Puzzles Solved"
+                    value={totalSolved}
+                    delay={550}
                     accentColor="#00695C"
                     trigger={animKey}
+                    onPress={() => navigation.navigate('LeaderboardDetail', { level: level.toLowerCase(), category: 'totalSolved' })}
                 />
             </View>
 
@@ -263,6 +291,12 @@ const styles = StyleSheet.create({
         fontSize: 11,
         color: '#888',
         marginTop: 3,
+    },
+    rankTap: {
+        fontSize: 11,
+        color: '#aaa',
+        marginTop: 5,
+        textDecorationLine: 'underline',
     },
     row: {
         flexDirection: 'row',
@@ -336,5 +370,19 @@ const styles = StyleSheet.create({
     cardValue: {
         fontSize: 32,
         fontWeight: 'bold',
+    },
+    rankingsHint: {
+        fontSize: 12,
+        color: '#555',
+        marginTop: 6,
+        fontWeight: '700',
+        letterSpacing: 0.3,
+        textDecorationLine: 'underline',
+    },
+    lockMessage: {
+        fontSize: 10,
+        color: '#bbb',
+        marginTop: 4,
+        textAlign: 'center',
     },
 });

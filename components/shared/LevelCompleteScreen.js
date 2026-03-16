@@ -11,8 +11,8 @@ import { getAuth } from 'firebase/auth';
 
 export const completionBonusMap = {
     one: 50,
-    two: 100,
-    three: 150,
+    two: 50,
+    three: 50,
 };
 
 export default function LevelCompleteScreen({ completeLadder, level, shortestSolution, timeStarted, timeFinished, prevStats, navigation }) {
@@ -41,7 +41,7 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
 
     let timeBonus = 100;
     if (timeTaken > 60) {
-        timeBonus = Math.max(0, 100 - Math.floor((timeTaken - 60) / 30) * 5);
+        timeBonus = Math.max(0, 100 - Math.floor((timeTaken - 60) / 6));
     }
 
     const completionBonus = completionBonusMap[level.toLowerCase()];
