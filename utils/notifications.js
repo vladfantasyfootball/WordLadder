@@ -37,7 +37,6 @@ export async function registerForPushNotificationsAsync() {
     }
     
     if (finalStatus !== 'granted') {
-      console.log('Failed to get push token for push notification!');
       return null;
     }
     
@@ -46,12 +45,9 @@ export async function registerForPushNotificationsAsync() {
         projectId: '785b674b-120a-4948-832d-898826a35fa1'
       });
       token = pushTokenData.data;
-      console.log('Push token:', token);
     } catch (error) {
       console.error('Error getting push token:', error);
     }
-  } else {
-    console.log('Must use physical device for Push Notifications');
   }
 
   return token;

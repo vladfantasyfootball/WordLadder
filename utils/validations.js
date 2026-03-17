@@ -6,7 +6,6 @@ export const validateWord = async (word) => {
     try {
         return englishWords.has(word.toUpperCase());
     } catch (error) {
-        console.log(error);
         return null;
     }
 }
