@@ -7,7 +7,7 @@ import { bindActionCreators } from 'redux';
 import { fetchUser, getWordLadders, updateUser } from '../../redux/actions';
 import LadderStepWord from '../shared/LadderStepWord'
 import FlatButton from '../shared/button';
-import { validateWord, validateLevelOneWord, validateExtraLevelTwoRule, validateExtraLevelThreeRules } from '../../utils/validations';
+import { validateWord, validateLevelOneWord, validateExtraLevelTwoRule, validateExtraLevelThreeRules, isBlockedWord } from '../../utils/validations';
 import LevelCompleteScreen, { completionBonusMap } from '../shared/LevelCompleteScreen';
 import CustomKeyboard from '../shared/CustomKeyboard';
 import { getAuth } from 'firebase/auth';
@@ -55,7 +55,21 @@ export class Play extends Component {
                 this.setState({ nextWord: '' });
                 return;
             }
-            
+
+            // Blocked word + valid transformation check
+            const prevWordL12 = (this.state.ladderWords.length > 1
+                ? this.state.ladderWords[this.state.ladderWords.length - 1]
+                : this.props.wordLadder[level.toLowerCase()].startingWord
+            ).toLowerCase();
+            if (isBlockedWord(currentWord) && (
+                validateLevelOneWord(prevWordL12, currentWord) ||
+                (level.toLowerCase() === 'two' && validateExtraLevelTwoRule(prevWordL12, currentWord))
+            )) {
+                Alert.alert('', 'Not an appropriate word.');
+                this.setState({ nextWord: '' });
+                return;
+            }
+
             const validWord = await validateWord(currentWord)
             if (validWord) {
                 if (validateLevelOneWord(this.state.ladderWords.length > 1 ?
@@ -215,6 +229,17 @@ export class Play extends Component {
             // Level 3 words must be 4-6 letters
             if (currentWord.length < 4 || currentWord.length > 6) {
                 Alert.alert('', 'Word must be 4 to 6 letters long.');
+                this.setState({ nextWord: '' });
+                return;
+            }
+
+            // Blocked word + valid transformation check
+            if (isBlockedWord(currentWord) && (
+                validateLevelOneWord(prevWord, currentWord) ||
+                validateExtraLevelTwoRule(prevWord, currentWord) ||
+                validateExtraLevelThreeRules(prevWord, currentWord)
+            )) {
+                Alert.alert('', 'Not an appropriate word.');
                 this.setState({ nextWord: '' });
                 return;
             }

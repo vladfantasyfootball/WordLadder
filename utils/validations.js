@@ -1,4 +1,6 @@
-import { englishWords } from "./validEnglishWords";
+import { englishWords, blockedWords } from "./validEnglishWords";
+
+export const isBlockedWord = (word) => blockedWords.has(word.toUpperCase());
 
 export const validateWord = async (word) => {
     try {
