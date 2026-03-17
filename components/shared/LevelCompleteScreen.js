@@ -135,29 +135,41 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
     const [showShortest, setShowShortest] = useState(false);
     const displayLadder = (showShortest && isPremium) ? shortestSolution : completeLadder;
 
-    // ─── Notification Prompt ──────────────────────────────────────────────────
+    // ─── Notification + Review Prompts ───────────────────────────────────────
+    // Both prompts wait for the achievement carousel to finish before firing.
+    // They can never co-occur: notifications fire on the 1st completion ever,
+    // review prompts fire at solve milestones #3 and #15.
+    const shouldShowReview = (() => {
+        if (level.toLowerCase() !== 'one') return false;
+        const newTotalSolved = (prevStats?.totalSolved ?? 0) + 1;
+        const lastPromptedAt = currentUser?.review?.lastPromptedAt ?? 0;
+        return [3, 15].includes(newTotalSolved) && lastPromptedAt < newTotalSolved;
+    })();
+
     useEffect(() => {
+        if (overlayVisible) return; // carousel still running — wait for it
+
         const hasBeenAsked = currentUser?.notifications?.hasBeenAskedForNotifications;
         const notificationsEnabled = currentUser?.notifications?.enabled;
+
         if (!hasBeenAsked && !notificationsEnabled) {
-            // Wait until the achievement carousel is done before prompting.
-            // overlayVisible starts true when there are achievements to show,
-            // and flips to false once the last card fades out. For non-first
-            // completions the overlay never shows so we prompt immediately.
-            if (overlayVisible) return; // carousel still running — wait for it
             setTimeout(showNotificationPrompt, 500);
         }
-    }, [overlayVisible]);
 
-    // ─── Review Prompt ────────────────────────────────────────────────────────
-    useEffect(() => {
-        const newTotalSolved = (prevStats?.totalSolved ?? 0) + 1;
-        if (newTotalSolved === 3) {
-            StoreReview.isAvailableAsync().then((available) => {
-                if (available) StoreReview.requestReview();
-            });
+        if (shouldShowReview) {
+            setTimeout(() => {
+                StoreReview.isAvailableAsync().then(async (available) => {
+                    if (!available) return;
+                    StoreReview.requestReview();
+                    const auth = getAuth();
+                    const latest = currentUserRef.current;
+                    const newTotalSolved = (prevStats?.totalSolved ?? 0) + 1;
+                    const updatedUser = { ...latest, review: { lastPromptedAt: newTotalSolved } };
+                    await dispatch(updateUser(latest.id, updatedUser, auth));
+                });
+            }, 500);
         }
-    }, []);
+    }, [overlayVisible]);
 
     const markAsAsked = async () => {
         try {
