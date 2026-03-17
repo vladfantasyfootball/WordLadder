@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Text, View, Button, Platform, TouchableOpacity, StyleSheet } from 'react-native'
+import { Text, View, Button, Platform, TouchableOpacity, StyleSheet, Alert } from 'react-native'
 import { AppleButton, appleAuth } from '@invertase/react-native-apple-authentication';
 import { getAuth, signInWithCredential, GoogleAuthProvider, OAuthProvider } from 'firebase/auth';
 import config from '../../config';
@@ -29,6 +29,7 @@ export default function LandingScreen({ navigation }) {
       return signInWithCredential(auth, googleCredential);
     } catch (error) {
       console.error('Google sign-in error:', error);
+      Alert.alert('Sign In Failed', 'Could not sign in with Google. Please try again.');
     }
   }
 
@@ -59,11 +60,12 @@ export default function LandingScreen({ navigation }) {
       return user
     } catch (error) {
       console.error('Apple sign-in error:', error);
+      Alert.alert('Sign In Failed', 'Could not sign in with Apple. Please try again.');
     }
   }
   
   return (
-    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', margin: '10px', backgroundColor: '#90EE90'}}>
+    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', margin: 10, backgroundColor: '#90EE90'}}>
       <Text style={{fontSize: 48, fontWeight: 'bold', marginBottom: 8}}>Word Ladder</Text>
       <Text style={{fontSize: 16, color: '#666', marginBottom: 40}}>MuskratProductions</Text>
       {Platform.OS === 'ios' && 

@@ -20,6 +20,7 @@ import config from './config';
 import { Alert, View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Purchases from 'react-native-purchases';
+import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 
 let app, auth;
 let initError = null;
@@ -118,6 +119,10 @@ function App() {
   useEffect(() => {
     const subscriber = onAuthStateChanged(auth, handleAuthStateChanged);
     return subscriber; // unsubscribe on unmount
+  }, []);
+
+  useEffect(() => {
+    requestTrackingPermissionsAsync();
   }, []);
 
   if (initializing) {

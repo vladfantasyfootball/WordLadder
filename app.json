@@ -2,7 +2,7 @@
   "expo": {
     "name": "WordLadder",
     "slug": "wordladder",
-    "version": "2",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/WL.png",
     "updates": {
@@ -19,7 +19,7 @@
     "ios": {
       "googleServicesFile": "./GoogleService-Info.plist",
       "bundleIdentifier": "com.vlad.wordLadder",
-      "buildNumber": "31",
+      "buildNumber": "32",
       "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -45,13 +45,20 @@
       ],
       "expo-font",
       [
+        "expo-tracking-transparency",
+        {
+          "userTrackingPermission": "This allows Word Ladder to show you relevant ads and helps keep the game free."
+        }
+      ],
+      [
         "expo-notifications",
         {
           "icon": "./assets/WL.png",
           "color": "#ffffff",
           "sounds": []
         }
-      ]
+      ],
+      "expo-tracking-transparency"
     ],
     "android": {
       "googleServicesFile": "./google-services.json",

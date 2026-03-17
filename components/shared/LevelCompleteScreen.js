@@ -8,6 +8,7 @@ import * as Animatable from 'react-native-animatable';
 import { registerForPushNotificationsAsync, checkNotificationPermissions } from '../../utils/notifications';
 import { updateUser } from '../../redux/actions';
 import { getAuth } from 'firebase/auth';
+import * as StoreReview from 'expo-store-review';
 
 export const completionBonusMap = {
     one: 50,
@@ -147,6 +148,16 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
             setTimeout(showNotificationPrompt, 500);
         }
     }, [overlayVisible]);
+
+    // ─── Review Prompt ────────────────────────────────────────────────────────
+    useEffect(() => {
+        const newTotalSolved = (prevStats?.totalSolved ?? 0) + 1;
+        if (newTotalSolved === 3) {
+            StoreReview.isAvailableAsync().then((available) => {
+                if (available) StoreReview.requestReview();
+            });
+        }
+    }, []);
 
     const markAsAsked = async () => {
         try {

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, Switch, StyleSheet, Alert, Linking } from 'react-native'
+import { View, Text, Switch, StyleSheet, Alert, Linking, TouchableOpacity } from 'react-native'
 import LogoutButton from '../shared/logoutButton'
 import { getAuth } from 'firebase/auth';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { updateUser } from '../../redux/actions/index';
 import { registerForPushNotificationsAsync, checkNotificationPermissions } from '../../utils/notifications';
+import axios from 'axios';
+import config from '../../config';
 
 function ProfilePage({ navigation, level, currentUser, updateUser }) {
     const auth = getAuth()
@@ -23,6 +25,32 @@ function ProfilePage({ navigation, level, currentUser, updateUser }) {
             console.error('Error signing out:', e)
         })
     }
+
+    const handleDeleteAccount = () => {
+        Alert.alert(
+            'Delete Account',
+            'This will permanently delete your account and all your progress. This cannot be undone.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            const token = await auth.currentUser.getIdToken();
+                            await axios.delete(`${config.WORD_LADDER_BACKEND}/api/deleteUser`, {
+                                headers: { Authorization: `Bearer ${token}` }
+                            });
+                            await auth.signOut();
+                        } catch (e) {
+                            console.error('Error deleting account:', e);
+                            Alert.alert('Error', 'Failed to delete account. Please try again.');
+                        }
+                    }
+                }
+            ]
+        );
+    };
 
     const handleNotificationToggle = async (value) => {
         if (isLoading) return;
@@ -146,6 +174,9 @@ function ProfilePage({ navigation, level, currentUser, updateUser }) {
             
             <View style={styles.logoutContainer}>
                 <LogoutButton auth={auth} onClickLogout={() => {logoutFunction()}}/>
+                <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
+                    <Text style={styles.deleteButtonText}>Delete Account</Text>
+                </TouchableOpacity>
             </View>
         </View>
     )
@@ -191,6 +222,16 @@ const styles = StyleSheet.create({
     },
     logoutContainer: {
         marginTop: 'auto',
+    },
+    deleteButton: {
+        marginTop: 12,
+        paddingVertical: 12,
+        alignItems: 'center',
+    },
+    deleteButtonText: {
+        color: '#FF3B30',
+        fontSize: 16,
+        fontWeight: '500',
     },
 });
 
