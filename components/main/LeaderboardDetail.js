@@ -111,6 +111,25 @@ export default function LeaderboardDetail({ route }) {
                         </Animatable.View>
                     );
                 })}
+                {!userInTop5 && userRank !== null && (
+                    <>
+                        <View style={styles.rowDivider} />
+                        <View style={styles.ellipsisRow}>
+                            <Text style={styles.ellipsisText}>• • •</Text>
+                        </View>
+                        <Animatable.View animation="fadeInUp" duration={400} delay={300}>
+                            <View style={[styles.row, styles.rowHighlighted]}>
+                                <Text style={styles.rankNumber}>{userRank}</Text>
+                                <Text style={[styles.scoreText, styles.scoreHighlighted]}>
+                                    {formatValue(category, userScore)}
+                                </Text>
+                                <View style={styles.youBadge}>
+                                    <Text style={styles.youBadgeText}>YOU</Text>
+                                </View>
+                            </View>
+                        </Animatable.View>
+                    </>
+                )}
             </View>
         </ScrollView>
     );
@@ -208,7 +227,7 @@ const styles = StyleSheet.create({
     },
     rowDivider: {
         height: 1,
-        backgroundColor: '#F0F0F0',
+        backgroundColor: '#D0D0D0',
         marginHorizontal: 4,
     },
     rowHighlighted: {
@@ -253,5 +272,14 @@ const styles = StyleSheet.create({
         color: '#aaa',
         fontSize: 14,
         paddingVertical: 16,
+    },
+    ellipsisRow: {
+        alignItems: 'center',
+        paddingVertical: 6,
+    },
+    ellipsisText: {
+        fontSize: 14,
+        color: '#999',
+        letterSpacing: 6,
     },
 });
