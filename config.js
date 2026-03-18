@@ -25,7 +25,7 @@ const getBackendUrl = () => {
 		// Development builds use localhost
 		return Platform.OS === 'ios' ? 'http://localhost:3000' : 'http://10.0.2.2:3000';
 	}
-	// Production builds use Railway from EAS secrets
+	// Production builds use Cloud Run URL from EAS secrets
 	return extra.WORD_LADDER_BACKEND || ENV_WORD_LADDER_BACKEND;
 };
 
