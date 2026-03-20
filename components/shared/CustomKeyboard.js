@@ -36,7 +36,7 @@ const CustomKeyboard = ({ onKeyPress, onSubmit, disabled, submitDisabled, levelC
           isSpecial && styles.specialKey,
           isSubmit && { backgroundColor: levelColor || '#6AAA64' },
           isDelete && styles.deleteKey,
-          (disabled || (isSubmit && submitDisabled)) && styles.disabledKey
+          (disabled || (isSubmit && submitDisabled)) && styles.disabledKey,
         ]}
         onPress={() => handleKeyPress(key)}
         disabled={disabled || (isSubmit && submitDisabled)}
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 4,
     marginHorizontal: 2,
-    minWidth: 34,
+    minWidth: 38,
     height: 52,
     justifyContent: 'center',
     alignItems: 'center',

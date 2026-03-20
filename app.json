@@ -3,6 +3,7 @@
     "name": "WordLadder",
     "slug": "wordladder",
     "version": "2.0.0",
+    "scheme": "wordladder",
     "orientation": "portrait",
     "icon": "./assets/WL.png",
     "updates": {
@@ -19,11 +20,14 @@
     "ios": {
       "googleServicesFile": "./GoogleService-Info.plist",
       "bundleIdentifier": "com.vlad.wordLadder",
-      "buildNumber": "32",
+      "buildNumber": "34",
       "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "associatedDomains": [
+        "applinks:word-ladder-backend-938399512582.us-central1.run.app"
+      ]
     },
     "plugins": [
       [
@@ -31,7 +35,10 @@
         {
           "ios": {
             "useFrameworks": "static",
-            "deploymentTarget": "15.1"
+            "deploymentTarget": "15.1",
+            "extraPodfileProperties": {
+              "SWIFT_VERSION": "5"
+            }
           }
         }
       ],
@@ -57,19 +64,34 @@
           "color": "#ffffff",
           "sounds": []
         }
-      ],
-      "expo-tracking-transparency"
+      ]
     ],
     "android": {
       "googleServicesFile": "./google-services.json",
       "package": "com.vlad.wordLadderAndroid",
       "versionCode": 1,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FFFFFF"
+        "foregroundImage": "./assets/ic_launcher-playstore.png",
+        "backgroundColor": "#a1fcbc"
       },
       "permissions": [
-        "RECEIVE_BOOT_COMPLETED"
+        "RECEIVE_BOOT_COMPLETED",
+        "POST_NOTIFICATIONS",
+        "com.google.android.gms.permission.AD_ID"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "word-ladder-backend-938399512582.us-central1.run.app",
+              "pathPrefix": "/share"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
       ]
     },
     "web": {

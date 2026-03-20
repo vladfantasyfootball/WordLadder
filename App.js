@@ -46,8 +46,11 @@ try {
     persistence: getReactNativePersistence(AsyncStorage)
   });
 
-  // Initialize RevenueCat (iOS key only for now — add Android key when needed)
-  Purchases.configure({ apiKey: config.REVENUECAT_IOS_API_KEY });
+  // Initialize RevenueCat with the correct platform key
+  const rcApiKey = Platform.OS === 'android'
+    ? config.REVENUECAT_ANDROID_API_KEY
+    : config.REVENUECAT_IOS_API_KEY;
+  Purchases.configure({ apiKey: rcApiKey });
 } catch (error) {
   console.error('Firebase initialization error:', error);
   initError = error.message;
@@ -122,7 +125,10 @@ function App() {
   }, []);
 
   useEffect(() => {
-    requestTrackingPermissionsAsync();
+    // ATT (App Tracking Transparency) is iOS-only
+    if (Platform.OS === 'ios') {
+      requestTrackingPermissionsAsync();
+    }
   }, []);
 
   if (initializing) {

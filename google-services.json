@@ -14,6 +14,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "938399512582-br07vrl9aqna34t9qjtqo4kbo8j5qo4c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vlad.wordLadderAndroid",
+            "certificate_hash": "8adb2cda3a1dd0e2098bdd3d0be01bf6d58556a6"
+          }
+        },
+        {
+          "client_id": "938399512582-qkqojcd8oc9cijgu1rihtppkrsks1s71.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vlad.wordLadderAndroid",
+            "certificate_hash": "a6657791c922eaf087ee98e25179c7b5c898fbe4"
+          }
+        },
+        {
           "client_id": "938399512582-bte9oc4riasoaull0l6329u8igpstsm1.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -27,7 +43,7 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "938399512582-9t5i54925sur907oc8cu3gh58iecc9jk.apps.googleusercontent.com",
+              "client_id": "938399512582-bte9oc4riasoaull0l6329u8igpstsm1.apps.googleusercontent.com",
               "client_type": 3
             },
             {

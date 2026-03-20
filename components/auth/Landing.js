@@ -1,11 +1,12 @@
 import React, { useEffect } from 'react'
-import { Text, View, Button, Platform, TouchableOpacity, StyleSheet, Alert } from 'react-native'
+import { Text, View, Platform, TouchableOpacity, StyleSheet, Alert } from 'react-native'
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppleButton, appleAuth } from '@invertase/react-native-apple-authentication';
 import { getAuth, signInWithCredential, GoogleAuthProvider, OAuthProvider } from 'firebase/auth';
 import config from '../../config';
 
 // Platform-specific imports
-const GoogleSignin = Platform.OS === 'android' ? require('@react-native-google-signin/google-signin').GoogleSignin : null;
+const { GoogleSignin } = Platform.OS === 'android' ? require('@react-native-google-signin/google-signin') : {};
 
 export default function LandingScreen({ navigation }) {
 
@@ -79,10 +80,32 @@ export default function LandingScreen({ navigation }) {
         onPress={() => onAppleButtonPress()}
       />}
       {Platform.OS === 'android' &&
-      <Button
-        title="Sign in with Google"
-        onPress={() => onGoogleButtonPress()}
-      />}
+      <TouchableOpacity style={styles.googleButton} onPress={() => onGoogleButtonPress()}>
+        <MaterialCommunityIcons name="google" size={20} color="#4285F4" />
+        <Text style={styles.googleButtonText}>Sign in with Google</Text>
+      </TouchableOpacity>}
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    gap: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1,
+  },
+  googleButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#3c4043',
+  },
+});

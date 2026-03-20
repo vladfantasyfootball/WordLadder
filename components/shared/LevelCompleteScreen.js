@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share, Alert, Linking, Animated, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share, Alert, Linking, Animated, Modal, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector, useDispatch } from 'react-redux';
 import { levelColorScheme } from '../../redux/constants/colorScheme';
@@ -41,8 +41,8 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
         : new Date(timeTaken * 1000).toISOString().substr(11, 8);
 
     let timeBonus = 100;
-    if (timeTaken > 60) {
-        timeBonus = Math.max(0, 100 - Math.floor((timeTaken - 60) / 6));
+    if (timeTaken > 30) {
+        timeBonus = Math.max(0, 100 - Math.floor((timeTaken - 30) / 6));
     }
 
     const completionBonus = completionBonusMap[level.toLowerCase()];
@@ -228,12 +228,17 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
         }
     };
 
+    // Smart link: if the app is installed, iOS/Android opens it directly.
+    // If not installed, the backend detects the platform and redirects to the correct store.
+    // Once live on App Store, update /share route in the backend to use the App Store URL.
+    const SHARE_LINK = 'https://word-ladder-backend-938399512582.us-central1.run.app/share';
+
     const handleShare = async () => {
         try {
             const startWord = completeLadder[0];
             const endWord = completeLadder[completeLadder.length - 1];
             const optimalLine = isOptimalPath ? '\n⭐ Found the shortest solution!' : '';
-            const message = `🎉 I just completed a Level ${level} Word Ladder!\n\n${startWord.toUpperCase()} → ${endWord.toUpperCase()}\n⏱️ Time: ${timeFormattedTimeTaken}\n📊 Score: ${totalScore}\n🪜 ${userLength} words${optimalLine}\n\nCan you beat my score?\nhttps://testflight.apple.com/join/JxNSA5rZ`;
+            const message = `🎉 I just completed a Level ${level} Word Ladder!\n\n⏱️ Time: ${timeFormattedTimeTaken}\n📊 Score: ${totalScore}\n🪜 ${userLength} words${optimalLine}\n\nCan you beat my score?\n${SHARE_LINK}`;
             await Share.share({ message });
         } catch {
             Alert.alert('Error', 'Unable to share. Please try again.');
