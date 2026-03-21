@@ -9,6 +9,7 @@ import { registerForPushNotificationsAsync, checkNotificationPermissions } from 
 import { updateUser } from '../../redux/actions';
 import { getAuth } from 'firebase/auth';
 import * as StoreReview from 'expo-store-review';
+import { useAudioPlayer } from 'expo-audio';
 
 export const completionBonusMap = {
     one: 50,
@@ -60,6 +61,14 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
 
     const levelColor = levelColorScheme[level] ?? '#9ADBFA';
 
+    // ─── Level Complete Sound ─────────────────────────────────────────────────
+    const levelCompletePlayer = useAudioPlayer(require('../../assets/sounds/levelComplete.wav'));
+    useEffect(() => {
+        if (isFirstCompletion) {
+            try { levelCompletePlayer.play(); } catch (e) {}
+        }
+    }, []);
+
     // ─── Achievements (first completion only) ────────────────────────────────
     const achievements = [];
     if (isFirstCompletion) {
@@ -102,34 +111,35 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
     const cardScale = useRef(new Animated.Value(0.85)).current;
     const cardOpacity = useRef(new Animated.Value(0)).current;
 
+    // Animate each card in when carouselIndex changes — user advances manually
     useEffect(() => {
-        if (!overlayVisible) return;
-
-        if (carouselIndex < achievements.length) {
-            // Animate card in
-            cardScale.setValue(0.85);
-            cardOpacity.setValue(0);
-            Animated.parallel([
-                Animated.spring(cardScale, { toValue: 1, useNativeDriver: true, tension: 120, friction: 8 }),
-                Animated.timing(cardOpacity, { toValue: 1, duration: 250, useNativeDriver: true }),
-            ]).start();
-
-            // Hold, then fade card out and advance
-            const hold = setTimeout(() => {
-                Animated.parallel([
-                    Animated.timing(cardScale, { toValue: 0.9, duration: 200, useNativeDriver: true }),
-                    Animated.timing(cardOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
-                ]).start(() => setCarouselIndex(i => i + 1));
-            }, 1700);
-
-            return () => clearTimeout(hold);
-        } else {
-            // All cards shown — fade out overlay
-            Animated.timing(overlayAnim, { toValue: 0, duration: 500, useNativeDriver: true }).start(() => {
-                setOverlayVisible(false);
-            });
-        }
+        if (!overlayVisible || carouselIndex >= achievements.length) return;
+        cardScale.setValue(0.85);
+        cardOpacity.setValue(0);
+        Animated.parallel([
+            Animated.spring(cardScale, { toValue: 1, useNativeDriver: true, tension: 120, friction: 8 }),
+            Animated.timing(cardOpacity, { toValue: 1, duration: 250, useNativeDriver: true }),
+        ]).start();
     }, [carouselIndex, overlayVisible]);
+
+    const closeOverlay = () => {
+        Animated.timing(overlayAnim, { toValue: 0, duration: 400, useNativeDriver: true }).start(() => {
+            setOverlayVisible(false);
+        });
+    };
+
+    const handleNext = () => {
+        Animated.parallel([
+            Animated.timing(cardScale, { toValue: 0.9, duration: 150, useNativeDriver: true }),
+            Animated.timing(cardOpacity, { toValue: 0, duration: 150, useNativeDriver: true }),
+        ]).start(() => {
+            if (carouselIndex + 1 >= achievements.length) {
+                closeOverlay();
+            } else {
+                setCarouselIndex(i => i + 1);
+            }
+        });
+    };
 
     // ─── Solution Tab ─────────────────────────────────────────────────────────
     const [showShortest, setShowShortest] = useState(false);
@@ -256,12 +266,15 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                 animationType="none"
                 statusBarTranslucent
             >
-                <Animated.View style={[styles.overlay, { opacity: overlayAnim, backgroundColor: levelColor + 'AA' }]}>
+            <Animated.View style={[styles.overlay, { opacity: overlayAnim, backgroundColor: levelColor + 'AA' }]}>
                     {carouselIndex < achievements.length && (
                         <Animated.View style={[styles.achievementCard, {
                             opacity: cardOpacity,
                             transform: [{ scale: cardScale }],
                         }]}>
+                            <TouchableOpacity style={styles.overlayExitBtn} onPress={closeOverlay}>
+                                <Ionicons name="close" size={24} color="#777" />
+                            </TouchableOpacity>
                             <Ionicons
                                 name={achievements[carouselIndex].icon}
                                 size={68}
@@ -279,6 +292,11 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                                     <View key={i} style={[styles.dot, i === carouselIndex && styles.dotActive]} />
                                 ))}
                             </View>
+                            <TouchableOpacity style={styles.nextBtn} onPress={handleNext}>
+                                <Text style={styles.nextBtnText}>
+                                    {carouselIndex + 1 >= achievements.length ? 'Done ✓' : 'Next →'}
+                                </Text>
+                            </TouchableOpacity>
                         </Animated.View>
                     )}
                 </Animated.View>
@@ -422,6 +440,7 @@ const styles = StyleSheet.create({
     dotsRow: {
         flexDirection: 'row',
         gap: 7,
+        marginBottom: 20,
     },
     dot: {
         width: 8,
@@ -433,6 +452,24 @@ const styles = StyleSheet.create({
         backgroundColor: '#555',
         width: 22,
         borderRadius: 4,
+    },
+    overlayExitBtn: {
+        position: 'absolute',
+        top: 12,
+        right: 12,
+        padding: 6,
+        borderRadius: 20,
+    },
+    nextBtn: {
+        backgroundColor: '#111',
+        borderRadius: 24,
+        paddingVertical: 12,
+        paddingHorizontal: 40,
+    },
+    nextBtnText: {
+        color: 'white',
+        fontWeight: '800',
+        fontSize: 16,
     },
 
     // ── Header ──

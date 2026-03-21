@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, Platform, ScrollView, Alert, TouchableOpacity } from 'react-native'
+import { View, Text, StyleSheet, Platform, ScrollView, Alert, TouchableOpacity, Modal } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { levelColorScheme } from '../../redux/constants/colorScheme';
+import { levelColorScheme, levelButtonColorScheme } from '../../redux/constants/colorScheme';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { fetchUser, getWordLadders, updateUser } from '../../redux/actions';
@@ -12,21 +12,26 @@ import LevelCompleteScreen, { completionBonusMap } from '../shared/LevelComplete
 import CustomKeyboard from '../shared/CustomKeyboard';
 import { getAuth } from 'firebase/auth';
 import { Ionicons, SimpleLineIcons } from '@expo/vector-icons';
+import { createAudioPlayer } from 'expo-audio';
 
 export class Play extends Component {
     constructor(props) {
         super(props);
+        const levelKey = this.props.route.params.level.toLowerCase();
+        const levelData = this.props.currentUser.wordLadder[levelKey];
+        const alreadyCompleted = levelData.currentWordLadder.completed;
+        const isFirstOpen = !levelData.timeStarted;
         this.state = {
             nextWord: '',
-            ladderWords: this.props.currentUser.wordLadder[this.props.route.params.level.toLowerCase()].currentWordLadder.currentAttempt,
-            gameCompleted: this.props.currentUser.wordLadder[this.props.route.params.level.toLowerCase()].currentWordLadder.completed,
-            timeFinished: this.props.currentUser.wordLadder[this.props.route.params.level.toLowerCase()].currentWordLadder.completed
-                ? this.props.currentUser.wordLadder[this.props.route.params.level.toLowerCase()].timeFinished
-                : null,
+            ladderWords: levelData.currentWordLadder.currentAttempt,
+            gameCompleted: alreadyCompleted,
+            timeFinished: alreadyCompleted ? levelData.timeFinished : null,
             prevStats: null,
+            showHintModal: !alreadyCompleted && isFirstOpen,
         };
         // Prevents mid-game step saves from racing with / overwriting the completion save
         this._completing = false;
+        this._undoPlayer = createAudioPlayer(require('../../assets/sounds/undo.wav'));
     }
 
     onChangeNextWord = (nextWord) => {
@@ -324,6 +329,7 @@ export class Play extends Component {
     undoLastWord = () => {
         // Can't undo past the starting word
         if (this.state.ladderWords.length <= 1) return;
+        try { this._undoPlayer.seekTo(0); this._undoPlayer.play(); } catch (e) {}
         const newLadderWords = this.state.ladderWords.slice(0, -1);
         this.setState({ ladderWords: newLadderWords }, () => {
             if (this._completing) return;
@@ -405,6 +411,31 @@ export class Play extends Component {
                         />
                     </View>
                 }
+
+                <Modal
+                    visible={this.state.showHintModal}
+                    transparent={true}
+                    animationType="fade"
+                    onRequestClose={() => this.setState({ showHintModal: false })}
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalCard}>
+                            <Text style={styles.modalEmoji}>{'🪜'}</Text>
+                            <Text style={styles.modalTitle}>{'Shortest Ladder'}</Text>
+                            <Text style={styles.modalLength}>
+                                {`${wordLadder[level.toLowerCase()]?.shortestSolution?.length ?? '?'} words`}
+                            </Text>
+                            <Text style={styles.modalSubtitle}>{'includes starting & ending word'}</Text>
+                            <Text style={styles.modalChallenge}>{'Can you find it?'}</Text>
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: levelButtonColorScheme[level] }]}
+                                onPress={() => this.setState({ showHintModal: false })}
+                            >
+                                <Text style={styles.modalButtonText}>{"Let's go!"}</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
 
                 {!this.state.gameCompleted &&
                     <View style={[styles.container, { backgroundColor: levelColorScheme[level] }]}>
@@ -490,6 +521,66 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 10,
         paddingVertical: 8,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.45)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalCard: {
+        backgroundColor: 'white',
+        borderRadius: 20,
+        paddingVertical: 32,
+        paddingHorizontal: 36,
+        alignItems: 'center',
+        width: '78%',
+        shadowColor: '#000',
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 4 },
+    },
+    modalEmoji: {
+        fontSize: 40,
+        marginBottom: 8,
+    },
+    modalTitle: {
+        fontWeight: '800',
+        fontSize: 26,
+        color: '#5B5A53',
+        textAlign: 'center',
+        marginBottom: 6,
+    },
+    modalLength: {
+        fontWeight: '800',
+        fontSize: 38,
+        color: '#5B5A53',
+        textAlign: 'center',
+    },
+    modalSubtitle: {
+        fontSize: 13,
+        color: '#5B5A53',
+        textAlign: 'center',
+        opacity: 0.6,
+        marginTop: 4,
+        marginBottom: 16,
+    },
+    modalChallenge: {
+        fontWeight: '700',
+        fontSize: 17,
+        color: '#5B5A53',
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    modalButton: {
+        borderRadius: 30,
+        paddingVertical: 12,
+        paddingHorizontal: 36,
+    },
+    modalButtonText: {
+        fontWeight: '800',
+        fontSize: 16,
+        color: 'white',
     },
     wordDisplay: {
         flex: 1,

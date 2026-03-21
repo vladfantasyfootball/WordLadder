@@ -1,81 +1,109 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { levelColorScheme, levelButtonColorScheme } from '../../redux/constants/colorScheme';
+import * as Haptics from 'expo-haptics';
+import { useAudioPlayer } from 'expo-audio';
+
+const ROW_HEIGHT    = 48;
+const ROW_MARGIN    = 6;
+const KEY_H_MARGIN  = 2;   // marginHorizontal on each key
+const ACTION_WIDTH  = 48;  // fixed right-column width
+const KB_PADDING    = 4;   // keyboard paddingHorizontal
+
+const LETTER_ROWS = [
+  ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],  // 10 keys — defines key width
+  ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],        // 9 keys — left-aligned gap at end
+  ['Z', 'X', 'C', 'V', 'B', 'N', 'M'],                   // 7 keys — left-aligned gap at end
+];
 
 const CustomKeyboard = ({ onKeyPress, onSubmit, disabled, submitDisabled, levelColor }) => {
-  const rows = [
-    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'DELETE'],
-    ['Z', 'X', 'C', 'V', 'B', 'N', 'M', 'SUBMIT'],
-  ];
+  const { width: screenWidth } = useWindowDimensions();
+  const submitPlayer = useAudioPlayer(require('../../assets/sounds/submit.wav'));
 
-  const handleKeyPress = (key) => {
+  // Calculate a fixed key size so every letter key is identical.
+  // Total horizontal space taken by margins across 10 keys = 10 * 2 * KEY_H_MARGIN
+  const keyWidth = Math.floor(
+    (screenWidth - ACTION_WIDTH - KB_PADDING * 2 - 10 * KEY_H_MARGIN * 2) / 10
+  );
+
+  // Map the pastel level color to its darker button variant for contrast
+  const levelKey = Object.keys(levelColorScheme).find((k) => levelColorScheme[k] === levelColor);
+  const submitBg = (levelKey ? levelButtonColorScheme[levelKey] : null) || levelColor || '#6AAA64';
+
+  const handlePress = (key) => {
     if (disabled) return;
-    
     if (key === 'DELETE') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       onKeyPress('BACKSPACE');
-    } else if (key === 'SUBMIT') {
-      if (!submitDisabled) {
-        onSubmit();
-      }
     } else {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       onKeyPress(key.toLowerCase());
     }
   };
 
-  const renderKey = (key) => {
-    const isSpecial = key === 'SUBMIT' || key === 'DELETE';
-    const isSubmit = key === 'SUBMIT';
-    const isDelete = key === 'DELETE';
-    
-    return (
-      <TouchableOpacity
-        key={key}
-        style={[
-          styles.key,
-          isSpecial && styles.specialKey,
-          isSubmit && { backgroundColor: levelColor || '#6AAA64' },
-          isDelete && styles.deleteKey,
-          (disabled || (isSubmit && submitDisabled)) && styles.disabledKey,
-        ]}
-        onPress={() => handleKeyPress(key)}
-        disabled={disabled || (isSubmit && submitDisabled)}
-      >
-        {isDelete ? (
-          <MaterialCommunityIcons name="backspace-outline" size={22} color="#FFFFFF" />
-        ) : (
-          <Text style={[
-            styles.keyText,
-            isSubmit && styles.submitKeyText
-          ]}>
-            {key}
-          </Text>
-        )}
-      </TouchableOpacity>
-    );
+  const handleSubmit = () => {
+    if (disabled || submitDisabled) return;
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    try { submitPlayer?.seekTo(0); submitPlayer?.play(); } catch (e) {}
+    onSubmit();
   };
 
   return (
     <View style={styles.keyboard}>
-      {rows.map((row, rowIndex) => {
-        const actionKey = row.find(k => k === 'DELETE' || k === 'SUBMIT');
-        const letters = actionKey ? row.filter(k => k !== actionKey) : row;
+      <View style={styles.layout}>
 
-        return (
-          <View key={rowIndex} style={[styles.row, !actionKey && styles.rowLeft]}>
-            {actionKey ? (
-              <>
-                <View style={styles.letterGroup}>
-                  {letters.map(renderKey)}
-                </View>
-                {renderKey(actionKey)}
-              </>
-            ) : (
-              letters.map(renderKey)
-            )}
-          </View>
-        );
-      })}
+        {/* ── Left: letter rows ─────────────────────────────────────── */}
+        <View>
+          {LETTER_ROWS.map((row, i) => (
+            <View key={i} style={styles.letterRow}>
+              {row.map((letter) => (
+                <TouchableOpacity
+                  key={letter}
+                  style={[
+                    styles.letterKey,
+                    { width: keyWidth, height: ROW_HEIGHT },
+                    disabled && styles.disabledKey,
+                  ]}
+                  onPress={() => handlePress(letter)}
+                  disabled={disabled}
+                >
+                  <Text style={styles.keyText}>{letter}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ))}
+        </View>
+
+        {/* ── Right: action column ──────────────────────────────────── */}
+        <View style={styles.actionColumn}>
+          {/* Empty cell — aligns with row 1 */}
+          <View style={styles.actionSpacer} />
+
+          {/* Back — aligns with row 2 */}
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.deleteBtn, disabled && styles.disabledKey]}
+            onPress={() => handlePress('DELETE')}
+            disabled={disabled}
+          >
+            <MaterialCommunityIcons name="backspace-outline" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          {/* Submit — aligns with row 3 */}
+          <TouchableOpacity
+            style={[
+              styles.actionBtn,
+              { backgroundColor: submitBg },
+              (disabled || submitDisabled) && styles.disabledKey,
+            ]}
+            onPress={handleSubmit}
+            disabled={disabled || submitDisabled}
+          >
+            <MaterialCommunityIcons name="check-bold" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+
+      </View>
     </View>
   );
 };
@@ -84,41 +112,45 @@ const styles = StyleSheet.create({
   keyboard: {
     backgroundColor: '#D3D6DA',
     paddingVertical: 8,
-    paddingHorizontal: 2,
+    paddingHorizontal: KB_PADDING,
   },
-  row: {
+  layout: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  letterRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: ROW_MARGIN,
   },
-  rowLeft: {
-    justifyContent: 'flex-start',
-  },
-  letterGroup: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  key: {
+  letterKey: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 4,
-    marginHorizontal: 2,
-    minWidth: 38,
-    height: 52,
+    borderRadius: 5,
+    marginHorizontal: KEY_H_MARGIN,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1,
+    elevation: 2,
   },
-  specialKey: {
-    backgroundColor: '#818384',
-    minWidth: 60,
+  actionColumn: {
+    width: ACTION_WIDTH,
+    paddingLeft: 4,
   },
-  deleteKey: {
+  actionSpacer: {
+    height: ROW_HEIGHT + ROW_MARGIN,  // same as one row
+  },
+  actionBtn: {
+    height: ROW_HEIGHT,
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: ROW_MARGIN,
+  },
+  deleteBtn: {
     backgroundColor: '#818384',
-    minWidth: 42,
-    paddingHorizontal: 4,
   },
   disabledKey: {
     opacity: 0.5,
@@ -128,16 +160,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#000000',
   },
-  specialKeyText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  submitKeyText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#000000',
-  },
 });
 
 export default CustomKeyboard;
+

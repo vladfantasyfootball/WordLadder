@@ -17,7 +17,7 @@ import { user } from './redux/reducers/user';
 import { wordLadder } from './redux/reducers/wordLadder';
 import { leaderboard } from './redux/reducers/leaderboard';
 import config from './config';
-import { Alert, View, Text, TouchableOpacity } from 'react-native';
+import { Alert, View, Text, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Purchases from 'react-native-purchases';
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';

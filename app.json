@@ -20,7 +20,7 @@
     "ios": {
       "googleServicesFile": "./GoogleService-Info.plist",
       "bundleIdentifier": "com.vlad.wordLadder",
-      "buildNumber": "34",
+      "buildNumber": "35",
       "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -64,7 +64,8 @@
           "color": "#ffffff",
           "sounds": []
         }
-      ]
+      ],
+      "expo-audio"
     ],
     "android": {
       "googleServicesFile": "./google-services.json",
@@ -90,7 +91,10 @@
               "pathPrefix": "/share"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
