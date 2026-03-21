@@ -32,6 +32,8 @@ export class Play extends Component {
         // Prevents mid-game step saves from racing with / overwriting the completion save
         this._completing = false;
         this._undoPlayer = createAudioPlayer(require('../../assets/sounds/undo.wav'));
+        this._submitPlayer = createAudioPlayer(require('../../assets/sounds/submit.wav'));
+        this._errorPlayer = createAudioPlayer(require('../../assets/sounds/error.mp3'));
     }
 
     onChangeNextWord = (nextWord) => {
@@ -48,6 +50,14 @@ export class Play extends Component {
         }
     }
 
+    _playSubmit = () => {
+        try { this._submitPlayer.seekTo(0); this._submitPlayer.play(); } catch (e) {}
+    }
+
+    _playError = () => {
+        try { this._errorPlayer.seekTo(0); this._errorPlayer.play(); } catch (e) {}
+    }
+
     onPress = async (level) => {
         if (level.toLowerCase() === "one" || level.toLowerCase() === "two") {
             const currentWord = this.state.nextWord.toLowerCase();
@@ -56,6 +66,7 @@ export class Play extends Component {
             
             // Check word length first (fast check)
             if (currentWord.length !== expectedLength) {
+                this._playError();
                 Alert.alert('', `Word must be ${expectedLength} letters long.`);
                 this.setState({ nextWord: '' });
                 return;
@@ -70,6 +81,7 @@ export class Play extends Component {
                 validateLevelOneWord(prevWordL12, currentWord) ||
                 (level.toLowerCase() === 'two' && validateExtraLevelTwoRule(prevWordL12, currentWord))
             )) {
+                this._playError();
                 Alert.alert('', 'Not an appropriate word.');
                 this.setState({ nextWord: '' });
                 return;
@@ -122,6 +134,7 @@ export class Play extends Component {
                         })
                     }
                     else {
+                        this._playSubmit();
                         this.setState({ ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, () => {
                             if (this._completing) return;
                             const newUser = JSON.parse(JSON.stringify(this.props.currentUser))
@@ -180,6 +193,7 @@ export class Play extends Component {
                                 })
                             }
                             else {
+                                this._playSubmit();
                                 this.setState({ ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, () => {
                                     if (this._completing) return;
                                     const newUser = JSON.parse(JSON.stringify(this.props.currentUser))
@@ -190,6 +204,7 @@ export class Play extends Component {
                                 })
                             }
                         } else {
+                            this._playError();
                             Alert.alert(
                                 '',
                                 'Not a valid word transformation',
@@ -205,6 +220,7 @@ export class Play extends Component {
                             )
                         }
                     } else {
+                        this._playError();
                         Alert.alert(
                             '',
                             'Not a valid word transformation',
@@ -221,6 +237,7 @@ export class Play extends Component {
                     }
                 }
             } else {
+                this._playError();
                 Alert.alert('', 'Word does not exist.');
                 this.setState({ nextWord: '' });
             }
@@ -233,6 +250,7 @@ export class Play extends Component {
 
             // Level 3 words must be 4-6 letters
             if (currentWord.length < 4 || currentWord.length > 6) {
+                this._playError();
                 Alert.alert('', 'Word must be 4 to 6 letters long.');
                 this.setState({ nextWord: '' });
                 return;
@@ -244,6 +262,7 @@ export class Play extends Component {
                 validateExtraLevelTwoRule(prevWord, currentWord) ||
                 validateExtraLevelThreeRules(prevWord, currentWord)
             )) {
+                this._playError();
                 Alert.alert('', 'Not an appropriate word.');
                 this.setState({ nextWord: '' });
                 return;
@@ -293,6 +312,7 @@ export class Play extends Component {
                             await this.props.updateUser(this.props.currentUser.id, newUser, getAuth());
                         });
                     } else {
+                        this._playSubmit();
                         this.setState({ ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, () => {
                             if (this._completing) return;
                             const newUser = JSON.parse(JSON.stringify(this.props.currentUser));
@@ -301,6 +321,7 @@ export class Play extends Component {
                         });
                     }
                 } else {
+                    this._playError();
                     Alert.alert(
                         '',
                         'Not a valid word transformation',
@@ -316,6 +337,7 @@ export class Play extends Component {
                     );
                 }
             } else {
+                this._playError();
                 Alert.alert('', 'Word does not exist.');
                 this.setState({ nextWord: '' });
             }

@@ -11,23 +11,23 @@ export class Stats extends Component {
   componentDidMount() { }
   render() {
     return (
-      <Tab.Navigator initialRouteName='Level One'>
+      <Tab.Navigator initialRouteName='Classic'>
         <Tab.Screen
-          name={"Level One"}
+          name={"Classic"}
           options={{
             headerTitleAlign: 'center',
           }}>
           {props => <LevelStat {...props} level={'One'} />}
         </Tab.Screen>
         <Tab.Screen
-          name={"Level Two"}
+          name={"Shuffle"}
           options={{
             headerTitleAlign: 'center',
           }}>
           {props => <LevelStat {...props} level={'Two'} />}
         </Tab.Screen>
         <Tab.Screen
-          name={"Level Three"}
+          name={"Morph"}
           options={{
             headerTitleAlign: 'center',
           }}>

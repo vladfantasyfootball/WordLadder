@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions } from 'r
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { levelColorScheme, levelButtonColorScheme } from '../../redux/constants/colorScheme';
 import * as Haptics from 'expo-haptics';
-import { useAudioPlayer } from 'expo-audio';
 
 const ROW_HEIGHT    = 48;
 const ROW_MARGIN    = 6;
@@ -19,7 +18,6 @@ const LETTER_ROWS = [
 
 const CustomKeyboard = ({ onKeyPress, onSubmit, disabled, submitDisabled, levelColor }) => {
   const { width: screenWidth } = useWindowDimensions();
-  const submitPlayer = useAudioPlayer(require('../../assets/sounds/submit.wav'));
 
   // Calculate a fixed key size so every letter key is identical.
   // Total horizontal space taken by margins across 10 keys = 10 * 2 * KEY_H_MARGIN
@@ -44,8 +42,7 @@ const CustomKeyboard = ({ onKeyPress, onSubmit, disabled, submitDisabled, levelC
 
   const handleSubmit = () => {
     if (disabled || submitDisabled) return;
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    try { submitPlayer?.seekTo(0); submitPlayer?.play(); } catch (e) {}
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onSubmit();
   };
 

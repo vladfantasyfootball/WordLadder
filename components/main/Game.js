@@ -12,6 +12,8 @@ const rewardedInterstitialAd = RewardedInterstitialAd.createForAdRequest(TestIds
     requestNonPersonalizedAdsOnly: true
   });
 
+const levelDisplayName = { One: 'Classic', Two: 'Shuffle', Three: 'Morph' };
+
 export default function Game({ navigation, level, route }) {
     const dispatch = useDispatch();
     const currentUser = useSelector((state) => {return state.userState.currentUser});
@@ -126,13 +128,13 @@ export default function Game({ navigation, level, route }) {
     }
     
     const buttonText = useMemo(() => {
-        if (level.toLowerCase() === 'three' && !isPremium) return 'Unlock Level Three 🔒';
+        if (level.toLowerCase() === 'three' && !isPremium) return 'Unlock Morph 🔒';
         const levelData = currentUser?.wordLadder[level.toLowerCase()];
         const isCompleted = levelData?.currentWordLadder?.completed;
         const hasStarted = levelData?.currentWordLadder?.currentAttempt?.length > 1;
         if (isCompleted) return 'View Solution';
-        if (hasStarted) return `Resume Level ${level}`;
-        return `Play Level ${level}`;
+        if (hasStarted) return `Resume ${levelDisplayName[level]}`;
+        return `Play ${levelDisplayName[level]}`;
     }, [currentUser, level, isPremium]);
 
     const determineLevelDisabled = (level) => {
@@ -149,7 +151,7 @@ export default function Game({ navigation, level, route }) {
                     ? 
                         <ScrollView persistentScrollbar={true} contentContainerStyle={{backgroundColor: levelColorScheme[level], width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', paddingTop: 10, paddingBottom: 20, paddingHorizontal: 20 }}>
                             <Text style={{ fontWeight: '800', textAlign: 'center', paddingBottom: 16, fontSize: 22, color: '#5B5A53' }}>
-                                {`Level ${level} Rules`}
+                                {`${levelDisplayName[level]} Rules`}
                             </Text>
                             {level.toLowerCase() === "one" ? <>
                                     <Text style={{ textAlign: 'center', paddingBottom: 16, fontSize: 15, color: '#5B5A53', lineHeight: 22 }}>
@@ -173,7 +175,7 @@ export default function Game({ navigation, level, route }) {
                                 </>
                             : level.toLowerCase() === "two" ? <>
                                     <Text style={{ textAlign: 'center', paddingBottom: 16, fontSize: 15, color: '#5B5A53', lineHeight: 22 }}>
-                                        {`All the same rules as Level One — plus one new move:`}
+                                        {`All the same rules as Classic — plus one new move:`}
                                     </Text>
                                     <View style={{ backgroundColor: 'white', borderRadius: 14, paddingVertical: 16, paddingHorizontal: 20, width: '100%', alignItems: 'center', marginBottom: 16, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } }}>
                                         <Text style={{ fontSize: 28, paddingBottom: 6 }}>🔀</Text>
@@ -193,7 +195,7 @@ export default function Game({ navigation, level, route }) {
                                 </>
                             : level.toLowerCase() === "three" && <>
                                     <Text style={{ textAlign: 'center', paddingBottom: 16, fontSize: 15, color: '#5B5A53', lineHeight: 22 }}>
-                                        {`All the same rules as Level Two — plus one new move:`}
+                                        {`All the same rules as Shuffle — plus one new move:`}
                                     </Text>
                                     <View style={{ backgroundColor: 'white', borderRadius: 14, paddingVertical: 16, paddingHorizontal: 20, width: '100%', alignItems: 'center', marginBottom: 16, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } }}>
                                         <Text style={{ fontSize: 28, paddingBottom: 6 }}>➕➖</Text>

@@ -149,13 +149,13 @@ function App() {
       <NavigationContainer>
         <Stack.Navigator initialRouteName="Main">
           <Stack.Screen name="Main" component={MainScreen} options={{headerShown: false}}/>
-          <Stack.Screen name="Play" component={Play} options={({ route, navigation }) => {return { headerTitleAlign: "center", headerTitle: `Level ${route.params.level}`, headerLeft: () => (
-              <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginLeft: 12 }}>
+          <Stack.Screen name="Play" component={Play} options={({ route, navigation }) => {return { headerTitleAlign: "center", headerTitle: ({ One: 'Classic', Two: 'Shuffle', Three: 'Morph' })[route.params.level] || `Level ${route.params.level}`, headerLeft: () => (
+              <TouchableOpacity onPress={() => navigation.goBack()} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
                 <Ionicons name="chevron-back" size={28} color="#000" />
               </TouchableOpacity>
             ) }}}/>
           <Stack.Screen name="ProfilePage" component={ProfilePage} options={({ route, navigation }) => {return { headerTitleAlign: "center", headerTitle: `Profile`, headerLeft: () => (
-              <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginLeft: 12 }}>
+              <TouchableOpacity onPress={() => navigation.goBack()} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
                 <Ionicons name="chevron-back" size={28} color="#000" />
               </TouchableOpacity>
             ) }}}/>
@@ -165,7 +165,7 @@ function App() {
             headerTitleAlign: 'center',
             headerTitle: ({ ['totalScore']: 'Total Score', ['averageScore']: 'Average Score', ['currentStreak']: 'Current Streak', ['longestStreak']: 'Longest Streak', ['totalSolved']: 'Puzzles Solved' })[route.params?.category] || 'Leaderboard',
             headerLeft: () => (
-              <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginLeft: 12 }}>
+              <TouchableOpacity onPress={() => navigation.goBack()} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
                 <Ionicons name="chevron-back" size={28} color="#000" />
               </TouchableOpacity>
             ),
@@ -174,7 +174,7 @@ function App() {
             headerTitleAlign: 'center',
             headerTitle: 'Rank Progression',
             headerLeft: () => (
-              <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginLeft: 12 }}>
+              <TouchableOpacity onPress={() => navigation.goBack()} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
                 <Ionicons name="chevron-back" size={28} color="#000" />
               </TouchableOpacity>
             ),
