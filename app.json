@@ -26,7 +26,7 @@
         "ITSAppUsesNonExemptEncryption": false
       },
       "associatedDomains": [
-        "applinks:word-ladder-backend-938399512582.us-central1.run.app"
+        "applinks:wordladderpuzzlegame.com"
       ]
     },
     "plugins": [
@@ -87,7 +87,7 @@
           "data": [
             {
               "scheme": "https",
-              "host": "word-ladder-backend-938399512582.us-central1.run.app",
+              "host": "wordladderpuzzlegame.com",
               "pathPrefix": "/share"
             }
           ],

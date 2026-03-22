@@ -238,17 +238,19 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
         }
     };
 
-    // Smart link: if the app is installed, iOS/Android opens it directly.
-    // If not installed, the backend detects the platform and redirects to the correct store.
-    // Once live on App Store, update /share route in the backend to use the App Store URL.
-    const SHARE_LINK = 'https://word-ladder-backend-938399512582.us-central1.run.app/share';
+    // Smart link: if the app is installed, iOS/Android intercepts and opens directly.
+    // If not installed, backend redirects to the correct store.
+    // Update to a short URL (e.g. bit.ly/wordladder) to avoid showing the raw backend URL.
+    const SHARE_LINK = 'https://wordladderpuzzlegame.com/share';
+    const levelDisplayName = { One: 'Classic', Two: 'Shuffle', Three: 'Morph' };
 
     const handleShare = async () => {
         try {
             const startWord = completeLadder[0];
             const endWord = completeLadder[completeLadder.length - 1];
             const optimalLine = isOptimalPath ? '\n⭐ Found the shortest solution!' : '';
-            const message = `🎉 I just completed a Level ${level} Word Ladder!\n\n⏱️ Time: ${timeFormattedTimeTaken}\n📊 Score: ${totalScore}\n🪜 ${userLength} words${optimalLine}\n\nCan you beat my score?\n${SHARE_LINK}`;
+            const displayName = levelDisplayName[level] || level;
+            const message = `🪜 I just solved a ${displayName} Word Ladder!\n\n⏱️ Time: ${timeFormattedTimeTaken}\n📊 Score: ${totalScore}\n🪜 ${userLength} words${optimalLine}\n\nCan you beat my score?\n${SHARE_LINK}`;
             await Share.share({ message });
         } catch {
             Alert.alert('Error', 'Unable to share. Please try again.');
