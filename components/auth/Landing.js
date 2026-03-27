@@ -6,7 +6,7 @@ import { getAuth, signInWithCredential, GoogleAuthProvider, OAuthProvider } from
 import config from '../../config';
 
 // Platform-specific imports
-const { GoogleSignin } = Platform.OS === 'android' ? require('@react-native-google-signin/google-signin') : {};
+const { GoogleSignin, statusCodes } = Platform.OS === 'android' ? require('@react-native-google-signin/google-signin') : {};
 
 export default function LandingScreen({ navigation }) {
 
@@ -14,7 +14,7 @@ export default function LandingScreen({ navigation }) {
   useEffect(() => {
     if (Platform.OS === 'android') {
       GoogleSignin.configure({
-        webClientId: config.GOOGLE_WEB_CLIENT_ID, // Firebase Web Client ID
+        webClientId: config.GOOGLE_WEB_CLIENT_ID,
       });
     }
   }, []);
@@ -29,8 +29,16 @@ export default function LandingScreen({ navigation }) {
       const auth = getAuth();
       return signInWithCredential(auth, googleCredential);
     } catch (error) {
-      console.error('Google sign-in error:', error);
-      Alert.alert('Sign In Failed', 'Could not sign in with Google. Please try again.');
+      const isCancel = statusCodes && error.code === statusCodes.SIGN_IN_CANCELLED;
+      const isInProgress = statusCodes && error.code === statusCodes.IN_PROGRESS;
+      const isPlayServicesError = statusCodes && error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE;
+
+      if (!isCancel && !isInProgress) {
+        Alert.alert('Sign In Failed', isPlayServicesError
+          ? 'Google Play Services not available'
+          : 'Could not sign in with Google. Please try again.'
+        );
+      }
     }
   }
 

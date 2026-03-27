@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { View, StyleSheet, Text, ScrollView} from 'react-native'
+import { View, StyleSheet, Text, ScrollView, Platform} from 'react-native'
 import FlatButton from '../shared/button';
 import { levelColorScheme } from '../../redux/constants/colorScheme';
 import { useDispatch, useSelector } from 'react-redux';
@@ -8,7 +8,13 @@ import {RewardedInterstitialAd, TestIds, RewardedAdEventType, AdEventType} from 
 import * as StatusBar from 'expo-status-bar';
 import { getAuth } from 'firebase/auth';
 
-const rewardedInterstitialAd = RewardedInterstitialAd.createForAdRequest(TestIds.REWARDED_INTERSTITIAL, {
+const REWARDED_INTERSTITIAL_AD_UNIT_ID = __DEV__
+  ? TestIds.REWARDED_INTERSTITIAL
+  : Platform.OS === 'android'
+    ? 'ca-app-pub-5826991812725211/2952492979'
+    : 'ca-app-pub-5826991812725211/3298385019';
+
+const rewardedInterstitialAd = RewardedInterstitialAd.createForAdRequest(REWARDED_INTERSTITIAL_AD_UNIT_ID, {
     requestNonPersonalizedAdsOnly: true
   });
 

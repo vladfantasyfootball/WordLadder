@@ -20,7 +20,7 @@
     "ios": {
       "googleServicesFile": "./GoogleService-Info.plist",
       "bundleIdentifier": "com.vlad.wordLadder",
-      "buildNumber": "36",
+      "buildNumber": "37",
       "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -70,7 +70,7 @@
     "android": {
       "googleServicesFile": "./google-services.json",
       "package": "com.vlad.wordLadderAndroid",
-      "versionCode": 1,
+      "versionCode": 8,
       "adaptiveIcon": {
         "foregroundImage": "./assets/ic_launcher-playstore.png",
         "backgroundColor": "#a1fcbc"
@@ -79,6 +79,9 @@
         "RECEIVE_BOOT_COMPLETED",
         "POST_NOTIFICATIONS",
         "com.google.android.gms.permission.AD_ID"
+      ],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
       ],
       "intentFilters": [
         {

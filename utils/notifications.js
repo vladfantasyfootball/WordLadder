@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 // Configure how notifications are handled when app is foregrounded
 Notifications.setNotificationHandler({
@@ -42,7 +43,7 @@ export async function registerForPushNotificationsAsync() {
     
     try {
       const pushTokenData = await Notifications.getExpoPushTokenAsync({
-        projectId: '785b674b-120a-4948-832d-898826a35fa1'
+        projectId: Constants.expoConfig?.extra?.eas?.projectId
       });
       token = pushTokenData.data;
     } catch (error) {

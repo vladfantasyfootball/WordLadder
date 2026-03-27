@@ -14,19 +14,19 @@
       },
       "oauth_client": [
         {
+          "client_id": "938399512582-4temkivcq5s14mg27dmtajqke6v1stu8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vlad.wordLadderAndroid",
+            "certificate_hash": "1f75dda5a3d177771e57a413aef85d4be635bb2b"
+          }
+        },
+        {
           "client_id": "938399512582-br07vrl9aqna34t9qjtqo4kbo8j5qo4c.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.vlad.wordLadderAndroid",
             "certificate_hash": "8adb2cda3a1dd0e2098bdd3d0be01bf6d58556a6"
-          }
-        },
-        {
-          "client_id": "938399512582-qkqojcd8oc9cijgu1rihtppkrsks1s71.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.vlad.wordLadderAndroid",
-            "certificate_hash": "a6657791c922eaf087ee98e25179c7b5c898fbe4"
           }
         },
         {
