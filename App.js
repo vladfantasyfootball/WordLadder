@@ -21,6 +21,7 @@ import { Alert, View, Text, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Purchases from 'react-native-purchases';
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
+import MobileAds from 'react-native-google-mobile-ads';
 
 let app, auth;
 let initError = null;
@@ -125,10 +126,14 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // ATT (App Tracking Transparency) is iOS-only
-    if (Platform.OS === 'ios') {
-      requestTrackingPermissionsAsync();
-    }
+    const initAds = async () => {
+      // ATT must be requested before initializing ads on iOS
+      if (Platform.OS === 'ios') {
+        await requestTrackingPermissionsAsync();
+      }
+      await MobileAds().initialize();
+    };
+    initAds();
   }, []);
 
   if (initializing) {
