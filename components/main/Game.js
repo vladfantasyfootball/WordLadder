@@ -7,6 +7,7 @@ import { updateUser } from '../../redux/actions';
 import {RewardedInterstitialAd, TestIds, RewardedAdEventType, AdEventType} from 'react-native-google-mobile-ads'
 import * as StatusBar from 'expo-status-bar';
 import { getAuth } from 'firebase/auth';
+import { adsInitialized } from '../../App';
 
 const REWARDED_INTERSTITIAL_AD_UNIT_ID = __DEV__
   ? TestIds.REWARDED_INTERSTITIAL
@@ -14,9 +15,11 @@ const REWARDED_INTERSTITIAL_AD_UNIT_ID = __DEV__
     ? 'ca-app-pub-5826991812725211/2952492979'
     : 'ca-app-pub-5826991812725211/3298385019';
 
-const rewardedInterstitialAd = RewardedInterstitialAd.createForAdRequest(REWARDED_INTERSTITIAL_AD_UNIT_ID, {
-    requestNonPersonalizedAdsOnly: true
-  });
+// Ad is created after SDK is initialized to avoid silent load failures
+let rewardedInterstitialAd;
+adsInitialized.then(() => {
+  rewardedInterstitialAd = RewardedInterstitialAd.createForAdRequest(REWARDED_INTERSTITIAL_AD_UNIT_ID);
+});
 
 const levelDisplayName = { One: 'Classic', Two: 'Shuffle', Three: 'Morph' };
 
@@ -32,6 +35,8 @@ export default function Game({ navigation, level, route }) {
     const [firstTimeLevel, setFirstTimeLevel] = useState(null);
 
     const loadRewardedInterstitial = () => {
+        if (!rewardedInterstitialAd) return () => {};
+
         const unsubscribeLoaded = rewardedInterstitialAd.addAdEventListener(
           RewardedAdEventType.LOADED, () => {
             setAdLoaded(true)
@@ -88,18 +93,22 @@ export default function Game({ navigation, level, route }) {
                 setAdWatched(true)
             }
         }
-        const unsubscribeRewardedInterstitial = loadRewardedInterstitial()
+        // Wait for SDK init then start loading ad
+        adsInitialized.then(() => {
+            const unsubscribeRewardedInterstitial = loadRewardedInterstitial()
+            return unsubscribeRewardedInterstitial;
+        });
 
-        return () => {
-            unsubscribeRewardedInterstitial();
-        }
+        return () => {};
     },[currentUser])
 
     const isPremium = currentUser?.purchases?.premium === true;
 
     const navigateToPlay = (level) => {
         if(level.toLowerCase() === "two" && !adWatched && !isPremium){
-            rewardedInterstitialAd.show().then(() => {StatusBar.setStatusBarHidden(true)});
+            if (rewardedInterstitialAd) {
+                rewardedInterstitialAd.show().then(() => {StatusBar.setStatusBarHidden(true)});
+            }
         } else if (level.toLowerCase() === "three" && !isPremium) {
             navigation.navigate('Paywall');
         } else {

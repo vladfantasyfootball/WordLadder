@@ -23,6 +23,10 @@ import Purchases from 'react-native-purchases';
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import MobileAds from 'react-native-google-mobile-ads';
 
+// Start MobileAds initialization early so it's ready before Game.js loads ads
+const adsInitialized = MobileAds().initialize();
+export { adsInitialized };
+
 let app, auth;
 let initError = null;
 
@@ -126,14 +130,10 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const initAds = async () => {
-      // ATT must be requested before initializing ads on iOS
-      if (Platform.OS === 'ios') {
-        await requestTrackingPermissionsAsync();
-      }
-      await MobileAds().initialize();
-    };
-    initAds();
+    // Request ATT on iOS - adsInitialized is already running in parallel
+    if (Platform.OS === 'ios') {
+      requestTrackingPermissionsAsync();
+    }
   }, []);
 
   if (initializing) {

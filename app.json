@@ -20,7 +20,7 @@
     "ios": {
       "googleServicesFile": "./GoogleService-Info.plist",
       "bundleIdentifier": "com.vlad.wordLadder",
-      "buildNumber": "38",
+      "buildNumber": "40",
       "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
