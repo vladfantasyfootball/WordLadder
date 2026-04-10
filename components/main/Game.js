@@ -7,7 +7,7 @@ import { updateUser } from '../../redux/actions';
 import {RewardedInterstitialAd, TestIds, RewardedAdEventType, AdEventType} from 'react-native-google-mobile-ads'
 import * as StatusBar from 'expo-status-bar';
 import { getAuth } from 'firebase/auth';
-import { adsInitialized } from '../../App';
+import { adsInitialized } from '../../utils/ads';
 
 const REWARDED_INTERSTITIAL_AD_UNIT_ID = __DEV__
   ? TestIds.REWARDED_INTERSTITIAL

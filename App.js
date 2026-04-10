@@ -21,11 +21,7 @@ import { Alert, View, Text, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Purchases from 'react-native-purchases';
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
-import MobileAds from 'react-native-google-mobile-ads';
-
-// Start MobileAds initialization early so it's ready before Game.js loads ads
-const adsInitialized = MobileAds().initialize();
-export { adsInitialized };
+import { adsInitialized } from './utils/ads';
 
 let app, auth;
 let initError = null;
