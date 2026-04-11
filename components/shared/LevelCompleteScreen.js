@@ -41,15 +41,14 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
         ? new Date(timeTaken * 1000).toISOString().substr(14, 5)
         : new Date(timeTaken * 1000).toISOString().substr(11, 8);
 
-    let timeBonus = 100;
-    if (timeTaken > 30) {
-        timeBonus = Math.max(0, 100 - Math.floor((timeTaken - 30) / 6));
-    }
-
     const completionBonus = completionBonusMap[level.toLowerCase()];
     const shortestLength = shortestSolution.length;
     const userLength = completeLadder.length;
-    const wordBonus = Math.max(0, 100 - (userLength - shortestLength) * 5);
+    const overBy = userLength - shortestLength;
+    const isOptimalPath = overBy === 0;
+    const wordBonus = isOptimalPath ? 100 : Math.max(0, 50 - (overBy - 1) * 5);
+    const isSpeedBonus = timeTaken < 60;
+    const timeBonus = isSpeedBonus ? 100 : Math.max(0, 50 - Math.floor((timeTaken - 60) / 12));
     const totalScore = completionBonus + wordBonus + timeBonus;
 
     const isFirstCompletion = prevStats != null;
@@ -57,7 +56,6 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
     const isNewHighScore = isFirstCompletion && totalScore > (prevStats.highScore ?? 0);
     const newStreak = isFirstCompletion ? prevStats.currentStreak + 1 : null;
     const streakIncreased = isFirstCompletion && newStreak > prevStats.currentStreak;
-    const isOptimalPath = userLength === shortestLength;
 
     const levelColor = levelColorScheme[level] ?? '#9ADBFA';
 
@@ -94,7 +92,13 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
             icon: 'star',
             color: '#AF52DE',
             title: 'Optimal Path!',
-            description: 'You found the shortest solution!',
+            description: 'Shortest solution — +50 word bonus!',
+        });
+        if (isSpeedBonus) achievements.push({
+            icon: 'flash',
+            color: '#FFD000',
+            title: 'Speed Bonus!',
+            description: 'Finished under 1 minute — +50 time bonus!',
         });
         achievements.push({
             icon: 'stats-chart',
@@ -248,7 +252,7 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
         try {
             const startWord = completeLadder[0];
             const endWord = completeLadder[completeLadder.length - 1];
-            const optimalLine = isOptimalPath ? '\n⭐ Found the shortest solution!' : '';
+            const optimalLine = [isOptimalPath ? '⭐ Shortest solution!' : '', isSpeedBonus ? '⚡ Under 1 minute!' : ''].filter(Boolean).map(s => `\n${s}`).join('');
             const displayName = levelDisplayName[level] || level;
             const message = `🪜 I just solved a ${displayName} Word Ladder!\n\n⏱️ Time: ${timeFormattedTimeTaken}\n📊 Score: ${totalScore}\n🪜 ${userLength} words${optimalLine}\n\nCan you beat my score?\n${SHARE_LINK}`;
             await Share.share({ message });
@@ -318,13 +322,17 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                     <Text style={styles.scoreValue}>+{completionBonus}</Text>
                 </Animatable.View>
                 <Animatable.View animation="fadeInRight" delay={800} style={styles.scoreRow}>
-                    <Text style={styles.scoreLabel}>Word Bonus</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={styles.scoreLabel}>Word Bonus</Text>
+                        {isOptimalPath && <Text style={styles.bonusTag}>⚡ Perfect!</Text>}
+                    </View>
                     <Text style={styles.scoreValue}>+{wordBonus}</Text>
                 </Animatable.View>
                 <Animatable.View animation="fadeInRight" delay={1200} style={styles.scoreRow}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={styles.scoreLabel}>Time Bonus</Text>
                         <Text style={styles.scoreSubLabel}>  {timeFormattedTimeTaken}</Text>
+                        {isSpeedBonus && <Text style={styles.bonusTag}>⚡ Speed!</Text>}
                     </View>
                     <Text style={styles.scoreValue}>+{timeBonus}</Text>
                 </Animatable.View>
@@ -543,6 +551,17 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: '700',
         color: '#111',
+    },
+    bonusTag: {
+        marginLeft: 6,
+        backgroundColor: '#AF52DE22',
+        color: '#AF52DE',
+        fontSize: 10,
+        fontWeight: '700',
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 8,
+        overflow: 'hidden',
     },
     totalRow: {
         flexDirection: 'row',

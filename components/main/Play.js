@@ -113,15 +113,12 @@ export class Play extends Component {
                             newUser.wordLadder[level.toLowerCase()].lastSolved = newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle;
                             newUser.wordLadder[level.toLowerCase()].totalSolved = (newUser.wordLadder[level.toLowerCase()].totalSolved || 0) + 1;
                             let timeTaken = Math.round((newUser.wordLadder[level.toLowerCase()].timeFinished - newUser.wordLadder[level.toLowerCase()].timeStarted) / 1000);
-                        let timeBonus = 100;
-                        if (timeTaken > 60) {
-                            const secondsOver = timeTaken - 60;
-                            timeBonus = Math.max(0, 100 - Math.floor(secondsOver / 6));
-                        }
                         const completionBonus = completionBonusMap[level.toLowerCase()];
                         const shortestLength = this.props.wordLadder[level.toLowerCase()].shortestSolution.length;
                         const userLength = this.state.ladderWords.length;
-                        const wordBonus = Math.max(0, 100 - (userLength - shortestLength) * 5);
+                        const overBy = userLength - shortestLength;
+                        const wordBonus = overBy === 0 ? 100 : Math.max(0, 50 - (overBy - 1) * 5);
+                        const timeBonus = timeTaken < 60 ? 100 : Math.max(0, 50 - Math.floor((timeTaken - 60) / 12));
                         const totalRoundScore = timeBonus + completionBonus + wordBonus;
                             newUser.wordLadder[level.toLowerCase()].totalScore = newUser.wordLadder[level.toLowerCase()].totalScore + totalRoundScore;
                             if(totalRoundScore > newUser.wordLadder[level.toLowerCase()].highScore){
@@ -172,16 +169,12 @@ export class Play extends Component {
                                     newUser.wordLadder[level.toLowerCase()].totalSolved = (newUser.wordLadder[level.toLowerCase()].totalSolved || 0) + 1;
                                     let timeTaken = Math.round((newUser.wordLadder[level.toLowerCase()].timeFinished - newUser.wordLadder[level.toLowerCase()].timeStarted) / 1000);
 
-                                // Time bonus: Start at 100 points, lose 1 point every 6 seconds after 1 minute
-                                let timeBonus = 100;
-                                if (timeTaken > 60) {
-                                    const secondsOver = timeTaken - 60;
-                                    timeBonus = Math.max(0, 100 - Math.floor(secondsOver / 6));
-                                }
                                 const completionBonus = completionBonusMap[level.toLowerCase()];
                                 const shortestLength = this.props.wordLadder[level.toLowerCase()].shortestSolution.length;
                                 const userLength = this.state.ladderWords.length;
-                                const wordBonus = Math.max(0, 100 - (userLength - shortestLength) * 5);
+                                const overBy = userLength - shortestLength;
+                                const wordBonus = overBy === 0 ? 100 : Math.max(0, 50 - (overBy - 1) * 5);
+                                const timeBonus = timeTaken < 60 ? 100 : Math.max(0, 50 - Math.floor((timeTaken - 60) / 12));
                                 const totalRoundScore = timeBonus + completionBonus + wordBonus;
                                     newUser.wordLadder[level.toLowerCase()].totalScore = newUser.wordLadder[level.toLowerCase()].totalScore + totalRoundScore;
                                     if(totalRoundScore > newUser.wordLadder[level.toLowerCase()].highScore){
