@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { View, StyleSheet, Text, ScrollView, Platform} from 'react-native'
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Platform} from 'react-native'
 import FlatButton from '../shared/button';
 import { levelColorScheme } from '../../redux/constants/colorScheme';
 import { useDispatch, useSelector } from 'react-redux';
@@ -13,13 +13,26 @@ const REWARDED_INTERSTITIAL_AD_UNIT_ID = __DEV__
   ? TestIds.REWARDED_INTERSTITIAL
   : Platform.OS === 'android'
     ? 'ca-app-pub-5826991812725211/2952492979'
-    : 'ca-app-pub-5826991812725211/3298385019';
+    : 'ca-app-pub-5826991812725211/8265105651';
+
+// Capture logs before component mounts (SDK init happens at module load time)
+const earlyAdLogs = [];
+const earlyLog = (msg) => earlyAdLogs.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
+earlyLog(`Platform: ${Platform.OS} | __DEV__: ${__DEV__}`);
+earlyLog(`Ad unit ID: ${REWARDED_INTERSTITIAL_AD_UNIT_ID}`);
+earlyLog('Waiting for MobileAds SDK init...');
 
 // Ad is created after SDK is initialized to avoid silent load failures
 let rewardedInterstitialAd;
-adsInitialized.then(() => {
-  rewardedInterstitialAd = RewardedInterstitialAd.createForAdRequest(REWARDED_INTERSTITIAL_AD_UNIT_ID);
-});
+adsInitialized
+  .then(() => {
+    earlyLog('MobileAds SDK initialized ✓');
+    rewardedInterstitialAd = RewardedInterstitialAd.createForAdRequest(REWARDED_INTERSTITIAL_AD_UNIT_ID);
+    earlyLog('RewardedInterstitialAd object created ✓');
+  })
+  .catch((err) => {
+    earlyLog(`MobileAds SDK init FAILED: ${err?.message ?? String(err)}`);
+  });
 
 const levelDisplayName = { One: 'Classic', Two: 'Shuffle', Three: 'Morph' };
 
@@ -29,28 +42,43 @@ export default function Game({ navigation, level, route }) {
     const [adWatched, setAdWatched] = useState(false)
 
     const [adLoaded, setAdLoaded] = useState(false)
+    const [adLoadFailed, setAdLoadFailed] = useState(false)
+    const [adLogs, setAdLogs] = useState([...earlyAdLogs]);
+    const [showAdLogs, setShowAdLogs] = useState(false);
+
+    const addLog = (msg) => setAdLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
 
     const wordLadder = useSelector((state) => state.wordLadderState.wordLadder);
     const [howToOpen, setHowToOpen] = useState(null);
     const [firstTimeLevel, setFirstTimeLevel] = useState(null);
 
     const loadRewardedInterstitial = () => {
-        if (!rewardedInterstitialAd) return () => {};
+        addLog('loadRewardedInterstitial() called');
+        if (!rewardedInterstitialAd) {
+          addLog('ERROR: Ad object is null — SDK may not have initialized yet');
+          return () => {};
+        }
+        addLog('Ad object exists, attaching event listeners...');
 
         const unsubscribeLoaded = rewardedInterstitialAd.addAdEventListener(
           RewardedAdEventType.LOADED, () => {
+            addLog('Event: LOADED ✓ — ad is ready to show');
             setAdLoaded(true)
+            setAdLoadFailed(false)
           }
         )
         const unsubscribeEarned = rewardedInterstitialAd.addAdEventListener(
           RewardedAdEventType.EARNED_REWARD, (reward) => {
+            addLog(`Event: EARNED_REWARD — type: ${reward?.type}, amount: ${reward?.amount}`);
             setAdWatched(true)
           }
         )
         const unsubscribeClosed = rewardedInterstitialAd.addAdEventListener(
           AdEventType.CLOSED, () => {
+            addLog(`Event: CLOSED — adWatched at close: ${adWatched}`);
             StatusBar.setStatusBarHidden(false)
             setAdLoaded(false)
+            addLog('Calling .load() to preload next ad...');
             rewardedInterstitialAd.load()
 
             if(adWatched){
@@ -58,13 +86,25 @@ export default function Game({ navigation, level, route }) {
             }
           }
         )
-    
+        const unsubscribeError = rewardedInterstitialAd.addAdEventListener(
+          AdEventType.ERROR, (error) => {
+            const msg = `Event: ERROR — code: ${error?.code ?? 'n/a'}, message: ${error?.message ?? String(error)}`;
+            addLog(msg);
+            console.error('Rewarded ad failed to load:', error)
+            setAdLoaded(false)
+            setAdLoadFailed(true)
+          }
+        )
+
+        addLog('All listeners attached, calling .load()...');
         rewardedInterstitialAd.load()
     
         return () => {
+          addLog('Cleanup: removing ad listeners');
           unsubscribeLoaded()
           unsubscribeClosed()
           unsubscribeEarned()
+          unsubscribeError()
         }
     }
 
@@ -94,7 +134,9 @@ export default function Game({ navigation, level, route }) {
             }
         }
         // Wait for SDK init then start loading ad
+        addLog(`useEffect[currentUser] — user: ${currentUser?.id ?? 'null'}, waiting for SDK init...`);
         adsInitialized.then(() => {
+            addLog(`SDK init resolved in effect — ad object: ${rewardedInterstitialAd ? 'exists' : 'NULL'}`);
             const unsubscribeRewardedInterstitial = loadRewardedInterstitial()
             return unsubscribeRewardedInterstitial;
         });
@@ -105,9 +147,13 @@ export default function Game({ navigation, level, route }) {
     const isPremium = currentUser?.purchases?.premium === true;
 
     const navigateToPlay = (level) => {
-        if(level.toLowerCase() === "two" && !adWatched && !isPremium){
+        addLog(`navigateToPlay(${level}) — adLoaded:${adLoaded} adWatched:${adWatched} isPremium:${isPremium} adLoadFailed:${adLoadFailed}`);
+        if(level.toLowerCase() === "two" && !adWatched && !isPremium && !adLoadFailed){
             if (rewardedInterstitialAd) {
+                addLog('Calling rewardedInterstitialAd.show()...');
                 rewardedInterstitialAd.show().then(() => {StatusBar.setStatusBarHidden(true)});
+            } else {
+                addLog('ERROR: Cannot show — ad object is null');
             }
         } else if (level.toLowerCase() === "three" && !isPremium) {
             navigation.navigate('Paywall');
@@ -154,7 +200,7 @@ export default function Game({ navigation, level, route }) {
 
     const determineLevelDisabled = (level) => {
         if(level.toLowerCase() === "two"){
-            return (!adLoaded && !adWatched && !isPremium)
+            return (!adLoaded && !adWatched && !isPremium && !adLoadFailed)
         } else {
             return false
         }
@@ -251,6 +297,28 @@ export default function Game({ navigation, level, route }) {
                                 <FlatButton text={`Unlock Level Two`} onPress={onPressUnlock} width='50' disabled={false}/> 
                             } */}
                             <FlatButton text='How to Play' onPress={() => onPressHowTo(level)} width='40' disabled={false}/>
+                            {level === 'Two' && (
+                                <View style={styles.adLogContainer}>
+                                    <TouchableOpacity onPress={() => setShowAdLogs(v => !v)} style={styles.adLogToggle}>
+                                        <Text style={styles.adLogToggleText}>{showAdLogs ? '▲ Hide Ad Logs' : '▼ Ad Logs'}</Text>
+                                    </TouchableOpacity>
+                                    {showAdLogs && (
+                                        <View style={styles.adLogPanel}>
+                                            <TouchableOpacity onPress={() => setAdLogs([])} style={styles.adLogClear}>
+                                                <Text style={styles.adLogClearText}>Clear</Text>
+                                            </TouchableOpacity>
+                                            <ScrollView style={styles.adLogScroll} nestedScrollEnabled>
+                                                {adLogs.length === 0
+                                                    ? <Text style={styles.adLogEntry}>No logs yet.</Text>
+                                                    : [...adLogs].reverse().map((log, i) => (
+                                                        <Text key={i} style={styles.adLogEntry}>{log}</Text>
+                                                    ))
+                                                }
+                                            </ScrollView>
+                                        </View>
+                                    )}
+                                </View>
+                            )}
                         </> 
                 }
                 
@@ -266,5 +334,49 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         height: 50,
         alignContent: 'center',
+    },
+    adLogContainer: {
+        marginTop: 16,
+        width: '88%',
+        alignItems: 'center',
+    },
+    adLogToggle: {
+        paddingHorizontal: 14,
+        paddingVertical: 6,
+        backgroundColor: 'rgba(0,0,0,0.18)',
+        borderRadius: 8,
+    },
+    adLogToggleText: {
+        color: '#5B5A53',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    adLogPanel: {
+        marginTop: 6,
+        width: '100%',
+        backgroundColor: 'rgba(0,0,0,0.75)',
+        borderRadius: 8,
+        padding: 8,
+        maxHeight: 220,
+    },
+    adLogClear: {
+        alignSelf: 'flex-end',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        marginBottom: 4,
+    },
+    adLogClearText: {
+        color: '#aaa',
+        fontSize: 10,
+    },
+    adLogScroll: {
+        maxHeight: 180,
+    },
+    adLogEntry: {
+        color: '#00ff88',
+        fontSize: 10,
+        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+        marginBottom: 3,
+        lineHeight: 14,
     },
 });
