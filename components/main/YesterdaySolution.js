@@ -59,82 +59,113 @@ export default function YesterdaySolution({ route }) {
         );
     }
 
-    const solution = puzzle.shortestSolution;
+    const rawSolution = puzzle.shortestSolution;
+    // Ensure the full path always includes the starting and ending word
+    const solution = (() => {
+        let s = [...rawSolution];
+        if (s[0]?.toLowerCase() !== puzzle.startingWord?.toLowerCase()) {
+            s = [puzzle.startingWord, ...s];
+        }
+        if (s[s.length - 1]?.toLowerCase() !== puzzle.endingWord?.toLowerCase()) {
+            s = [...s, puzzle.endingWord];
+        }
+        return s;
+    })();
+    const stepCount = solution.length - 1;
 
     return (
-        <ScrollView
-            contentContainerStyle={[styles.container, { backgroundColor: levelColor }]}
-            showsVerticalScrollIndicator={false}
-        >
-            <Text style={styles.heading}>Yesterday's {displayName} Solution</Text>
-            <Text style={styles.subheading}>
-                {puzzle.startingWord.toUpperCase()} → {puzzle.endingWord.toUpperCase()}
-            </Text>
-            <Text style={styles.stepsLabel}>
-                Shortest solution: {solution.length - 1} {solution.length - 1 === 1 ? 'step' : 'steps'}
-            </Text>
-
-            <View style={styles.ladderContainer}>
-                {solution.map((word, index) => (
-                    <View key={index} style={styles.wordRow}>
-                        <LadderStepWord
-                            word={word.toUpperCase()}
-                            level={index === 0 || index === solution.length - 1 ? null : level}
-                            size={52}
-                            fontSize={22}
-                        />
-                        {index < solution.length - 1 && (
-                            <Text style={styles.arrow}>↓</Text>
-                        )}
-                    </View>
-                ))}
+        <View style={[styles.root, { backgroundColor: levelColor }]}>
+            <View style={styles.header}>
+                <Text style={styles.headerTitle}>
+                    {puzzle.startingWord.toUpperCase()} → {puzzle.endingWord.toUpperCase()}
+                </Text>
+                <Text style={styles.stepsLabel}>
+                    Shortest solution: {stepCount} {stepCount === 1 ? 'step' : 'steps'}
+                </Text>
             </View>
-        </ScrollView>
+
+            <View style={styles.solutionSection}>
+                <View style={styles.card}>
+                    <Text style={styles.cardTitle}>Solution</Text>
+                    <View style={styles.divider} />
+                    <ScrollView
+                        contentContainerStyle={{ alignItems: 'center', paddingVertical: 8 }}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        {solution.map((word, index) => (
+                            <LadderStepWord
+                                key={index}
+                                word={word}
+                                level={(index === 0 || index === solution.length - 1) ? null : level}
+                                size={50}
+                                fontSize={32}
+                            />
+                        ))}
+                    </ScrollView>
+                </View>
+            </View>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
+    root: {
+        flex: 1,
+    },
     center: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    container: {
+    header: {
+        paddingTop: 20,
+        paddingBottom: 16,
+        paddingHorizontal: 24,
         alignItems: 'center',
-        paddingVertical: 28,
-        paddingHorizontal: 20,
-        flexGrow: 1,
     },
-    heading: {
+    headerTitle: {
         fontSize: 22,
         fontWeight: '800',
-        color: '#5B5A53',
-        textAlign: 'center',
-        marginBottom: 8,
-    },
-    subheading: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: '#5B5A53',
+        color: '#111',
+        letterSpacing: 1.5,
         marginBottom: 4,
-        letterSpacing: 1,
     },
     stepsLabel: {
         fontSize: 13,
-        color: '#777',
-        marginBottom: 24,
+        color: '#666',
+        fontWeight: '500',
     },
-    ladderContainer: {
-        alignItems: 'center',
-        width: '100%',
+    solutionSection: {
+        maxHeight: '70%',
+        marginBottom: 20,
+        flexShrink: 1,
     },
-    wordRow: {
-        alignItems: 'center',
+    card: {
+        backgroundColor: '#fff',
+        borderRadius: 18,
+        marginHorizontal: 16,
+        overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 3,
     },
-    arrow: {
-        fontSize: 20,
-        color: '#5B5A53',
-        marginVertical: 2,
+    cardTitle: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: '#888',
+        paddingHorizontal: 20,
+        paddingTop: 14,
+        paddingBottom: 8,
+        textTransform: 'uppercase',
+        letterSpacing: 0.8,
+    },
+    divider: {
+        height: 1,
+        backgroundColor: '#EBEBEB',
+        marginHorizontal: 16,
+        marginBottom: 4,
     },
     errorText: {
         fontSize: 15,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { View, StyleSheet, Text, ScrollView, Platform} from 'react-native'
+import { View, StyleSheet, Text, ScrollView, Platform, TouchableOpacity} from 'react-native'
 import FlatButton from '../shared/button';
 import { levelColorScheme } from '../../redux/constants/colorScheme';
 import { useDispatch, useSelector } from 'react-redux';
@@ -26,6 +26,7 @@ const YESTERDAY_AD_UNIT_ID = __DEV__
 // Ad objects are created after SDK is initialized to avoid silent load failures
 let rewardedInterstitialAd;
 let yesterdayAd;
+let pendingYesterdayLevel = null;
 adsInitialized
   .then(() => {
     rewardedInterstitialAd = RewardedInterstitialAd.createForAdRequest(REWARDED_INTERSTITIAL_AD_UNIT_ID);
@@ -59,7 +60,9 @@ export default function Game({ navigation, level, route }) {
         );
         const unsubscribeEarned = yesterdayAd.addAdEventListener(
           RewardedAdEventType.EARNED_REWARD, () => {
-            navigation.navigate('YesterdaySolution', { level });
+            if (pendingYesterdayLevel === level) {
+              navigation.navigate('YesterdaySolution', { level });
+            }
           }
         );
         const unsubscribeClosed = yesterdayAd.addAdEventListener(
@@ -172,6 +175,7 @@ export default function Game({ navigation, level, route }) {
             return;
         }
         if (yesterdayAd && yesterdayAdLoaded) {
+            pendingYesterdayLevel = level;
             yesterdayAd.show().then(() => StatusBar.setStatusBarHidden(true));
         }
     };
@@ -324,12 +328,15 @@ export default function Game({ navigation, level, route }) {
                             } */}
                             <FlatButton text='How to Play' onPress={() => onPressHowTo(level)} width='40' disabled={false}/>
                             {todayPuzzleId >= 2 && (
-                                <FlatButton
-                                    text={isPremium || yesterdayAdLoadFailed ? "Yesterday's Solution" : yesterdayAdLoaded ? "Yesterday's Solution 🎬" : "Yesterday's Solution"}
-                                    onPress={onPressYesterday}
-                                    width='60'
-                                    disabled={!isPremium && !yesterdayAdLoaded && !yesterdayAdLoadFailed}
-                                />
+                                <View style={styles.yesterdayContainer}>
+                                    <TouchableOpacity
+                                        onPress={onPressYesterday}
+                                        disabled={!isPremium && !yesterdayAdLoaded && !yesterdayAdLoadFailed}
+                                        style={[styles.yesterdayButton, { opacity: (!isPremium && !yesterdayAdLoaded && !yesterdayAdLoadFailed) ? 0.3 : 1 }]}
+                                    >
+                                        <Text style={styles.yesterdayButtonText}>Yesterday's Solution</Text>
+                                    </TouchableOpacity>
+                                </View>
                             )}
                         </> 
                 }
@@ -344,7 +351,23 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        height: 50,
-        alignContent: 'center',
+    },
+    yesterdayContainer: {
+        position: 'absolute',
+        bottom: 52,
+        alignItems: 'center',
+        width: '100%',
+    },
+    yesterdayButton: {
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        paddingVertical: 8,
+        paddingHorizontal: 20,
+    },
+    yesterdayButtonText: {
+        color: '#5B5A53',
+        fontWeight: '600',
+        fontSize: 13,
+        textAlign: 'center',
     },
 });

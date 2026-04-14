@@ -181,9 +181,9 @@ function App() {
               </TouchableOpacity>
             ),
           })}/>
-          <Stack.Screen name="YesterdaySolution" component={YesterdaySolution} options={({ navigation }) => ({
+          <Stack.Screen name="YesterdaySolution" component={YesterdaySolution} options={({ route, navigation }) => ({
             headerTitleAlign: 'center',
-            headerTitle: "Yesterday's Solution",
+            headerTitle: `Yesterday's ${{ One: 'Classic', Two: 'Shuffle', Three: 'Morph' }[route.params?.level] || ''} Solution`,
             headerLeft: () => (
               <TouchableOpacity onPress={() => navigation.goBack()} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
                 <Ionicons name="chevron-back" size={28} color="#000" />

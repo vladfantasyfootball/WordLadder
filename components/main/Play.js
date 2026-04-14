@@ -438,9 +438,9 @@ export class Play extends Component {
                             <Text style={styles.modalEmoji}>{'🪜'}</Text>
                             <Text style={styles.modalTitle}>{'Shortest Ladder'}</Text>
                             <Text style={styles.modalLength}>
-                                {`${wordLadder[level.toLowerCase()]?.shortestSolution?.length ?? '?'} words`}
+                                {`${(wordLadder[level.toLowerCase()]?.shortestSolution?.length ?? 1) - 1} steps`}
                             </Text>
-                            <Text style={styles.modalSubtitle}>{'includes starting & ending word'}</Text>
+                            <Text style={styles.modalSubtitle}>{'includes ending word'}</Text>
                             <Text style={styles.modalChallenge}>{'Can you find it?'}</Text>
                             <TouchableOpacity
                                 style={[styles.modalButton, { backgroundColor: levelButtonColorScheme[level] }]}
