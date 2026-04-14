@@ -77,3 +77,18 @@ export function updateUser(id, userUpdate, auth) {
         }
     })
 }
+
+export function saveLeaderboardName(name, auth) {
+    return (async (dispatch) => {
+        if (auth.currentUser) {
+            const token = await auth.currentUser.getIdToken();
+            const response = await axios.put(
+                `${config.WORD_LADDER_BACKEND}/api/leaderboardName`,
+                { name },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            dispatch({ type: USER_STATE_CHANGE, currentUser: response.data });
+            return response.data;
+        }
+    })
+}

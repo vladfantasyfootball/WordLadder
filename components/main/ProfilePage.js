@@ -1,24 +1,46 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, Switch, StyleSheet, Alert, Linking, TouchableOpacity } from 'react-native'
-import LogoutButton from '../shared/logoutButton'
+import { View, Text, Switch, StyleSheet, Alert, Linking, TouchableOpacity, TextInput } from 'react-native'
+import LogoutButton from '../shared/logoutButton';
 import { getAuth } from 'firebase/auth';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { updateUser } from '../../redux/actions/index';
+import { updateUser, saveLeaderboardName } from '../../redux/actions/index';
 import { registerForPushNotificationsAsync, checkNotificationPermissions } from '../../utils/notifications';
 import axios from 'axios';
 import config from '../../config';
 
-function ProfilePage({ navigation, level, currentUser, updateUser }) {
+function ProfilePage({ navigation, level, currentUser, updateUser, saveLeaderboardName }) {
     const auth = getAuth()
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [editingName, setEditingName] = useState(false);
+    const [nameInput, setNameInput] = useState('');
+    const [nameError, setNameError] = useState('');
+    const [nameSaving, setNameSaving] = useState(false);
 
     useEffect(() => {
         if (currentUser?.notifications) {
             setNotificationsEnabled(currentUser.notifications.enabled || false);
         }
     }, [currentUser]);
+
+    const handleSaveLeaderboardName = async () => {
+        const trimmed = nameInput.trim();
+        if (!/^[a-zA-Z ]{1,20}$/.test(trimmed)) {
+            setNameError('Letters and spaces only, max 20 characters.');
+            return;
+        }
+        setNameError('');
+        setNameSaving(true);
+        try {
+            await saveLeaderboardName(trimmed, auth);
+            setEditingName(false);
+        } catch (e) {
+            setNameError(e?.response?.data || 'Something went wrong.');
+        } finally {
+            setNameSaving(false);
+        }
+    };
 
     const logoutFunction = async () => {
         await auth.signOut().catch((e) => {
@@ -154,6 +176,60 @@ function ProfilePage({ navigation, level, currentUser, updateUser }) {
     return (
         <View style={styles.container}>
             <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Leaderboard Name</Text>
+                {editingName ? (
+                    <View>
+                        <TextInput
+                            style={styles.nameInput}
+                            value={nameInput}
+                            onChangeText={t => { setNameInput(t); setNameError(''); }}
+                            placeholder="e.g. Word Wizard"
+                            placeholderTextColor="#999"
+                            maxLength={20}
+                            autoCapitalize="words"
+                            autoCorrect={false}
+                            autoFocus
+                        />
+                        {nameError ? <Text style={styles.nameError}>{nameError}</Text> : null}
+                        <View style={styles.nameButtonRow}>
+                            <TouchableOpacity
+                                style={[styles.nameSaveButton, nameSaving && { opacity: 0.6 }]}
+                                onPress={handleSaveLeaderboardName}
+                                disabled={nameSaving}
+                            >
+                                <Text style={styles.nameSaveText}>{nameSaving ? 'Saving…' : 'Save'}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.nameCancelButton}
+                                onPress={() => { setEditingName(false); setNameError(''); }}
+                            >
+                                <Text style={styles.nameCancelText}>Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                ) : (
+                    <View style={styles.settingRow}>
+                        <View style={styles.settingTextContainer}>
+                            <Text style={styles.settingLabel}>
+                                {currentUser?.leaderboardName || 'Not set'}
+                            </Text>
+                            <Text style={styles.settingDescription}>
+                                How you appear on leaderboards
+                            </Text>
+                        </View>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setNameInput(currentUser?.leaderboardName || '');
+                                setNameError('');
+                                setEditingName(true);
+                            }}
+                        >
+                            <Text style={styles.editText}>Edit</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+            </View>
+            <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Notifications</Text>
                 <View style={styles.settingRow}>
                     <View style={styles.settingTextContainer}>
@@ -233,12 +309,60 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '500',
     },
+    nameInput: {
+        borderWidth: 1.5,
+        borderColor: '#DDD',
+        borderRadius: 10,
+        paddingVertical: 10,
+        paddingHorizontal: 14,
+        fontSize: 16,
+        color: '#111',
+        marginBottom: 6,
+    },
+    nameError: {
+        fontSize: 13,
+        color: '#E53935',
+        marginBottom: 8,
+    },
+    nameButtonRow: {
+        flexDirection: 'row',
+        gap: 10,
+    },
+    nameSaveButton: {
+        flex: 1,
+        backgroundColor: '#FFD60A',
+        borderRadius: 10,
+        paddingVertical: 11,
+        alignItems: 'center',
+    },
+    nameSaveText: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#333',
+    },
+    nameCancelButton: {
+        flex: 1,
+        backgroundColor: '#f0f0f0',
+        borderRadius: 10,
+        paddingVertical: 11,
+        alignItems: 'center',
+    },
+    nameCancelText: {
+        fontSize: 15,
+        fontWeight: '500',
+        color: '#555',
+    },
+    editText: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#007AFF',
+    },
 });
 
 const mapStateToProps = (store) => ({
     currentUser: store.userState.currentUser,
 })
 
-const mapDispatchToProps = (dispatch) => bindActionCreators({ updateUser }, dispatch);
+const mapDispatchToProps = (dispatch) => bindActionCreators({ updateUser, saveLeaderboardName }, dispatch);
 
 export default connect(mapStateToProps, mapDispatchToProps)(ProfilePage);

@@ -12,6 +12,7 @@ import ProfilePage from './components/main/ProfilePage';
 import PaywallScreen from './components/main/PaywallScreen';
 import LeaderboardDetail from './components/main/LeaderboardDetail';
 import RankProgression from './components/main/RankProgression';
+import YesterdaySolution from './components/main/YesterdaySolution';
 import { configureStore } from '@reduxjs/toolkit'
 import { user } from './redux/reducers/user';
 import { wordLadder } from './redux/reducers/wordLadder';
@@ -174,6 +175,15 @@ function App() {
           <Stack.Screen name="RankProgression" component={RankProgression} options={({ navigation }) => ({
             headerTitleAlign: 'center',
             headerTitle: 'Rank Progression',
+            headerLeft: () => (
+              <TouchableOpacity onPress={() => navigation.goBack()} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="chevron-back" size={28} color="#000" />
+              </TouchableOpacity>
+            ),
+          })}/>
+          <Stack.Screen name="YesterdaySolution" component={YesterdaySolution} options={({ navigation }) => ({
+            headerTitleAlign: 'center',
+            headerTitle: "Yesterday's Solution",
             headerLeft: () => (
               <TouchableOpacity onPress={() => navigation.goBack()} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
                 <Ionicons name="chevron-back" size={28} color="#000" />

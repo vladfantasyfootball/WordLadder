@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Modal, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { getAuth } from 'firebase/auth';
-import { fetchLeaderboard } from '../../redux/actions';
+import { fetchLeaderboard, saveLeaderboardName } from '../../redux/actions';
 import { levelColorScheme } from '../../redux/constants/colorScheme';
 import * as Animatable from 'react-native-animatable';
 
@@ -19,13 +19,48 @@ export default function LeaderboardDetail({ route }) {
     const auth = getAuth();
     const currentUserId = auth.currentUser?.uid;
 
+    const currentUser = useSelector((state) => state.userState?.currentUser);
     const leaderboardData = useSelector(
         (state) => state.leaderboardState?.[level]?.[category]
     );
 
+    const [nameModalVisible, setNameModalVisible] = useState(false);
+    const [nameInput, setNameInput] = useState('');
+    const [nameError, setNameError] = useState('');
+    const [nameSaving, setNameSaving] = useState(false);
+
     useEffect(() => {
         dispatch(fetchLeaderboard(level, category, auth));
     }, [level, category]);
+
+    // Show name prompt on first visit if name not yet set
+    useEffect(() => {
+        if (currentUser && !currentUser.leaderboardName) {
+            setNameModalVisible(true);
+        }
+    }, [currentUser?.leaderboardName]);
+
+    const handleSaveName = async () => {
+        const trimmed = nameInput.trim();
+        if (!/^[a-zA-Z ]{1,20}$/.test(trimmed)) {
+            setNameError('1–20 characters, letters and spaces only.');
+            return;
+        }
+        setNameError('');
+        setNameSaving(true);
+        try {
+            await dispatch(saveLeaderboardName(trimmed, auth));
+            setNameModalVisible(false);
+        } catch (e) {
+            setNameError(e?.response?.data || 'Something went wrong. Please try again.');
+        } finally {
+            setNameSaving(false);
+        }
+    };
+
+    const handleSkip = () => {
+        setNameModalVisible(false);
+    };
 
     const bgColor = levelColorScheme[level.charAt(0).toUpperCase() + level.slice(1)];
 
@@ -37,7 +72,7 @@ export default function LeaderboardDetail({ route }) {
         );
     }
 
-    const { top10: top5, total, userRank, percentileAhead, userScore } = leaderboardData;
+    const { top10: top5, total, userRank, percentileAhead, userScore, userDisplayName } = leaderboardData;
     const userInTop5 = top5.some(e => e.userId === currentUserId);
 
     const CATEGORY_HEADINGS = {
@@ -50,6 +85,40 @@ export default function LeaderboardDetail({ route }) {
 
     return (
         <ScrollView contentContainerStyle={[styles.container, { backgroundColor: bgColor }]}>
+
+            {/* Leaderboard name modal */}
+            <Modal visible={nameModalVisible} transparent animationType="fade">
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={styles.modalOverlay}
+                >
+                    <View style={styles.modalCard}>
+                        <Text style={styles.modalTitle}>Choose your display name</Text>
+                        <Text style={styles.modalSubtitle}>This is how you'll appear on the leaderboard. Letters and spaces only, max 20 characters.</Text>
+                        <TextInput
+                            style={styles.nameInput}
+                            value={nameInput}
+                            onChangeText={t => { setNameInput(t); setNameError(''); }}
+                            placeholder="e.g. Word Wizard"
+                            placeholderTextColor="#999"
+                            maxLength={20}
+                            autoCapitalize="words"
+                            autoCorrect={false}
+                        />
+                        {nameError ? <Text style={styles.nameError}>{nameError}</Text> : null}
+                        <TouchableOpacity
+                            style={[styles.saveButton, nameSaving && styles.saveButtonDisabled]}
+                            onPress={handleSaveName}
+                            disabled={nameSaving}
+                        >
+                            <Text style={styles.saveButtonText}>{nameSaving ? 'Saving…' : 'Save Name'}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
+                            <Text style={styles.skipText}>Skip for now</Text>
+                        </TouchableOpacity>
+                    </View>
+                </KeyboardAvoidingView>
+            </Modal>
 
             {/* Score + percentile card */}
             {percentileAhead !== null ? (
@@ -92,9 +161,17 @@ export default function LeaderboardDetail({ route }) {
                         >
                             <View style={[styles.row, isUser && styles.rowHighlighted]}>
                                 <Text style={styles.rankNumber}>{index + 1}</Text>
-                                <Text style={[styles.scoreText, isUser && styles.scoreHighlighted]}>
-                                    {formatValue(category, entry[category])}
-                                </Text>
+                                <View style={styles.nameScoreCol}>
+                                    {(() => {
+                                        const name = isUser ? (currentUser?.leaderboardName || null) : entry.displayName;
+                                        return name ? (
+                                            <Text style={[styles.displayName, isUser && styles.displayNameHighlighted]} numberOfLines={1}>{name}</Text>
+                                        ) : null;
+                                    })()}
+                                    <Text style={[styles.scoreText, isUser && styles.scoreHighlighted]}>
+                                        {formatValue(category, entry[category])}
+                                    </Text>
+                                </View>
                                 {isUser && (
                                     <View style={styles.youBadge}>
                                         <Text style={styles.youBadgeText}>YOU</Text>
@@ -120,9 +197,16 @@ export default function LeaderboardDetail({ route }) {
                         <Animatable.View animation="fadeInUp" duration={400} delay={300}>
                             <View style={[styles.row, styles.rowHighlighted]}>
                                 <Text style={styles.rankNumber}>{userRank}</Text>
-                                <Text style={[styles.scoreText, styles.scoreHighlighted]}>
-                                    {formatValue(category, userScore)}
-                                </Text>
+                                <View style={styles.nameScoreCol}>
+                                    {(userDisplayName || currentUser?.leaderboardName) ? (
+                                        <Text style={[styles.displayName, styles.displayNameHighlighted]} numberOfLines={1}>
+                                            {userDisplayName || currentUser?.leaderboardName}
+                                        </Text>
+                                    ) : null}
+                                    <Text style={[styles.scoreText, styles.scoreHighlighted]}>
+                                        {formatValue(category, userScore)}
+                                    </Text>
+                                </View>
                                 <View style={styles.youBadge}>
                                     <Text style={styles.youBadgeText}>YOU</Text>
                                 </View>
@@ -247,11 +331,10 @@ const styles = StyleSheet.create({
         marginLeft: 8,
     },
     scoreText: {
-        flex: 1,
         fontSize: 18,
         fontWeight: '700',
         color: '#333',
-        marginLeft: 8,
+        marginLeft: 0,
     },
     scoreHighlighted: {
         color: '#B8860B',
@@ -281,5 +364,90 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#999',
         letterSpacing: 6,
+    },
+    nameScoreCol: {
+        flex: 1,
+        marginLeft: 8,
+        justifyContent: 'center',
+    },
+    displayName: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#555',
+        marginBottom: 1,
+    },
+    displayNameHighlighted: {
+        color: '#B8860B',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.55)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 24,
+    },
+    modalCard: {
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        padding: 28,
+        width: '100%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.2,
+        shadowRadius: 16,
+        elevation: 10,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: '800',
+        color: '#111',
+        textAlign: 'center',
+        marginBottom: 8,
+    },
+    modalSubtitle: {
+        fontSize: 14,
+        color: '#666',
+        textAlign: 'center',
+        marginBottom: 20,
+        lineHeight: 20,
+    },
+    nameInput: {
+        borderWidth: 1.5,
+        borderColor: '#DDD',
+        borderRadius: 12,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        fontSize: 16,
+        color: '#111',
+        marginBottom: 8,
+    },
+    nameError: {
+        fontSize: 13,
+        color: '#E53935',
+        marginBottom: 12,
+        textAlign: 'center',
+    },
+    saveButton: {
+        backgroundColor: '#FFD60A',
+        borderRadius: 14,
+        paddingVertical: 14,
+        alignItems: 'center',
+        marginTop: 8,
+    },
+    saveButtonDisabled: {
+        opacity: 0.6,
+    },
+    saveButtonText: {
+        fontSize: 16,
+        fontWeight: '800',
+        color: '#333',
+    },
+    skipButton: {
+        marginTop: 14,
+        alignItems: 'center',
+    },
+    skipText: {
+        fontSize: 14,
+        color: '#999',
     },
 });
