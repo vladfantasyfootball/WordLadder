@@ -52,6 +52,7 @@ try {
   const rcApiKey = Platform.OS === 'android'
     ? config.REVENUECAT_ANDROID_API_KEY
     : config.REVENUECAT_IOS_API_KEY;
+  Purchases.setLogLevel(__DEV__ ? Purchases.LOG_LEVEL.DEBUG : Purchases.LOG_LEVEL.ERROR);
   Purchases.configure({ apiKey: rcApiKey });
 } catch (error) {
   console.error('Firebase initialization error:', error);

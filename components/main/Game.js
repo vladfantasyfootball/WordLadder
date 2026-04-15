@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { View, StyleSheet, Text, ScrollView, Platform, TouchableOpacity} from 'react-native'
+import { View, StyleSheet, Text, ScrollView, Platform, TouchableOpacity, Alert} from 'react-native'
 import FlatButton from '../shared/button';
+import TutorialModal from '../shared/TutorialModal';
 import { levelColorScheme } from '../../redux/constants/colorScheme';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUser } from '../../redux/actions';
@@ -27,6 +28,9 @@ const YESTERDAY_AD_UNIT_ID = __DEV__
 let rewardedInterstitialAd;
 let yesterdayAd;
 let pendingYesterdayLevel = null;
+// Module-level vars avoid stale closure in ad event listeners
+let shuffleAdRewardEarned = false;
+let pendingTutorialAfterAd = false;
 adsInitialized
   .then(() => {
     rewardedInterstitialAd = RewardedInterstitialAd.createForAdRequest(REWARDED_INTERSTITIAL_AD_UNIT_ID);
@@ -48,7 +52,7 @@ export default function Game({ navigation, level, route }) {
 
     const wordLadder = useSelector((state) => state.wordLadderState.wordLadder);
     const [howToOpen, setHowToOpen] = useState(null);
-    const [firstTimeLevel, setFirstTimeLevel] = useState(null);
+    const [showTutorial, setShowTutorial] = useState(false);
 
     const loadYesterdayAd = () => {
         if (!yesterdayAd) return () => {};
@@ -98,6 +102,7 @@ export default function Game({ navigation, level, route }) {
         )
         const unsubscribeEarned = rewardedInterstitialAd.addAdEventListener(
           RewardedAdEventType.EARNED_REWARD, (reward) => {
+            shuffleAdRewardEarned = true; // use module var — no stale closure
             setAdWatched(true)
           }
         )
@@ -107,8 +112,16 @@ export default function Game({ navigation, level, route }) {
             setAdLoaded(false)
             rewardedInterstitialAd.load()
 
-            if(adWatched){
-                navigation.navigate('Play', {level: 'Two'});
+            const earned = shuffleAdRewardEarned;
+            shuffleAdRewardEarned = false; // reset for next time
+
+            if (pendingTutorialAfterAd) {
+                // First-time Shuffle flow: show tutorial after ad (whether earned or skipped)
+                pendingTutorialAfterAd = false;
+                setShowTutorial(true);
+            } else if (earned) {
+                // Returning Shuffle player who earned the reward
+                navigation.navigate('Play', { level: 'Two', onShowRules: () => setHowToOpen('Two') });
             }
           }
         )
@@ -156,7 +169,8 @@ export default function Game({ navigation, level, route }) {
         }
         // Wait for SDK init then start loading ad
         adsInitialized.then(() => {
-            const unsubscribeRewardedInterstitial = loadRewardedInterstitial()
+            // Only the Shuffle tab owns the rewarded interstitial — avoids duplicate listeners
+            const unsubscribeRewardedInterstitial = level === 'Two' ? loadRewardedInterstitial() : () => {};
             const unsubscribeYesterday = loadYesterdayAd();
             return () => { unsubscribeRewardedInterstitial(); unsubscribeYesterday(); };
         });
@@ -170,7 +184,7 @@ export default function Game({ navigation, level, route }) {
     const todayPuzzleId = wordLadder?.[level.toLowerCase()]?.id ?? 1;
 
     const onPressYesterday = () => {
-        if (isPremium || yesterdayAdLoadFailed) {
+        if (isPremium || yesterdayAdLoadFailed || !yesterdayAdLoaded) {
             navigation.navigate('YesterdaySolution', { level });
             return;
         }
@@ -200,11 +214,51 @@ export default function Game({ navigation, level, route }) {
             navigation.navigate('Paywall');
             return;
         }
-        const hasEverPlayed = (currentUser?.wordLadder[level.toLowerCase()]?.totalAttempted ?? 0) > 0;
+        const lvl = currentUser?.wordLadder[level.toLowerCase()];
+        const hasEverPlayed = lvl?.lastAttempted != null
+            || (lvl?.totalAttempted ?? 0) > 0
+            || (lvl?.totalSolved ?? 0) > 0
+            || (lvl?.highScore ?? 0) > 0
+            || lvl?.timeStarted != null
+            || lvl?.currentWordLadder?.currentAttempt?.length > 0;
         if (!hasEverPlayed) {
-            // First time — show rules, with a play button at the bottom
-            setFirstTimeLevel(level);
-            setHowToOpen(level);
+            // Prerequisite gate: must have started previous level at least once.
+            // Check every possible signal — totalAttempted, lastAttempted, totalSolved,
+            // highScore, timeStarted — so any evidence of past play unlocks the gate.
+            if (level === 'Two') {
+                const one = currentUser?.wordLadder?.one;
+                const hasStartedClassic = one?.lastAttempted != null
+                    || (one?.totalAttempted ?? 0) > 0
+                    || (one?.totalSolved ?? 0) > 0
+                    || (one?.highScore ?? 0) > 0
+                    || one?.timeStarted != null
+                    || one?.currentWordLadder?.currentAttempt?.length > 0;
+                if (!hasStartedClassic) {
+                    Alert.alert('Play Classic First', 'Try a Classic puzzle before unlocking Shuffle.');
+                    return;
+                }
+            }
+            if (level === 'Three') {
+                const two = currentUser?.wordLadder?.two;
+                const hasStartedShuffle = two?.lastAttempted != null
+                    || (two?.totalAttempted ?? 0) > 0
+                    || (two?.totalSolved ?? 0) > 0
+                    || (two?.highScore ?? 0) > 0
+                    || two?.timeStarted != null
+                    || two?.currentWordLadder?.currentAttempt?.length > 0;
+                if (!hasStartedShuffle) {
+                    Alert.alert('Play Shuffle First', 'Try a Shuffle puzzle before unlocking Morph.');
+                    return;
+                }
+            }
+            // First time on this level
+            if (level === 'Two' && !adWatched && !isPremium && adLoaded) {
+                // Show the ad first, tutorial will appear after CLOSED fires
+                pendingTutorialAfterAd = true;
+                rewardedInterstitialAd.show().then(() => StatusBar.setStatusBarHidden(true));
+            } else {
+                setShowTutorial(true);
+            }
         } else {
             navigateToPlay(level);
         }
@@ -227,6 +281,14 @@ export default function Game({ navigation, level, route }) {
         if (hasStarted) return `Resume ${levelDisplayName[level]}`;
         return `Play ${levelDisplayName[level]}`;
     }, [currentUser, level, isPremium]);
+
+    const lvlData = currentUser?.wordLadder[level.toLowerCase()];
+    const hasEverAttempted = lvlData?.lastAttempted != null
+        || (lvlData?.totalAttempted ?? 0) > 0
+        || (lvlData?.totalSolved ?? 0) > 0
+        || (lvlData?.highScore ?? 0) > 0
+        || lvlData?.timeStarted != null
+        || lvlData?.currentWordLadder?.currentAttempt?.length > 0;
 
     const determineLevelDisabled = (level) => {
         if(level.toLowerCase() === "two"){
@@ -315,10 +377,7 @@ export default function Game({ navigation, level, route }) {
                                 </>
                             }
                             
-                            {firstTimeLevel !== null
-                                ? <FlatButton text="Got it, Let's Play!" onPress={() => { setHowToOpen(null); setFirstTimeLevel(null); navigateToPlay(level); }} width='60' disabled={false}/>
-                                : <FlatButton text='Close Rules' onPress={() => onPressHowTo(null)} width='40' disabled={false}/>
-                            }
+                            <FlatButton text='Close Rules' onPress={() => onPressHowTo(null)} width='40' disabled={false}/>
                         </ScrollView>
                     : 
                         <>
@@ -326,13 +385,14 @@ export default function Game({ navigation, level, route }) {
                             {/* {level === 'Two' && 
                                 <FlatButton text={`Unlock Level Two`} onPress={onPressUnlock} width='50' disabled={false}/> 
                             } */}
-                            <FlatButton text='How to Play' onPress={() => onPressHowTo(level)} width='40' disabled={false}/>
+                            {hasEverAttempted && (
+                                <FlatButton text='How to Play' onPress={() => setShowTutorial(true)} width='40' disabled={false}/>
+                            )}
                             {todayPuzzleId >= 2 && (
                                 <View style={styles.yesterdayContainer}>
                                     <TouchableOpacity
                                         onPress={onPressYesterday}
-                                        disabled={!isPremium && !yesterdayAdLoaded && !yesterdayAdLoadFailed}
-                                        style={[styles.yesterdayButton, { opacity: (!isPremium && !yesterdayAdLoaded && !yesterdayAdLoadFailed) ? 0.3 : 1 }]}
+                                        style={styles.yesterdayButton}
                                     >
                                         <Text style={styles.yesterdayButtonText}>Yesterday's Solution</Text>
                                     </TouchableOpacity>
@@ -340,6 +400,16 @@ export default function Game({ navigation, level, route }) {
                             )}
                         </> 
                 }
+
+                <TutorialModal
+                    level={level}
+                    visible={showTutorial}
+                    onComplete={() => {
+                        setShowTutorial(false);
+                        // Navigate directly — ad was already shown (or not needed) before tutorial
+                        navigation.navigate('Play', { level, onShowRules: () => setHowToOpen(level) });
+                    }}
+                />
                 
             </View>
     )
