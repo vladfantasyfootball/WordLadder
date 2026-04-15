@@ -51,7 +51,6 @@ export default function Game({ navigation, level, route }) {
     const [yesterdayAdLoadFailed, setYesterdayAdLoadFailed] = useState(false)
 
     const wordLadder = useSelector((state) => state.wordLadderState.wordLadder);
-    const [howToOpen, setHowToOpen] = useState(null);
     const [showTutorial, setShowTutorial] = useState(false);
 
     const loadYesterdayAd = () => {
@@ -121,7 +120,7 @@ export default function Game({ navigation, level, route }) {
                 setShowTutorial(true);
             } else if (earned) {
                 // Returning Shuffle player who earned the reward
-                navigation.navigate('Play', { level: 'Two', onShowRules: () => setHowToOpen('Two') });
+                navigation.navigate('Play', { level: 'Two' });
             }
           }
         )
@@ -202,10 +201,7 @@ export default function Game({ navigation, level, route }) {
         } else if (level.toLowerCase() === "three" && !isPremium) {
             navigation.navigate('Paywall');
         } else {
-            navigation.navigate('Play', {
-                level,
-                onShowRules: () => setHowToOpen(level)
-            });
+            navigation.navigate('Play', { level });
         }
     }
 
@@ -268,9 +264,6 @@ export default function Game({ navigation, level, route }) {
         navigation.navigate('Paywall')
     }
 
-    const onPressHowTo = (level) => {
-        setHowToOpen(level)
-    }
     
     const buttonText = useMemo(() => {
         if (level.toLowerCase() === 'three' && !isPremium) return 'Unlock Morph 🔒';
@@ -300,88 +293,7 @@ export default function Game({ navigation, level, route }) {
 
     return (
             <View style={[styles.container, {backgroundColor: levelColorScheme[level]}]}>
-                {howToOpen !== null 
-                    ? 
-                        <ScrollView persistentScrollbar={true} contentContainerStyle={{backgroundColor: levelColorScheme[level], width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', paddingTop: 10, paddingBottom: 20, paddingHorizontal: 20 }}>
-                            <Text style={{ fontWeight: '800', textAlign: 'center', paddingBottom: 16, fontSize: 22, color: '#5B5A53' }}>
-                                {`${levelDisplayName[level]} Rules`}
-                            </Text>
-                            {level.toLowerCase() === "one" ? <>
-                                    <Text style={{ textAlign: 'center', paddingBottom: 16, fontSize: 15, color: '#5B5A53', lineHeight: 22 }}>
-                                        {`Change one letter at a time to get from the top word to the bottom word.`}
-                                    </Text>
-                                    <View style={{ backgroundColor: 'white', borderRadius: 14, paddingVertical: 16, paddingHorizontal: 20, width: '100%', alignItems: 'center', marginBottom: 16, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } }}>
-                                        <Text style={{ fontSize: 28, paddingBottom: 6 }}>✏️</Text>
-                                        <Text style={{ fontWeight: '800', fontSize: 17, color: '#5B5A53', paddingBottom: 4 }}>
-                                            {`Change one letter`}
-                                        </Text>
-                                        <Text style={{ fontSize: 14, color: '#5B5A53', textAlign: 'center', lineHeight: 20, paddingBottom: 10 }}>
-                                            {`Swap exactly one letter to make a new word`}
-                                        </Text>
-                                        <Text style={{ fontWeight: '700', fontSize: 16, color: '#5B5A53', letterSpacing: 1 }}>
-                                            {`bike → bake`}
-                                        </Text>
-                                    </View>
-                                    <Text style={{ fontWeight: '700', fontSize: 14, color: '#5B5A53', textAlign: 'center', paddingTop: 4 }}>
-                                        {`⚡ Fewer words & faster time = higher score`}
-                                    </Text>
-                                </>
-                            : level.toLowerCase() === "two" ? <>
-                                    <Text style={{ textAlign: 'center', paddingBottom: 16, fontSize: 15, color: '#5B5A53', lineHeight: 22 }}>
-                                        {`All the same rules as Classic — plus one new move:`}
-                                    </Text>
-                                    <View style={{ backgroundColor: 'white', borderRadius: 14, paddingVertical: 16, paddingHorizontal: 20, width: '100%', alignItems: 'center', marginBottom: 16, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } }}>
-                                        <Text style={{ fontSize: 28, paddingBottom: 6 }}>🔀</Text>
-                                        <Text style={{ fontWeight: '800', fontSize: 17, color: '#5B5A53', paddingBottom: 4 }}>
-                                            {`Anagram`}
-                                        </Text>
-                                        <Text style={{ fontSize: 14, color: '#5B5A53', textAlign: 'center', lineHeight: 20, paddingBottom: 10 }}>
-                                            {`Rearrange all the letters to make a new word`}
-                                        </Text>
-                                        <Text style={{ fontWeight: '700', fontSize: 16, color: '#5B5A53', letterSpacing: 1 }}>
-                                            {`bake → beak`}
-                                        </Text>
-                                    </View>
-                                    <Text style={{ fontWeight: '700', fontSize: 14, color: '#5B5A53', textAlign: 'center', paddingTop: 4 }}>
-                                        {`⚡ Fewer words & faster time = higher score`}
-                                    </Text>
-                                </>
-                            : level.toLowerCase() === "three" && <>
-                                    <Text style={{ textAlign: 'center', paddingBottom: 16, fontSize: 15, color: '#5B5A53', lineHeight: 22 }}>
-                                        {`All the same rules as Shuffle — plus one new move:`}
-                                    </Text>
-                                    <View style={{ backgroundColor: 'white', borderRadius: 14, paddingVertical: 16, paddingHorizontal: 20, width: '100%', alignItems: 'center', marginBottom: 16, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } }}>
-                                        <Text style={{ fontSize: 28, paddingBottom: 6 }}>➕➖</Text>
-                                        <Text style={{ fontWeight: '800', fontSize: 17, color: '#5B5A53', paddingBottom: 4 }}>
-                                            {`Add or Remove a Letter`}
-                                        </Text>
-                                        <Text style={{ fontSize: 14, color: '#5B5A53', textAlign: 'center', lineHeight: 20, paddingBottom: 14 }}>
-                                            {`Insert or remove one letter anywhere to make a new word`}
-                                        </Text>
-                                        <Text style={{ fontWeight: '700', fontSize: 15, color: '#5B5A53', letterSpacing: 0.5, paddingBottom: 6 }}>
-                                            {`rake ↔ brake`}
-                                        </Text>
-                                        <Text style={{ fontWeight: '700', fontSize: 15, color: '#5B5A53', letterSpacing: 0.5, paddingBottom: 6 }}>
-                                            {`bake ↔ brake`}
-                                        </Text>
-                                        <Text style={{ fontWeight: '700', fontSize: 15, color: '#5B5A53', letterSpacing: 0.5 }}>
-                                            {`bark ↔ barks`}
-                                        </Text>
-                                    </View>
-                                    <Text style={{ fontWeight: '700', fontSize: 14, color: '#5B5A53', textAlign: 'center', paddingBottom: 8 }}>
-                                        {`Words can be 4 to 6 letters long.`}
-                                    </Text>
-                                    <Text style={{ fontWeight: '700', fontSize: 14, color: '#5B5A53', textAlign: 'center', paddingTop: 4 }}>
-                                        {`⚡ Fewer words & faster time = higher score`}
-                                    </Text>
-                                </>
-                            }
-                            
-                            <FlatButton text='Close Rules' onPress={() => onPressHowTo(null)} width='40' disabled={false}/>
-                        </ScrollView>
-                    : 
-                        <>
-                            <FlatButton text={buttonText} onPress={() => {onPressPlay(level)}} width='60' disabled={determineLevelDisabled(level)}/>
+                <FlatButton text={buttonText} onPress={() => {onPressPlay(level)}} width='60' disabled={determineLevelDisabled(level)}/>
                             {/* {level === 'Two' && 
                                 <FlatButton text={`Unlock Level Two`} onPress={onPressUnlock} width='50' disabled={false}/> 
                             } */}
@@ -398,16 +310,13 @@ export default function Game({ navigation, level, route }) {
                                     </TouchableOpacity>
                                 </View>
                             )}
-                        </> 
-                }
 
                 <TutorialModal
                     level={level}
                     visible={showTutorial}
                     onComplete={() => {
                         setShowTutorial(false);
-                        // Navigate directly — ad was already shown (or not needed) before tutorial
-                        navigation.navigate('Play', { level, onShowRules: () => setHowToOpen(level) });
+                        navigation.navigate('Play', { level });
                     }}
                 />
                 

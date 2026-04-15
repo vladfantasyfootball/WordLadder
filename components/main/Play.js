@@ -9,6 +9,7 @@ import LadderStepWord from '../shared/LadderStepWord'
 import FlatButton from '../shared/button';
 import { validateWord, validateLevelOneWord, validateExtraLevelTwoRule, validateExtraLevelThreeRules, isBlockedWord } from '../../utils/validations';
 import LevelCompleteScreen, { completionBonusMap } from '../shared/LevelCompleteScreen';
+import TutorialModal from '../shared/TutorialModal';
 import CustomKeyboard from '../shared/CustomKeyboard';
 import { getAuth } from 'firebase/auth';
 import { Ionicons, SimpleLineIcons } from '@expo/vector-icons';
@@ -28,6 +29,7 @@ export class Play extends Component {
             timeFinished: alreadyCompleted ? levelData.timeFinished : null,
             prevStats: null,
             showHintModal: !alreadyCompleted && isFirstOpen,
+            showTutorial: false,
         };
         // Prevents mid-game step saves from racing with / overwriting the completion save
         this._completing = false;
@@ -203,12 +205,7 @@ export class Play extends Component {
                                 'Not a valid word transformation',
                                 [
                                     { text: 'OK', style: 'cancel' },
-                                    { text: 'View Rules', onPress: () => {
-                                        this.props.navigation.goBack();
-                                        setTimeout(() => {
-                                            this.props.route.params?.onShowRules?.();
-                                        }, 100);
-                                    }}
+                                    { text: 'View Rules', onPress: () => this.setState({ showTutorial: true }) }
                                 ]
                             )
                         }
@@ -219,12 +216,7 @@ export class Play extends Component {
                             'Not a valid word transformation',
                             [
                                 { text: 'OK', style: 'cancel' },
-                                { text: 'View Rules', onPress: () => {
-                                    this.props.navigation.goBack();
-                                    setTimeout(() => {
-                                        this.props.route.params?.onShowRules?.();
-                                    }, 100);
-                                }}
+                                { text: 'View Rules', onPress: () => this.setState({ showTutorial: true }) }
                             ]
                         )
                     }
@@ -320,12 +312,7 @@ export class Play extends Component {
                         'Not a valid word transformation',
                         [
                             { text: 'OK', style: 'cancel' },
-                            { text: 'View Rules', onPress: () => {
-                                this.props.navigation.goBack();
-                                setTimeout(() => {
-                                    this.props.route.params?.onShowRules?.();
-                                }, 100);
-                            }}
+                            { text: 'View Rules', onPress: () => this.setState({ showTutorial: true }) }
                         ]
                     );
                 }
@@ -426,6 +413,12 @@ export class Play extends Component {
                         />
                     </View>
                 }
+
+                <TutorialModal
+                    level={level}
+                    visible={this.state.showTutorial}
+                    onComplete={() => this.setState({ showTutorial: false })}
+                />
 
                 <Modal
                     visible={this.state.showHintModal}
