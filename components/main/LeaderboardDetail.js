@@ -113,9 +113,6 @@ export default function LeaderboardDetail({ route }) {
                         >
                             <Text style={styles.saveButtonText}>{nameSaving ? 'Saving…' : 'Save Name'}</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
-                            <Text style={styles.skipText}>Skip for now</Text>
-                        </TouchableOpacity>
                     </View>
                 </KeyboardAvoidingView>
             </Modal>
