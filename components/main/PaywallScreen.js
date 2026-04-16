@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, ScrollView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Purchases from 'react-native-purchases';
 import { useDispatch, useSelector } from 'react-redux';
@@ -43,6 +43,7 @@ export default function PaywallScreen({ navigation }) {
 
     const unlockPremiumInBackend = async () => {
         const auth = getAuth();
+        if (!auth.currentUser) throw new Error('Session expired. Please sign in again and retry.');
         const token = await auth.currentUser.getIdToken();
         const response = await fetch(`${config.WORD_LADDER_BACKEND}/api/purchases/verify`, {
             method: 'POST',
@@ -157,7 +158,9 @@ export default function PaywallScreen({ navigation }) {
                 )}
 
                 <Text style={styles.legalNote}>
-                    Payment will be charged to your Apple ID account. This is a one-time purchase.
+                    {Platform.OS === 'ios'
+                        ? 'Payment will be charged to your Apple ID account.'
+                        : 'Payment will be charged to your Google Play account.'}{' '}This is a one-time purchase.
                 </Text>
             </ScrollView>
         </View>

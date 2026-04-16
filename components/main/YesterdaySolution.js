@@ -22,7 +22,13 @@ export default function YesterdaySolution({ route }) {
     useEffect(() => {
         const fetchPrevious = async () => {
             try {
-                const token = await getAuth().currentUser.getIdToken();
+                const authInstance = getAuth();
+                if (!authInstance.currentUser) {
+                    setError("Session expired. Please sign in again.");
+                    setLoading(false);
+                    return;
+                }
+                const token = await authInstance.currentUser.getIdToken();
                 const res = await axios.get(
                     `${config.WORD_LADDER_BACKEND}/api/getPreviousPuzzles`,
                     { headers: { Authorization: `Bearer ${token}` } }

@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { levelColorScheme, levelButtonColorScheme } from '../../redux/constants/colorScheme';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { fetchUser, getWordLadders, updateUser } from '../../redux/actions';
+import { updateUser } from '../../redux/actions';
 import LadderStepWord from '../shared/LadderStepWord'
 import FlatButton from '../shared/button';
 import { validateWord, validateLevelOneWord, validateExtraLevelTwoRule, validateExtraLevelThreeRules, isBlockedWord } from '../../utils/validations';
@@ -98,10 +98,11 @@ export class Play extends Component {
                     if (this.state.nextWord.toLowerCase() === this.props.wordLadder[level.toLowerCase()].endingWord.toLowerCase()) {
                         const completionTime = Date.now();
                         const prevStats = {
-                            totalScore: this.props.currentUser.wordLadder[level.toLowerCase()].totalScore || 0,
-                            highScore: this.props.currentUser.wordLadder[level.toLowerCase()].highScore || 0,
-                            currentStreak: this.props.currentUser.wordLadder[level.toLowerCase()].currentStreak || 0,
-                        };
+                                    totalScore: this.props.currentUser.wordLadder[level.toLowerCase()].totalScore || 0,
+                                    highScore: this.props.currentUser.wordLadder[level.toLowerCase()].highScore || 0,
+                                    currentStreak: this.props.currentUser.wordLadder[level.toLowerCase()].currentStreak || 0,
+                                    totalSolved: this.props.currentUser.wordLadder[level.toLowerCase()].totalSolved || 0,
+                                };
                         this._completing = true;
                         this.setState({ gameCompleted: true, timeFinished: completionTime, prevStats, ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, async () => {
                             const newUser = JSON.parse(JSON.stringify(this.props.currentUser))
@@ -156,6 +157,7 @@ export class Play extends Component {
                                     totalScore: this.props.currentUser.wordLadder[level.toLowerCase()].totalScore || 0,
                                     highScore: this.props.currentUser.wordLadder[level.toLowerCase()].highScore || 0,
                                     currentStreak: this.props.currentUser.wordLadder[level.toLowerCase()].currentStreak || 0,
+                                    totalSolved: this.props.currentUser.wordLadder[level.toLowerCase()].totalSolved || 0,
                                 };
                                 this._completing = true;
                                 this.setState({ gameCompleted: true, timeFinished: completionTime, prevStats, ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, async () => {
@@ -266,6 +268,7 @@ export class Play extends Component {
                             totalScore: this.props.currentUser.wordLadder[level.toLowerCase()].totalScore || 0,
                             highScore: this.props.currentUser.wordLadder[level.toLowerCase()].highScore || 0,
                             currentStreak: this.props.currentUser.wordLadder[level.toLowerCase()].currentStreak || 0,
+                            totalSolved: this.props.currentUser.wordLadder[level.toLowerCase()].totalSolved || 0,
                         };
                         this._completing = true;
                         this.setState({ gameCompleted: true, timeFinished: completionTime, prevStats, ladderWords: [...this.state.ladderWords, this.state.nextWord.toLowerCase()], nextWord: '' }, async () => {
@@ -280,15 +283,12 @@ export class Play extends Component {
                             newUser.wordLadder[level.toLowerCase()].lastSolved = newUser.wordLadder[level.toLowerCase()].currentWordLadder.currentPuzzle;
                             newUser.wordLadder[level.toLowerCase()].totalSolved = (newUser.wordLadder[level.toLowerCase()].totalSolved || 0) + 1;
                             let timeTaken = Math.round((newUser.wordLadder[level.toLowerCase()].timeFinished - newUser.wordLadder[level.toLowerCase()].timeStarted) / 1000);
-                            let timeBonus = 100;
-                            if (timeTaken > 60) {
-                                const secondsOver = timeTaken - 60;
-                                timeBonus = Math.max(0, 100 - Math.floor(secondsOver / 6));
-                            }
                             const completionBonus = completionBonusMap[level.toLowerCase()];
                             const shortestLength = this.props.wordLadder[level.toLowerCase()].shortestSolution.length;
                             const userLength = this.state.ladderWords.length;
-                            const wordBonus = Math.max(0, 100 - (userLength - shortestLength) * 5);
+                            const overBy = userLength - shortestLength;
+                            const wordBonus = overBy === 0 ? 100 : Math.max(0, 50 - (overBy - 1) * 5);
+                            const timeBonus = timeTaken < 60 ? 100 : Math.max(0, 50 - Math.floor((timeTaken - 60) / 12));
                             const totalRoundScore = timeBonus + completionBonus + wordBonus;
                             newUser.wordLadder[level.toLowerCase()].totalScore = newUser.wordLadder[level.toLowerCase()].totalScore + totalRoundScore;
                             if (totalRoundScore > newUser.wordLadder[level.toLowerCase()].highScore) {
@@ -366,6 +366,12 @@ export class Play extends Component {
         )
     }
 
+    componentWillUnmount() {
+        try { this._undoPlayer.remove(); } catch (e) {}
+        try { this._submitPlayer.remove(); } catch (e) {}
+        try { this._errorPlayer.remove(); } catch (e) {}
+    }
+
     componentDidMount() {
         const level = this.props.route.params.level.toLowerCase();
         const newUser = JSON.parse(JSON.stringify(this.props.currentUser));
@@ -405,7 +411,7 @@ export class Play extends Component {
                         <LevelCompleteScreen 
                             completeLadder={this.state.ladderWords} 
                             level={level}
-                            shortestSolution={wordLadder[level.toLowerCase()].shortestSolution}
+                            shortestSolution={wordLadder[level.toLowerCase()].shortestSolution ?? []}
                             timeStarted={this.props.currentUser.wordLadder[level.toLowerCase()].timeStarted}
                             timeFinished={this.state.timeFinished}
                             prevStats={this.state.prevStats}
@@ -624,6 +630,6 @@ const mapStateToProps = (store) => ({
     currentUser: store.userState.currentUser,
     wordLadder: store.wordLadderState.wordLadder,
 })
-const mapDispatchProps = (dispatch) => bindActionCreators({ fetchUser, getWordLadders, updateUser }, dispatch);
+const mapDispatchProps = (dispatch) => bindActionCreators({ updateUser }, dispatch);
 
 export default connect(mapStateToProps, mapDispatchProps)(Play);

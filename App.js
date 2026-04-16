@@ -61,18 +61,17 @@ try {
 
 const Stack = createNativeStackNavigator();
 
-const AppWrapper = () => {
-
-// Automatically adds the thunk middleware and the Redux DevTools extension
-  const store = configureStore({
-  // Automatically calls `combineReducers`
+// Store is created once outside the component — inside the function body it
+// would be recreated on every render, wiping all Redux state during HMR.
+const store = configureStore({
   reducer: {
     userState: user,
     wordLadderState: wordLadder,
     leaderboardState: leaderboard,
   }
-})
+});
 
+const AppWrapper = () => {
   return (
     <Provider store={store}>
       <App />

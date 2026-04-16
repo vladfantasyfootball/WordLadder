@@ -281,11 +281,14 @@ export default function TutorialModal({ level, visible, onComplete }) {
         step.chains.forEach((chain, ci) => {
             chain.words.forEach((_, wi) => allWords.push({ ci, wi }));
         });
+        const timers = [];
         allWords.forEach(({ ci, wi }, idx) => {
-            setTimeout(() => {
+            const t = setTimeout(() => {
                 setVisibleWords(prev => ({ ...prev, [`${ci}-${wi}`]: true }));
             }, idx * 450 + 300);
+            timers.push(t);
         });
+        return () => timers.forEach(clearTimeout);
     }, [stepIndex]);
 
     const goNext = () => {
@@ -304,7 +307,7 @@ export default function TutorialModal({ level, visible, onComplete }) {
     const isReady = step?.type === 'ready';
 
     return (
-        <Modal visible={visible} animationType="slide" statusBarTranslucent>
+        <Modal visible={visible} animationType="slide" statusBarTranslucent onRequestClose={onComplete}>
             <SafeAreaView style={[styles.root, { backgroundColor: accentColor }]}>
                 {/* Progress dots */}
                 <View style={styles.dotsRow}>

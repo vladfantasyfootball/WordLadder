@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { View, StyleSheet, Text, ScrollView, Platform, TouchableOpacity, Alert} from 'react-native'
 import FlatButton from '../shared/button';
 import TutorialModal from '../shared/TutorialModal';
@@ -52,6 +52,7 @@ export default function Game({ navigation, level, route }) {
 
     const wordLadder = useSelector((state) => state.wordLadderState.wordLadder);
     const [showTutorial, setShowTutorial] = useState(false);
+    const adCleanupRef = useRef(null);
 
     const loadYesterdayAd = () => {
         if (!yesterdayAd) return () => {};
@@ -166,15 +167,28 @@ export default function Game({ navigation, level, route }) {
                 setAdWatched(true)
             }
         }
+        // Clean up any previously-registered listeners before adding new ones.
+        // This is necessary because the cleanup must be returned from useEffect itself,
+        // not from inside the .then() callback (which React never calls as cleanup).
+        if (adCleanupRef.current) {
+            adCleanupRef.current();
+            adCleanupRef.current = null;
+        }
+
         // Wait for SDK init then start loading ad
         adsInitialized.then(() => {
             // Only the Shuffle tab owns the rewarded interstitial — avoids duplicate listeners
-            const unsubscribeRewardedInterstitial = level === 'Two' ? loadRewardedInterstitial() : () => {};
-            const unsubscribeYesterday = loadYesterdayAd();
-            return () => { unsubscribeRewardedInterstitial(); unsubscribeYesterday(); };
+            const unsubA = level === 'Two' ? loadRewardedInterstitial() : () => {};
+            const unsubB = loadYesterdayAd();
+            adCleanupRef.current = () => { unsubA(); unsubB(); };
         });
 
-        return () => {};
+        return () => {
+            if (adCleanupRef.current) {
+                adCleanupRef.current();
+                adCleanupRef.current = null;
+            }
+        };
     },[currentUser])
 
     const isPremium = currentUser?.purchases?.premium === true;

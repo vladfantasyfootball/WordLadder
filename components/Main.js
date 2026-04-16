@@ -9,18 +9,80 @@ import Leaderboards from './main/Leaderboards';
 import { MaterialCommunityIcons, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Profile from './main/Profile';
 import { getAuth } from 'firebase/auth';
+import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
 
 
 const Tab = createBottomTabNavigator();
 
 export class MainScreen extends Component {
+    constructor(props) {
+        super(props);
+        this.state = { loadError: false };
+        this._loadTimeout = null;
+    }
+
     componentDidMount() {
-        const auth = getAuth()
+        const auth = getAuth();
+        this._loadTimeout = setTimeout(() => {
+            // If data still hasn't arrived after 30s assume cold-start timeout
+            if (!this.props.currentUser || !this.props.wordLadder?.one?.startingWord) {
+                this.setState({ loadError: true });
+            }
+        }, 30000);
+        this.props.fetchUser(auth);
+        this.props.getWordLadder(auth);
+    }
+
+    componentDidUpdate() {
+        const loaded = this.props.currentUser && this.props.wordLadder?.one?.startingWord;
+        if (loaded && this._loadTimeout) {
+            clearTimeout(this._loadTimeout);
+            this._loadTimeout = null;
+        }
+    }
+
+    componentWillUnmount() {
+        if (this._loadTimeout) clearTimeout(this._loadTimeout);
+    }
+
+    retry = () => {
+        const auth = getAuth();
+        this.setState({ loadError: false });
+        this._loadTimeout = setTimeout(() => {
+            if (!this.props.currentUser || !this.props.wordLadder?.one?.startingWord) {
+                this.setState({ loadError: true });
+            }
+        }, 30000);
         this.props.fetchUser(auth);
         this.props.getWordLadder(auth);
     }
 
     render() {
+        const { currentUser, wordLadder } = this.props;
+        const { loadError } = this.state;
+        const isLoaded = currentUser && wordLadder?.one?.startingWord;
+
+        if (loadError) {
+            return (
+                <View style={styles.centered}>
+                    <Text style={styles.errorTitle}>{'Connection issue'}</Text>
+                    <Text style={styles.errorBody}>{'The server took too long to respond.\nThis usually resolves in a few seconds.'}</Text>
+                    <TouchableOpacity style={styles.retryBtn} onPress={this.retry}>
+                        <Text style={styles.retryText}>{'Try again'}</Text>
+                    </TouchableOpacity>
+                </View>
+            );
+        }
+
+        if (!isLoaded) {
+            return (
+                <View style={styles.centered}>
+                    <ActivityIndicator size="large" color="#9ADBFA" />
+                    <Text style={styles.loadingText}>{'Loading...'}</Text>
+                </View>
+            );
+        }
+
         return (
             <Tab.Navigator initialRouteName='Word Ladder'>
                 <Tab.Screen
@@ -74,3 +136,43 @@ const mapStateToProps = (store) => ({
 const mapDispatchProps = (dispatch) => bindActionCreators({ fetchUser, getWordLadder: getWordLadders }, dispatch);
 
 export default connect(mapStateToProps, mapDispatchProps)(MainScreen);
+
+const styles = StyleSheet.create({
+    centered: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#fff',
+        gap: 16,
+        padding: 32,
+    },
+    loadingText: {
+        fontSize: 15,
+        color: '#888',
+        marginTop: 8,
+    },
+    errorTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#1C1C1E',
+        textAlign: 'center',
+    },
+    errorBody: {
+        fontSize: 14,
+        color: '#888',
+        textAlign: 'center',
+        lineHeight: 22,
+    },
+    retryBtn: {
+        marginTop: 8,
+        backgroundColor: '#9ADBFA',
+        paddingHorizontal: 32,
+        paddingVertical: 12,
+        borderRadius: 24,
+    },
+    retryText: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#1C1C1E',
+    },
+});
