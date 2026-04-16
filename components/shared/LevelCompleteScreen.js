@@ -250,12 +250,17 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
 
     const handleShare = async () => {
         try {
-            const startWord = completeLadder[0];
-            const endWord = completeLadder[completeLadder.length - 1];
             const optimalLine = [isOptimalPath ? '⭐ Shortest solution!' : '', isSpeedBonus ? '⚡ Under 1 minute!' : ''].filter(Boolean).map(s => `\n${s}`).join('');
             const displayName = levelDisplayName[level] || level;
-            const message = `🪜 I just solved a ${displayName} Word Ladder!\n\n⏱️ Time: ${timeFormattedTimeTaken}\n📊 Score: ${totalScore}\n🪜 ${userLength} words${optimalLine}\n\nCan you beat my score?\n${SHARE_LINK}`;
-            await Share.share({ message });
+            const statsText = `🪜 I just solved a ${displayName} Word Ladder!\n\n⏱️ Time: ${timeFormattedTimeTaken}\n📊 Score: ${totalScore}\n🪜 ${userLength} words${optimalLine}\n\nCan you beat my score?`;
+            if (Platform.OS === 'ios') {
+                // iOS passes message + url as separate items — most apps show both,
+                // and platforms like Facebook at least get a proper link preview.
+                await Share.share({ message: statsText, url: SHARE_LINK });
+            } else {
+                // Android: url field is ignored by Share, so append it to the message.
+                await Share.share({ message: `${statsText}\n${SHARE_LINK}` });
+            }
         } catch {
             Alert.alert('Error', 'Unable to share. Please try again.');
         }
