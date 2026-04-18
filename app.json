@@ -70,7 +70,7 @@
     "android": {
       "googleServicesFile": "./google-services.json",
       "package": "com.vlad.wordLadderAndroid",
-      "versionCode": 9,
+      "versionCode": 10,
       "adaptiveIcon": {
         "foregroundImage": "./assets/ic_launcher-playstore.png",
         "backgroundColor": "#a1fcbc"

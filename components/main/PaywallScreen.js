@@ -80,10 +80,18 @@ export default function PaywallScreen({ navigation }) {
         }
         try {
             setPurchasing(true);
+            // Ensure RC is logged in as the Firebase UID before purchasing.
+            // If logIn hasn't completed yet (race on fresh install), the purchase
+            // would land on the anonymous RC identity and become unrestorable.
+            const auth = getAuth();
+            try {
+                await Purchases.logIn(auth.currentUser?.uid ?? currentUser.id);
+            } catch (e) {
+                console.warn('RevenueCat logIn before purchase failed:', e);
+            }
             const { customerInfo } = await Purchases.purchasePackage(offering.availablePackages[0]);
             if (customerInfo.entitlements.active[ENTITLEMENT_ID]) {
                 const updatedUser = await unlockWithRetry();
-                const auth = getAuth();
                 await dispatch(updateUser(currentUser.id, updatedUser, auth));
                 Alert.alert('🎉 Welcome to Premium!', 'Enjoy no ads and full access to shortest solutions.', [
                     { text: 'Let\'s Go!', onPress: () => navigation.goBack() },
