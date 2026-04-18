@@ -59,6 +59,17 @@ export default function PaywallScreen({ navigation }) {
         return await response.json();
     };
 
+    const unlockWithRetry = async (retries = 3, delayMs = 2000) => {
+        for (let attempt = 1; attempt <= retries; attempt++) {
+            try {
+                return await unlockPremiumInBackend();
+            } catch (err) {
+                if (attempt === retries) throw err;
+                await new Promise(resolve => setTimeout(resolve, delayMs));
+            }
+        }
+    };
+
     const handlePurchase = async () => {
         if (!offering?.availablePackages?.length) {
             Alert.alert(
@@ -71,7 +82,7 @@ export default function PaywallScreen({ navigation }) {
             setPurchasing(true);
             const { customerInfo } = await Purchases.purchasePackage(offering.availablePackages[0]);
             if (customerInfo.entitlements.active[ENTITLEMENT_ID]) {
-                const updatedUser = await unlockPremiumInBackend();
+                const updatedUser = await unlockWithRetry();
                 const auth = getAuth();
                 await dispatch(updateUser(currentUser.id, updatedUser, auth));
                 Alert.alert('🎉 Welcome to Premium!', 'Enjoy no ads and full access to shortest solutions.', [
@@ -81,7 +92,13 @@ export default function PaywallScreen({ navigation }) {
         } catch (error) {
             if (!error.userCancelled) {
                 console.error('Purchase error:', error?.message ?? error);
-                Alert.alert('Purchase Failed', error?.message ?? 'Something went wrong. Please try again.');
+                // Purchase went through on Google Play / App Store but backend sync failed.
+                // Guide user to restore rather than repurchase.
+                Alert.alert(
+                    'Almost There!',
+                    'Your payment was processed but we couldn\'t confirm it with our server. Tap "Restore Purchase" to complete the unlock.',
+                    [{ text: 'OK' }]
+                );
             }
         } finally {
             setPurchasing(false);
@@ -91,16 +108,55 @@ export default function PaywallScreen({ navigation }) {
     const handleRestore = async () => {
         try {
             setPurchasing(true);
-            const customerInfo = await Purchases.restorePurchases();
+            const auth = getAuth();
+
+            // Step 1: Re-login so RC maps any anonymous purchase to the Firebase UID.
+            try {
+                await Purchases.logIn(auth.currentUser?.uid ?? currentUser.id);
+            } catch (e) {
+                console.warn('RevenueCat re-login failed during restore:', e);
+            }
+
+            // Step 2: Android only — syncPurchases() forces RC to scan Google Play's
+            // local pending/unacknowledged purchase tokens and register them.
+            // This handles the "You already own this item" / "No purchase found" split
+            // where Google Play has an unacknowledged token RC never received.
+            if (Platform.OS === 'android') {
+                try {
+                    await Purchases.syncPurchases();
+                } catch (e) {
+                    console.warn('RevenueCat syncPurchases failed:', e);
+                }
+            }
+
+            // Step 3: Check customer info (after sync, RC should now see the entitlement).
+            let customerInfo = await Purchases.getCustomerInfo();
+
+            // Step 4: If still not found, fall back to full restorePurchases.
+            if (!customerInfo.entitlements.active[ENTITLEMENT_ID]) {
+                customerInfo = await Purchases.restorePurchases();
+            }
+
             if (customerInfo.entitlements.active[ENTITLEMENT_ID]) {
-                const updatedUser = await unlockPremiumInBackend();
-                const auth = getAuth();
+                const updatedUser = await unlockWithRetry();
                 await dispatch(updateUser(currentUser.id, updatedUser, auth));
                 Alert.alert('✅ Purchase Restored', 'Your premium access has been restored.', [
                     { text: 'Done', onPress: () => navigation.goBack() },
                 ]);
             } else {
-                Alert.alert('No Purchase Found', 'We couldn\'t find a previous purchase to restore.');
+                // Last resort: backend checks RC REST API directly by Firebase UID.
+                try {
+                    const updatedUser = await unlockPremiumInBackend();
+                    await dispatch(updateUser(currentUser.id, updatedUser, auth));
+                    Alert.alert('✅ Purchase Restored', 'Your premium access has been restored.', [
+                        { text: 'Done', onPress: () => navigation.goBack() },
+                    ]);
+                } catch {
+                    Alert.alert(
+                        'No Purchase Found',
+                        'We couldn\'t find a previous purchase linked to this account. Make sure you\'re signed in with the same account used to purchase.'
+                    );
+                }
             }
         } catch (error) {
             console.error('Restore error:', error);
