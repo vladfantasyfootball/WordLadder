@@ -182,7 +182,15 @@ function ProfilePage({ navigation, level, currentUser, updateUser, saveLeaderboa
                         <TextInput
                             style={styles.nameInput}
                             value={nameInput}
-                            onChangeText={t => { setNameInput(t); setNameError(''); }}
+                            onChangeText={t => {
+                                const filtered = t.replace(/[^a-zA-Z ]/g, '');
+                                if (filtered !== t) {
+                                    setNameError('Letters and spaces only.');
+                                } else {
+                                    setNameError('');
+                                }
+                                setNameInput(filtered);
+                            }}
                             placeholder="e.g. Word Wizard"
                             placeholderTextColor="#999"
                             maxLength={20}

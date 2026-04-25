@@ -30,6 +30,14 @@
           }
         },
         {
+          "client_id": "938399512582-mti16v1k2ih6supmkt7hc9n3mol83nd2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vlad.wordLadderAndroid",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
           "client_id": "938399512582-bte9oc4riasoaull0l6329u8igpstsm1.apps.googleusercontent.com",
           "client_type": 3
         }

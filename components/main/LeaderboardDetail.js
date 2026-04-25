@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Modal, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TextInput, TouchableOpacity } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { getAuth } from 'firebase/auth';
 import { fetchLeaderboard, saveLeaderboardName } from '../../redux/actions';
@@ -24,7 +24,6 @@ export default function LeaderboardDetail({ route }) {
         (state) => state.leaderboardState?.[level]?.[category]
     );
 
-    const [nameModalVisible, setNameModalVisible] = useState(false);
     const [nameInput, setNameInput] = useState('');
     const [nameError, setNameError] = useState('');
     const [nameSaving, setNameSaving] = useState(false);
@@ -32,13 +31,6 @@ export default function LeaderboardDetail({ route }) {
     useEffect(() => {
         dispatch(fetchLeaderboard(level, category, auth));
     }, [level, category]);
-
-    // Show name prompt on first visit if name not yet set
-    useEffect(() => {
-        if (currentUser && !currentUser.leaderboardName) {
-            setNameModalVisible(true);
-        }
-    }, [currentUser?.leaderboardName]);
 
     const handleSaveName = async () => {
         const trimmed = nameInput.trim();
@@ -50,16 +42,11 @@ export default function LeaderboardDetail({ route }) {
         setNameSaving(true);
         try {
             await dispatch(saveLeaderboardName(trimmed, auth));
-            setNameModalVisible(false);
         } catch (e) {
             setNameError(e?.response?.data || 'Something went wrong. Please try again.');
         } finally {
             setNameSaving(false);
         }
-    };
-
-    const handleSkip = () => {
-        setNameModalVisible(false);
     };
 
     const bgColor = levelColorScheme[level.charAt(0).toUpperCase() + level.slice(1)];
@@ -83,39 +70,46 @@ export default function LeaderboardDetail({ route }) {
         totalSolved:   "Puzzles You've Completed",
     };
 
+    // If no leaderboard name set, show inline name entry instead of leaderboard
+    if (currentUser && !currentUser.leaderboardName) {
+        return (
+            <View style={[styles.nameEntryScreen, { backgroundColor: bgColor }]}>
+                <View style={styles.modalCard}>
+                    <Text style={styles.modalTitle}>Choose your display name</Text>
+                    <Text style={styles.modalSubtitle}>This is how you'll appear on the leaderboard. Letters and spaces only, max 20 characters.</Text>
+                    <TextInput
+                        style={styles.nameInput}
+                        value={nameInput}
+                        onChangeText={t => {
+                                const filtered = t.replace(/[^a-zA-Z ]/g, '');
+                                if (filtered !== t) {
+                                    setNameError('Letters and spaces only.');
+                                } else {
+                                    setNameError('');
+                                }
+                                setNameInput(filtered);
+                            }}
+                        placeholder="e.g. Word Wizard"
+                        placeholderTextColor="#999"
+                        maxLength={20}
+                        autoCapitalize="words"
+                        autoCorrect={false}
+                    />
+                    {nameError ? <Text style={styles.nameError}>{nameError}</Text> : null}
+                    <TouchableOpacity
+                        style={[styles.saveButton, nameSaving && styles.saveButtonDisabled]}
+                        onPress={handleSaveName}
+                        disabled={nameSaving}
+                    >
+                        <Text style={styles.saveButtonText}>{nameSaving ? 'Saving…' : 'Save Name'}</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        );
+    }
+
     return (
         <ScrollView contentContainerStyle={[styles.container, { backgroundColor: bgColor }]}>
-
-            {/* Leaderboard name modal */}
-            <Modal visible={nameModalVisible} transparent animationType="fade">
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                    style={styles.modalOverlay}
-                >
-                    <View style={styles.modalCard}>
-                        <Text style={styles.modalTitle}>Choose your display name</Text>
-                        <Text style={styles.modalSubtitle}>This is how you'll appear on the leaderboard. Letters and spaces only, max 20 characters.</Text>
-                        <TextInput
-                            style={styles.nameInput}
-                            value={nameInput}
-                            onChangeText={t => { setNameInput(t); setNameError(''); }}
-                            placeholder="e.g. Word Wizard"
-                            placeholderTextColor="#999"
-                            maxLength={20}
-                            autoCapitalize="words"
-                            autoCorrect={false}
-                        />
-                        {nameError ? <Text style={styles.nameError}>{nameError}</Text> : null}
-                        <TouchableOpacity
-                            style={[styles.saveButton, nameSaving && styles.saveButtonDisabled]}
-                            onPress={handleSaveName}
-                            disabled={nameSaving}
-                        >
-                            <Text style={styles.saveButtonText}>{nameSaving ? 'Saving…' : 'Save Name'}</Text>
-                        </TouchableOpacity>
-                    </View>
-                </KeyboardAvoidingView>
-            </Modal>
 
             {/* Score + percentile card */}
             {percentileAhead !== null ? (
@@ -376,17 +370,16 @@ const styles = StyleSheet.create({
     displayNameHighlighted: {
         color: '#B8860B',
     },
-    modalOverlay: {
+    nameEntryScreen: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.55)',
-        justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 24,
+        paddingTop: 24,
     },
     modalCard: {
         backgroundColor: '#fff',
         borderRadius: 20,
-        padding: 28,
+        padding: 20,
         width: '100%',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 8 },
@@ -395,28 +388,28 @@ const styles = StyleSheet.create({
         elevation: 10,
     },
     modalTitle: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: '800',
         color: '#111',
         textAlign: 'center',
-        marginBottom: 8,
+        marginBottom: 6,
     },
     modalSubtitle: {
-        fontSize: 14,
+        fontSize: 13,
         color: '#666',
         textAlign: 'center',
-        marginBottom: 20,
-        lineHeight: 20,
+        marginBottom: 14,
+        lineHeight: 18,
     },
     nameInput: {
         borderWidth: 1.5,
         borderColor: '#DDD',
         borderRadius: 12,
-        paddingVertical: 12,
-        paddingHorizontal: 16,
+        paddingVertical: 9,
+        paddingHorizontal: 14,
         fontSize: 16,
         color: '#111',
-        marginBottom: 8,
+        marginBottom: 6,
     },
     nameError: {
         fontSize: 13,
@@ -427,9 +420,9 @@ const styles = StyleSheet.create({
     saveButton: {
         backgroundColor: '#FFD60A',
         borderRadius: 14,
-        paddingVertical: 14,
+        paddingVertical: 11,
         alignItems: 'center',
-        marginTop: 8,
+        marginTop: 6,
     },
     saveButtonDisabled: {
         opacity: 0.6,
