@@ -20,7 +20,7 @@ const LadderStepWord = ({ word, level, size, fontSize }) => {
             renderItem={({ item }) => {
                 return (
                     <View style={[styles.letterContainer, { backgroundColor: `${ladderWordStyleScheme[level] || 'white'}`, width: size, height: size }]}>
-                        <Text style={[styles.item, { fontSize: fontSize }]}>{item.key}</Text>
+                        <Text style={[styles.item, { fontSize: fontSize, lineHeight: fontSize, includeFontPadding: false }]}>{item.key}</Text>
                     </View>
                 )
             }}
@@ -34,8 +34,6 @@ const styles = StyleSheet.create({
         borderWidth: 4,
         borderColor: 'black',
         borderStyle: 'solid',
-        display: 'flex',
-        flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
         margin: 2,
