@@ -46,15 +46,22 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
     const userLength = completeLadder.length;
     const overBy = userLength - shortestLength;
     const isOptimalPath = overBy === 0;
-    const wordBonus = isOptimalPath ? 100 : Math.max(0, 50 - (overBy - 1) * 5);
-    const isSpeedBonus = timeTaken < 60;
-    const timeBonus = isSpeedBonus ? 100 : Math.max(0, 50 - Math.floor((timeTaken - 60) / 12));
-    const totalScore = completionBonus + wordBonus + timeBonus;
+    // optimal → 100, +1 → 75, +2 → 50, +3 → 45, +4 → 40, min 0
+    const wordBonus = overBy === 0 ? 100 : overBy === 1 ? 75 : Math.max(0, 50 - (overBy - 2) * 5);
+    // Under 60s: 50 base + 10 speed bonus + (60 - seconds). At 60s → 60, at 20s → 100.
+    // Over 60s: 50 base − 1 per 6 seconds over, floor 0.
+    const isSpeedBonus = timeTaken > 0 && timeTaken <= 60;
+    const timeBonus = isSpeedBonus
+        ? 50 + 10 + (60 - timeTaken)
+        : Math.max(0, 50 - Math.floor((timeTaken - 60) / 6));
 
     const isFirstCompletion = prevStats != null;
+    const newStreak = isFirstCompletion ? prevStats.currentStreak + 1 : null;
+    // Streak bonus: +N points for N-day streak, starting at 3 days.
+    const streakBonus = (newStreak !== null && newStreak >= 3) ? newStreak : 0;
+    const totalScore = completionBonus + wordBonus + timeBonus + streakBonus;
     const newTotalScore = isFirstCompletion ? prevStats.totalScore + totalScore : null;
     const isNewHighScore = isFirstCompletion && totalScore > (prevStats.highScore ?? 0);
-    const newStreak = isFirstCompletion ? prevStats.currentStreak + 1 : null;
     const streakIncreased = isFirstCompletion && newStreak > prevStats.currentStreak;
 
     const levelColor = levelColorScheme[level] ?? '#9ADBFA';
@@ -76,35 +83,19 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
             title: 'Level Complete!',
             description: `Finished in ${timeFormattedTimeTaken}`,
         });
-        if (isNewHighScore) achievements.push({
-            icon: 'trophy',
-            color: '#FFD700',
-            title: 'New High Score!',
-            description: `You scored ${totalScore} points!`,
-        });
-        if (streakIncreased) achievements.push({
-            icon: 'flame',
-            color: '#FF6B35',
-            title: 'Streak Extended!',
-            description: `${prevStats.currentStreak} → ${newStreak} days`,
-        });
         if (isOptimalPath) achievements.push({
             icon: 'star',
             color: '#AF52DE',
             title: 'Optimal Path!',
-            description: 'Shortest solution — +50 word bonus!',
+            description: 'Shortest possible solution!',
+            bonus: '+100 word bonus',
         });
         if (isSpeedBonus) achievements.push({
             icon: 'flash',
             color: '#FFD000',
             title: 'Speed Bonus!',
-            description: 'Finished under 1 minute — +50 time bonus!',
-        });
-        achievements.push({
-            icon: 'stats-chart',
-            color: '#007AFF',
-            title: 'Total Score',
-            description: `${prevStats.totalScore} → ${newTotalScore}  (+${totalScore})`,
+            description: 'Finished under a minute',
+            bonus: `+${timeBonus} speed bonus`,
         });
     }
 
@@ -298,6 +289,11 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                             <Text style={styles.achievementDesc}>
                                 {achievements[carouselIndex].description}
                             </Text>
+                            {achievements[carouselIndex].bonus && (
+                                <Text style={[styles.achievementBonus, { color: achievements[carouselIndex].color }]}>
+                                    {achievements[carouselIndex].bonus}
+                                </Text>
+                            )}
                             <View style={styles.dotsRow}>
                                 {achievements.map((_, i) => (
                                     <View key={i} style={[styles.dot, i === carouselIndex && styles.dotActive]} />
@@ -329,7 +325,8 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                 <Animatable.View animation="fadeInRight" delay={800} style={styles.scoreRow}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={styles.scoreLabel}>Word Bonus</Text>
-                        {isOptimalPath && <Text style={styles.bonusTag}>⚡ Perfect!</Text>}
+                        {isOptimalPath && <Text style={styles.bonusTag}>⭐ Perfect!</Text>}
+                        {overBy === 1 && <Text style={styles.bonusTag}>Close!</Text>}
                     </View>
                     <Text style={styles.scoreValue}>+{wordBonus}</Text>
                 </Animatable.View>
@@ -341,6 +338,15 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                     </View>
                     <Text style={styles.scoreValue}>+{timeBonus}</Text>
                 </Animatable.View>
+                {streakBonus > 0 && (
+                    <Animatable.View animation="fadeInRight" delay={1400} style={styles.scoreRow}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Text style={styles.scoreLabel}>Streak Bonus</Text>
+                            <Text style={[styles.bonusTag, { backgroundColor: '#FF6B3522', color: '#FF6B35' }]}>🔥 {newStreak} days</Text>
+                        </View>
+                        <Text style={styles.scoreValue}>+{streakBonus}</Text>
+                    </Animatable.View>
+                )}
                 <View style={styles.divider} />
                 <Animatable.View animation="bounceIn" delay={1600} style={styles.totalRow}>
                     <Text style={styles.totalLabel}>Round Score</Text>
@@ -450,6 +456,12 @@ const styles = StyleSheet.create({
         color: '#444',
         textAlign: 'center',
         fontWeight: '500',
+        marginBottom: 8,
+    },
+    achievementBonus: {
+        fontSize: 22,
+        fontWeight: '800',
+        textAlign: 'center',
         marginBottom: 24,
     },
     dotsRow: {

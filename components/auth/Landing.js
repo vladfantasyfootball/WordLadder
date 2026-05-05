@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Text, View, Platform, TouchableOpacity, StyleSheet, Alert } from 'react-native'
+import { View, Text, Platform, TouchableOpacity, StyleSheet, Alert, ImageBackground } from 'react-native'
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppleButton, appleAuth } from '@invertase/react-native-apple-authentication';
 import { getAuth, signInWithCredential, GoogleAuthProvider, OAuthProvider } from 'firebase/auth';
@@ -44,18 +44,15 @@ export default function LandingScreen({ navigation }) {
 
   async function onAppleButtonPress() {
     try {
-      // Start the sign-in request
       const appleAuthRequestResponse = await appleAuth.performRequest({
         requestedOperation: appleAuth.Operation.LOGIN,
         requestedScopes: [appleAuth.Scope.FULL_NAME, appleAuth.Scope.EMAIL],
       });
 
-      // Ensure Apple returned a user identityToken
       if (!appleAuthRequestResponse.identityToken) {
         throw new Error('Apple Sign-In failed - no identify token returned');
       }
 
-      // Create a Firebase credential from the response
       const { identityToken, nonce } = appleAuthRequestResponse;
       const provider = new OAuthProvider('apple.com');
       const appleCredential = provider.credential({
@@ -63,47 +60,64 @@ export default function LandingScreen({ navigation }) {
         rawNonce: nonce,
       });
 
-      // Sign the user in with the credential
       const auth = getAuth();
-      let user = await signInWithCredential(auth, appleCredential);
-      return user
+      return await signInWithCredential(auth, appleCredential);
     } catch (error) {
       console.error('Apple sign-in error:', error);
       Alert.alert('Sign In Failed', 'Could not sign in with Apple. Please try again.');
     }
   }
-  
+
   return (
-    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#90EE90'}}>
-      <Text style={{fontSize: 48, fontWeight: 'bold', marginBottom: 8}}>Word Ladder</Text>
-      <Text style={{fontSize: 16, color: '#666', marginBottom: 40}}>MuskratProductions</Text>
-      {Platform.OS === 'ios' && 
-      <AppleButton
-        buttonStyle={AppleButton.Style.WHITE}
-        buttonType={AppleButton.Type.SIGN_IN}
-        style={{
-          width: 160,
-          height: 45,
-        }}
-        onPress={() => onAppleButtonPress()}
-      />}
-      {Platform.OS === 'android' &&
-      <TouchableOpacity style={styles.googleButton} onPress={() => onGoogleButtonPress()}>
-        <MaterialCommunityIcons name="google" size={20} color="#4285F4" />
-        <Text style={styles.googleButtonText}>Sign in with Google</Text>
-      </TouchableOpacity>}
-    </View>
-  )
+    <ImageBackground
+      source={require('../../assets/login-screen.png')}
+      style={styles.bg}
+      resizeMode="cover"
+    >
+      <View style={styles.buttonArea}>
+        {Platform.OS === 'ios' &&
+          <AppleButton
+            buttonStyle={AppleButton.Style.WHITE}
+            buttonType={AppleButton.Type.SIGN_IN}
+            style={styles.appleButton}
+            onPress={() => onAppleButtonPress()}
+          />
+        }
+        {Platform.OS === 'android' &&
+          <TouchableOpacity style={styles.googleButton} onPress={() => onGoogleButtonPress()}>
+            <MaterialCommunityIcons name="google" size={20} color="#4285F4" />
+            <Text style={styles.googleButtonText}>Sign in with Google</Text>
+          </TouchableOpacity>
+        }
+      </View>
+    </ImageBackground>
+  );
 }
 
 const styles = StyleSheet.create({
+  bg: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  buttonArea: {
+    position: 'absolute',
+    bottom: 250,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  appleButton: {
+    width: 240,
+    height: 50,
+  },
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 4,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     gap: 8,
     elevation: 2,
     shadowColor: '#000',

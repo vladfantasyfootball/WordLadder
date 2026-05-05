@@ -9,7 +9,7 @@ import Leaderboards from './main/Leaderboards';
 import { MaterialCommunityIcons, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Profile from './main/Profile';
 import { getAuth } from 'firebase/auth';
-import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
 
 
 const Tab = createBottomTabNavigator();
@@ -64,22 +64,33 @@ export class MainScreen extends Component {
 
         if (loadError) {
             return (
-                <View style={styles.centered}>
-                    <Text style={styles.errorTitle}>{'Connection issue'}</Text>
-                    <Text style={styles.errorBody}>{'The server took too long to respond.\nThis usually resolves in a few seconds.'}</Text>
-                    <TouchableOpacity style={styles.retryBtn} onPress={this.retry}>
-                        <Text style={styles.retryText}>{'Try again'}</Text>
-                    </TouchableOpacity>
-                </View>
+                <ImageBackground
+                    source={require('../assets/splash.png')}
+                    style={styles.bgFull}
+                    resizeMode="cover"
+                >
+                    <View style={styles.bottomArea}>
+                        <Text style={styles.errorTitle}>{'Connection issue'}</Text>
+                        <Text style={styles.errorBody}>{'The server took too long to respond.\nThis usually resolves in a few seconds.'}</Text>
+                        <TouchableOpacity style={styles.retryBtn} onPress={this.retry}>
+                            <Text style={styles.retryText}>{'Try again'}</Text>
+                        </TouchableOpacity>
+                    </View>
+                </ImageBackground>
             );
         }
 
         if (!isLoaded) {
             return (
-                <View style={styles.centered}>
-                    <ActivityIndicator size="large" color="#9ADBFA" />
-                    <Text style={styles.loadingText}>{'Loading...'}</Text>
-                </View>
+                <ImageBackground
+                    source={require('../assets/splash.png')}
+                    style={styles.bgFull}
+                    resizeMode="cover"
+                >
+                    <View style={styles.bottomArea}>
+                        <ActivityIndicator size="large" color="#fff" />
+                    </View>
+                </ImageBackground>
             );
         }
 
@@ -138,13 +149,19 @@ const mapDispatchProps = (dispatch) => bindActionCreators({ fetchUser, getWordLa
 export default connect(mapStateToProps, mapDispatchProps)(MainScreen);
 
 const styles = StyleSheet.create({
-    centered: {
+    bgFull: {
         flex: 1,
+        width: '100%',
+        height: '100%',
+    },
+    bottomArea: {
+        position: 'absolute',
+        bottom: 160,
+        left: 0,
+        right: 0,
         alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#fff',
-        gap: 16,
-        padding: 32,
+        gap: 12,
+        paddingHorizontal: 32,
     },
     loadingText: {
         fontSize: 15,
