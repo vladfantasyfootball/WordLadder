@@ -7,12 +7,15 @@ import { useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 const RANKS = [
-    { label: 'Novice',     minScore: 0,     minStreak: 0,  color: '#FF8A65', emoji: '📖' },
-    { label: 'Apprentice', minScore: 1000,  minStreak: 0,  color: '#66BB6A', emoji: '✏️' },
-    { label: 'Wordsmith',  minScore: 3000,  minStreak: 5,  color: '#42A5F5', emoji: '🖊️' },
-    { label: 'Expert',     minScore: 10000, minStreak: 10, color: '#AB47BC', emoji: '🧠' },
-    { label: 'Master',     minScore: 20000, minStreak: 15, color: '#FFA726', emoji: '⚡' },
-    { label: 'Legend',     minScore: 50000, minStreak: 30, color: '#EF5350', emoji: '👑' },
+    { label: 'Novice',       minScore: 0,       minStreak: 0,   color: '#FF8A65', emoji: '📖' },
+    { label: 'Apprentice',   minScore: 1000,    minStreak: 0,   color: '#66BB6A', emoji: '✏️' },
+    { label: 'Wordsmith',    minScore: 3000,    minStreak: 5,   color: '#42A5F5', emoji: '🖊️' },
+    { label: 'Expert',       minScore: 10000,   minStreak: 10,  color: '#AB47BC', emoji: '🧠' },
+    { label: 'Master',       minScore: 20000,   minStreak: 15,  color: '#FFA726', emoji: '⚡' },
+    { label: 'Grandmaster',  minScore: 50000,   minStreak: 30,  color: '#EF5350', emoji: '🏆' },
+    { label: 'Legend',       minScore: 100000,  minStreak: 50,  color: '#E91E63', emoji: '👑' },
+    { label: 'Luminary',     minScore: 250000,  minStreak: 100, color: '#7C4DFF', emoji: '⭐' },
+    { label: 'Oracle',       minScore: 1000000, minStreak: 150, color: '#00BCD4', emoji: '🔮' },
 ];
 
 function getRank(totalScore, longestStreak) {
@@ -58,7 +61,7 @@ function AnimatedNumber({ value, style, trigger }) {
         return () => cancelAnimationFrame(rafRef.current);
     }, [value, trigger]);
 
-    return <Text style={style}>{displayed}</Text>;
+    return <Text style={style} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.4}>{displayed.toLocaleString()}</Text>;
 }
 
 function StatCard({ icon, label, value, delay, accentColor, trigger, suffix, onPress, locked, lockMessage }) {

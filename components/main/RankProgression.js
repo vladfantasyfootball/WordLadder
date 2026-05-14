@@ -1,16 +1,19 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useSelector } from 'react-redux';
 import * as Animatable from 'react-native-animatable';
 import { levelColorScheme } from '../../redux/constants/colorScheme';
 
 const RANKS = [
-    { label: 'Novice',     minScore: 0,     minStreak: 0,  color: '#FF8A65', emoji: '📖' },
-    { label: 'Apprentice', minScore: 1000,  minStreak: 0,  color: '#66BB6A', emoji: '✏️' },
-    { label: 'Wordsmith',  minScore: 3000,  minStreak: 5,  color: '#42A5F5', emoji: '🖊️' },
-    { label: 'Expert',     minScore: 10000, minStreak: 10, color: '#AB47BC', emoji: '🧠' },
-    { label: 'Master',     minScore: 20000, minStreak: 15, color: '#FFA726', emoji: '⚡' },
-    { label: 'Legend',     minScore: 50000, minStreak: 30, color: '#EF5350', emoji: '👑' },
+    { label: 'Novice',       minScore: 0,       minStreak: 0,   color: '#FF8A65', emoji: '📖' },
+    { label: 'Apprentice',   minScore: 1000,    minStreak: 0,   color: '#66BB6A', emoji: '✏️' },
+    { label: 'Wordsmith',    minScore: 3000,    minStreak: 5,   color: '#42A5F5', emoji: '🖊️' },
+    { label: 'Expert',       minScore: 10000,   minStreak: 10,  color: '#AB47BC', emoji: '🧠' },
+    { label: 'Master',       minScore: 20000,   minStreak: 15,  color: '#FFA726', emoji: '⚡' },
+    { label: 'Grandmaster',  minScore: 50000,   minStreak: 30,  color: '#EF5350', emoji: '🏆' },
+    { label: 'Legend',       minScore: 100000,  minStreak: 50,  color: '#E91E63', emoji: '👑' },
+    { label: 'Luminary',     minScore: 250000,  minStreak: 100, color: '#7C4DFF', emoji: '⭐' },
+    { label: 'Oracle',       minScore: 1000000, minStreak: 150, color: '#00BCD4', emoji: '🔮' },
 ];
 
 function getCurrentRankIndex(totalScore, longestStreak) {
@@ -30,8 +33,14 @@ export default function RankProgression({ route }) {
     const bgColor = levelColorScheme[level.charAt(0).toUpperCase() + level.slice(1)];
     const currentRankIdx = getCurrentRankIndex(totalScore, longestStreak);
 
+    const scrollRef = useRef(null);
+    const rowOffsets = useRef({});
+
     return (
-        <ScrollView contentContainerStyle={[styles.container, { backgroundColor: bgColor }]}>
+        <ScrollView
+            ref={scrollRef}
+            contentContainerStyle={[styles.container, { backgroundColor: bgColor }]}
+        >
             {RANKS.map((rank, index) => {
                 const isAchieved = index <= currentRankIdx;
                 const isCurrent = index === currentRankIdx;
@@ -64,6 +73,16 @@ export default function RankProgression({ route }) {
                         iterationCount={isCurrent ? 'infinite' : 1}
                         duration={isCurrent ? 3000 : 400}
                         delay={isCurrent ? 0 : index * 80}
+                        onLayout={(e) => {
+                            const y = e?.nativeEvent?.layout?.y;
+                            if (y == null) return;
+                            rowOffsets.current[index] = y;
+                            if (isCurrent) {
+                                setTimeout(() => {
+                                    scrollRef.current?.scrollTo({ y: Math.max(0, y - 80), animated: true });
+                                }, 500);
+                            }
+                        }}
                         style={[
                             styles.row,
                             isCurrent && {

@@ -115,7 +115,7 @@ export default function LeaderboardDetail({ route }) {
             {percentileAhead !== null ? (
                 <Animatable.View animation="bounceIn" duration={700} delay={100} style={styles.percentileCard}>
                     <Text style={styles.scoreHeading}>{CATEGORY_HEADINGS[category]}</Text>
-                    <Text style={styles.scoreDisplay}>{formatValue(category, userScore)}</Text>
+                    <Text style={styles.scoreDisplay} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.4}>{formatValue(category, userScore)}</Text>
                     <View style={styles.divider} />
                     <Text style={styles.percentileLine}>
                         Better than{' '}
@@ -159,7 +159,7 @@ export default function LeaderboardDetail({ route }) {
                                             <Text style={[styles.displayName, isUser && styles.displayNameHighlighted]} numberOfLines={1}>{name}</Text>
                                         ) : null;
                                     })()}
-                                    <Text style={[styles.scoreText, isUser && styles.scoreHighlighted]}>
+                                    <Text style={[styles.scoreText, isUser && styles.scoreHighlighted]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
                                         {formatValue(category, entry[category])}
                                     </Text>
                                 </View>
@@ -194,7 +194,7 @@ export default function LeaderboardDetail({ route }) {
                                             {userDisplayName || currentUser?.leaderboardName}
                                         </Text>
                                     ) : null}
-                                    <Text style={[styles.scoreText, styles.scoreHighlighted]}>
+                                    <Text style={[styles.scoreText, styles.scoreHighlighted]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
                                         {formatValue(category, userScore)}
                                     </Text>
                                 </View>
