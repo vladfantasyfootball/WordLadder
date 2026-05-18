@@ -76,7 +76,7 @@ export default function LeaderboardDetail({ route }) {
             <View style={[styles.nameEntryScreen, { backgroundColor: bgColor }]}>
                 <View style={styles.modalCard}>
                     <Text style={styles.modalTitle}>Choose your display name</Text>
-                    <Text style={styles.modalSubtitle}>This is how you'll appear on the leaderboard. Letters and spaces only, max 20 characters.</Text>
+                    <Text style={styles.modalSubtitle}>This is how you'll appear on the global leaderboard. Your scores and streak will be visible to all players. Letters and spaces only, max 20 characters.</Text>
                     <TextInput
                         style={styles.nameInput}
                         value={nameInput}
