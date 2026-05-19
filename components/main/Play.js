@@ -13,7 +13,7 @@ import TutorialModal from '../shared/TutorialModal';
 import CustomKeyboard from '../shared/CustomKeyboard';
 import { getAuth } from 'firebase/auth';
 import { Ionicons, SimpleLineIcons } from '@expo/vector-icons';
-import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 
 export class Play extends Component {
     constructor(props) {
@@ -33,9 +33,9 @@ export class Play extends Component {
         };
         // Prevents mid-game step saves from racing with / overwriting the completion save
         this._completing = false;
-        this._undoSound = null;
-        this._submitSound = null;
-        this._errorSound = null;
+        this._undoPlayer = null;
+        this._submitPlayer = null;
+        this._errorPlayer = null;
     }
 
     onChangeNextWord = (nextWord) => {
@@ -53,13 +53,13 @@ export class Play extends Component {
     }
 
     _playSubmit = () => {
-        if (!this._submitSound || this.props.currentUser?.soundEffectsEnabled === false) return;
-        this._submitSound.setPositionAsync(0).then(() => this._submitSound?.playAsync()).catch(() => {});
+        if (!this._submitPlayer || this.props.currentUser?.soundEffectsEnabled === false) return;
+        try { this._submitPlayer.seekTo(0); this._submitPlayer.play(); } catch (e) {}
     }
 
     _playError = () => {
-        if (!this._errorSound || this.props.currentUser?.soundEffectsEnabled === false) return;
-        this._errorSound.setPositionAsync(0).then(() => this._errorSound?.playAsync()).catch(() => {});
+        if (!this._errorPlayer || this.props.currentUser?.soundEffectsEnabled === false) return;
+        try { this._errorPlayer.seekTo(0); this._errorPlayer.play(); } catch (e) {}
     }
 
     onPress = async (level) => {
@@ -333,7 +333,9 @@ export class Play extends Component {
     undoLastWord = () => {
         // Can't undo past the starting word
         if (this.state.ladderWords.length <= 1) return;
-        if (this._undoSound && this.props.currentUser?.soundEffectsEnabled !== false) this._undoSound.setPositionAsync(0).then(() => this._undoSound?.playAsync()).catch(() => {});
+        if (this._undoPlayer && this.props.currentUser?.soundEffectsEnabled !== false) {
+            try { this._undoPlayer.seekTo(0); this._undoPlayer.play(); } catch (e) {}
+        }
         const newLadderWords = this.state.ladderWords.slice(0, -1);
         this.setState({ ladderWords: newLadderWords }, () => {
             if (this._completing) return;
@@ -369,28 +371,19 @@ export class Play extends Component {
     }
 
     componentWillUnmount() {
-        this._undoSound?.unloadAsync().catch(() => {});
-        this._submitSound?.unloadAsync().catch(() => {});
-        this._errorSound?.unloadAsync().catch(() => {});
+        try { this._undoPlayer?.remove(); } catch (e) {}
+        try { this._submitPlayer?.remove(); } catch (e) {}
+        try { this._errorPlayer?.remove(); } catch (e) {}
     }
 
     componentDidMount() {
-        Audio.setAudioModeAsync({
-            playsInSilentModeIOS: false,
-            staysActiveInBackground: false,
-            interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
-            shouldDuckAndroid: true,
-            interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+        setAudioModeAsync({
+            playsInSilentMode: false,
+            interruptionMode: 'mixWithOthers',
         }).catch(() => {});
-        Promise.all([
-            Audio.Sound.createAsync(require('../../assets/sounds/undo.wav')),
-            Audio.Sound.createAsync(require('../../assets/sounds/submit.wav')),
-            Audio.Sound.createAsync(require('../../assets/sounds/error.mp3')),
-        ]).then(([{ sound: undo }, { sound: submit }, { sound: error }]) => {
-            this._undoSound = undo;
-            this._submitSound = submit;
-            this._errorSound = error;
-        }).catch(() => {});
+        this._undoPlayer = createAudioPlayer(require('../../assets/sounds/undo.wav'));
+        this._submitPlayer = createAudioPlayer(require('../../assets/sounds/submit.wav'));
+        this._errorPlayer = createAudioPlayer(require('../../assets/sounds/error.mp3'));
 
         const level = this.props.route.params.level.toLowerCase();
         const newUser = JSON.parse(JSON.stringify(this.props.currentUser));

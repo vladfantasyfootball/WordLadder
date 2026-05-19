@@ -9,7 +9,7 @@ import { registerForPushNotificationsAsync, checkNotificationPermissions } from 
 import { updateUser } from '../../redux/actions';
 import { getAuth } from 'firebase/auth';
 import * as StoreReview from 'expo-store-review';
-import { Audio } from 'expo-av';
+import { useAudioPlayer } from 'expo-audio';
 
 export const completionBonusMap = {
     one: 50,
@@ -68,13 +68,10 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
 
     // ─── Level Complete Sound ─────────────────────────────────────────────────
     const soundEffectsEnabled = currentUser?.soundEffectsEnabled !== false;
+    const levelCompletePlayer = useAudioPlayer(require('../../assets/sounds/levelComplete.wav'));
     useEffect(() => {
         if (!isFirstCompletion || !soundEffectsEnabled) return;
-        let sound;
-        Audio.Sound.createAsync(require('../../assets/sounds/levelComplete.wav'))
-            .then(({ sound: s }) => { sound = s; return s.playAsync(); })
-            .catch(() => {});
-        return () => { sound?.unloadAsync().catch(() => {}); };
+        try { levelCompletePlayer.play(); } catch (e) {}
     }, []);
 
     // ─── Achievements (first completion only) ────────────────────────────────
