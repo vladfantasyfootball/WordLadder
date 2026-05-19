@@ -13,6 +13,7 @@ function ProfilePage({ navigation, level, currentUser, updateUser, saveLeaderboa
     const auth = getAuth()
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [soundsLoading, setSoundsLoading] = useState(false);
     const [editingName, setEditingName] = useState(false);
     const [nameInput, setNameInput] = useState('');
     const [nameError, setNameError] = useState('');
@@ -47,6 +48,19 @@ function ProfilePage({ navigation, level, currentUser, updateUser, saveLeaderboa
             console.error('Error signing out:', e)
         })
     }
+
+    const handleSoundEffectsToggle = async (value) => {
+        if (soundsLoading) return;
+        setSoundsLoading(true);
+        try {
+            const updatedUser = { ...currentUser, soundEffectsEnabled: value };
+            await updateUser(currentUser.id, updatedUser, auth);
+        } catch (error) {
+            console.error('Error updating sound effects setting:', error);
+        } finally {
+            setSoundsLoading(false);
+        }
+    };
 
     const handleDeleteAccount = () => {
         Alert.alert(
@@ -236,6 +250,24 @@ function ProfilePage({ navigation, level, currentUser, updateUser, saveLeaderboa
                         </TouchableOpacity>
                     </View>
                 )}
+            </View>
+            <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Sound Effects</Text>
+                <View style={styles.settingRow}>
+                    <View style={styles.settingTextContainer}>
+                        <Text style={styles.settingLabel}>Game Sounds</Text>
+                        <Text style={styles.settingDescription}>
+                            Play sounds for submissions and level completions
+                        </Text>
+                    </View>
+                    <Switch
+                        value={currentUser?.soundEffectsEnabled !== false}
+                        onValueChange={handleSoundEffectsToggle}
+                        disabled={soundsLoading}
+                        trackColor={{ false: '#767577', true: '#81b0ff' }}
+                        thumbColor={currentUser?.soundEffectsEnabled !== false ? '#007AFF' : '#f4f3f4'}
+                    />
+                </View>
             </View>
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Notifications</Text>
