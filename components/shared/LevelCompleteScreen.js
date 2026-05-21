@@ -405,12 +405,40 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                 </View>
             </View>
 
-            {/* ── Share Button (pinned to bottom) ── */}
-            <Animatable.View animation="fadeInUp" delay={2200} style={styles.shareWrapper}>
-                <TouchableOpacity style={styles.shareBtn} onPress={handleShare} activeOpacity={0.8}>
-                    <Ionicons name="share-outline" size={20} color="white" style={{ marginRight: 8 }} />
-                    <Text style={styles.shareBtnText}>Share with Friends</Text>
-                </TouchableOpacity>
+            {/* ── Bottom Actions (pinned to bottom) ── */}
+            <Animatable.View animation="fadeInUp" style={styles.shareWrapper}>
+                <View style={level !== 'Three' ? styles.actionsRow : undefined}>
+                    <TouchableOpacity
+                        style={[styles.shareBtn, level !== 'Three' && { flex: 1 }]}
+                        onPress={handleShare}
+                        activeOpacity={0.8}
+                    >
+                        <Ionicons name="share-outline" size={20} color="white" style={{ marginRight: 8 }} />
+                        <Text style={styles.shareBtnText}>
+                            {level === 'Three' ? 'Share with Friends' : 'Share'}
+                        </Text>
+                    </TouchableOpacity>
+                    {level === 'One' && (
+                        <TouchableOpacity
+                            style={[styles.nextModeBtn, { flex: 1 }]}
+                            onPress={() => navigation.navigate('Main', { screen: 'Word Ladder', params: { screen: 'Shuffle' } })}
+                            activeOpacity={0.8}
+                        >
+                            <Ionicons name="shuffle-outline" size={20} color="white" style={{ marginRight: 8 }} />
+                            <Text style={styles.shareBtnText}>Play Shuffle</Text>
+                        </TouchableOpacity>
+                    )}
+                    {level === 'Two' && (
+                        <TouchableOpacity
+                            style={[styles.nextModeBtn, { flex: 1 }]}
+                            onPress={() => navigation.navigate('Main', { screen: 'Word Ladder', params: { screen: 'Morph' } })}
+                            activeOpacity={0.8}
+                        >
+                            <Ionicons name="color-wand-outline" size={20} color="white" style={{ marginRight: 8 }} />
+                            <Text style={styles.shareBtnText}>Play Morph</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
             </Animatable.View>
 
         </View>
@@ -653,11 +681,15 @@ const styles = StyleSheet.create({
         color: '#111',
     },
 
-    // ── Share Button ──
+    // ── Bottom Actions ──
     shareWrapper: {
         marginHorizontal: 16,
         marginTop: 10,
         marginBottom: 16,
+    },
+    actionsRow: {
+        flexDirection: 'row',
+        gap: 10,
     },
     shareBtn: {
         backgroundColor: '#34C759',
@@ -677,5 +709,18 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '700',
         letterSpacing: 0.3,
+    },
+    nextModeBtn: {
+        backgroundColor: '#111',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 14,
+        borderRadius: 14,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 5,
     },
 });
