@@ -57,8 +57,21 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
 
     const isFirstCompletion = prevStats != null;
     const newStreak = isFirstCompletion ? prevStats.currentStreak + 1 : null;
-    // Streak bonus: +N points for N-day streak, starting at 3 days.
-    const streakBonus = (newStreak !== null && newStreak >= 3) ? newStreak : 0;
+    // Streak bonus: starting at 3 days.
+    const getStreakBonus = (streak) => {
+        if (streak < 3)   return 0;
+        if (streak < 7)   return 5;
+        if (streak < 14)  return 10;
+        if (streak < 21)  return 15;
+        if (streak < 30)  return 20;
+        if (streak < 45)  return 25;
+        if (streak < 60)  return 30;
+        if (streak < 90)  return 35;
+        if (streak < 120) return 40;
+        if (streak < 180) return 45;
+        return 50;
+    };
+    const streakBonus = newStreak !== null ? getStreakBonus(newStreak) : 0;
     const totalScore = completionBonus + wordBonus + timeBonus + streakBonus;
     const newTotalScore = isFirstCompletion ? prevStats.totalScore + totalScore : null;
     const isNewHighScore = isFirstCompletion && totalScore > (prevStats.highScore ?? 0);
