@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TextInput, TouchableOpacity, Modal, Share, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { getAuth } from 'firebase/auth';
-import { fetchLeaderboard, saveLeaderboardName, fetchGroupLeaderboard, createLeaderboardGroup, leaveLeaderboardGroup, renameLeaderboardGroup } from '../../redux/actions';
+import { fetchLeaderboard, saveLeaderboardName, fetchGroupLeaderboard, createLeaderboardGroup, leaveLeaderboardGroup, renameLeaderboardGroup, fetchDailyLeaderboard, fetchGroupDailyLeaderboard } from '../../redux/actions';
 import { levelColorScheme } from '../../redux/constants/colorScheme';
 import * as Animatable from 'react-native-animatable';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +13,11 @@ function formatValue(category, val) {
     if (category === 'averageScore') return val.toFixed ? val.toFixed(1) : String(val);
     if (category === 'currentStreak' || category === 'longestStreak') return `${val} days`;
     return Number(val).toLocaleString();
+}
+
+function getEntryValue(entry, category) {
+    if (category === 'dailyScore') return entry.dailyScore?.score ?? null;
+    return entry[category];
 }
 
 function LeaderboardEntries({ entries, currentUserId, currentUser, category, listTitle, showEllipsis, isGroup, userRank, userScore, userDisplayName, maxHeight }) {
@@ -50,7 +55,7 @@ function LeaderboardEntries({ entries, currentUserId, currentUser, category, lis
                             ) : null;
                         })()}
                         <Text style={[styles.scoreText, isUser && styles.scoreHighlighted]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
-                            {formatValue(category, entry[category])}
+                            {formatValue(category, getEntryValue(entry, category))}
                         </Text>
                     </View>
                     {isUser && <View style={styles.youBadge}><Text style={styles.youBadgeText}>YOU</Text></View>}
@@ -163,7 +168,11 @@ export default function LeaderboardDetail({ route }) {
     const [nameSaving, setNameSaving] = useState(false);
 
     useEffect(() => {
-        dispatch(fetchLeaderboard(level, category, auth));
+        if (category === 'dailyScore') {
+            dispatch(fetchDailyLeaderboard(level, auth));
+        } else {
+            dispatch(fetchLeaderboard(level, category, auth));
+        }
     }, [level, category]);
 
     // Fetch group leaderboard when scope switches to a group
@@ -171,7 +180,11 @@ export default function LeaderboardDetail({ route }) {
         if (selectedScope === 'global') return;
         const cached = groupLeaderboards[selectedScope]?.[level]?.[category];
         if (!cached) {
-            dispatch(fetchGroupLeaderboard(selectedScope, level, category, auth));
+            if (category === 'dailyScore') {
+                dispatch(fetchGroupDailyLeaderboard(selectedScope, level, auth));
+            } else {
+                dispatch(fetchGroupLeaderboard(selectedScope, level, category, auth));
+            }
         }
     }, [selectedScope, level, category]);
 
@@ -322,12 +335,15 @@ export default function LeaderboardDetail({ route }) {
         currentStreak: 'Your Current Streak',
         longestStreak: 'Your Best Streak',
         totalSolved:   "Puzzles You've Completed",
+        dailyScore:    "Today's Score",
     };
 
     const { top10: entries = [], total = 0, userRank, percentileAhead, userScore, userDisplayName, groupName } = activeData || {};
     const displayEntries = isGroup ? entries : entries.slice(0, 5);
     const listTitle = isGroup ? (groupName || activeGroup?.name || 'Group') : 'Top 5';
-    const percentileLabel = isGroup ? 'of group members' : 'of all players';
+    const percentileLabel = category === 'dailyScore'
+        ? (isGroup ? 'of group members today' : 'of all players today')
+        : (isGroup ? 'of group members' : 'of all players');
 
     return (
         <>

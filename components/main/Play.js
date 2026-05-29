@@ -122,9 +122,14 @@ export class Play extends Component {
                         const shortestLength = this.props.wordLadder[level.toLowerCase()].shortestSolution.length;
                         const userLength = this.state.ladderWords.length;
                         const overBy = userLength - shortestLength;
-                        const wordBonus = overBy === 0 ? 100 : Math.max(0, 50 - (overBy - 1) * 5);
-                        const timeBonus = timeTaken < 60 ? 100 : Math.max(0, 50 - Math.floor((timeTaken - 60) / 12));
-                        const totalRoundScore = timeBonus + completionBonus + wordBonus;
+                        const wordBonus = overBy === 0 ? 100 : overBy === 1 ? 75 : Math.max(0, 50 - (overBy - 2) * 5);
+                        const isSpeedBonus = timeTaken > 0 && timeTaken <= 60;
+                        const timeBonus = isSpeedBonus ? (50 + 10 + (60 - timeTaken)) : Math.max(0, 50 - Math.floor((timeTaken - 60) / 6));
+                        const newStreakVal = newUser.wordLadder[level.toLowerCase()].currentStreak;
+                        const streakBonus = newStreakVal < 3 ? 0 : newStreakVal < 7 ? 5 : newStreakVal < 14 ? 10 : newStreakVal < 21 ? 15 : newStreakVal < 30 ? 20 : newStreakVal < 45 ? 25 : newStreakVal < 60 ? 30 : newStreakVal < 90 ? 35 : newStreakVal < 120 ? 40 : newStreakVal < 180 ? 45 : 50;
+                        const totalRoundScore = timeBonus + completionBonus + wordBonus + streakBonus;
+                            newUser.wordLadder[level.toLowerCase()].currentRoundScore = totalRoundScore;
+                            newUser.wordLadder[level.toLowerCase()].currentRoundStreak = newStreakVal;
                             newUser.wordLadder[level.toLowerCase()].totalScore = newUser.wordLadder[level.toLowerCase()].totalScore + totalRoundScore;
                             if(totalRoundScore > newUser.wordLadder[level.toLowerCase()].highScore){
                                 newUser.wordLadder[level.toLowerCase()].highScore = totalRoundScore;
@@ -179,9 +184,14 @@ export class Play extends Component {
                                 const shortestLength = this.props.wordLadder[level.toLowerCase()].shortestSolution.length;
                                 const userLength = this.state.ladderWords.length;
                                 const overBy = userLength - shortestLength;
-                                const wordBonus = overBy === 0 ? 100 : Math.max(0, 50 - (overBy - 1) * 5);
-                                const timeBonus = timeTaken < 60 ? 100 : Math.max(0, 50 - Math.floor((timeTaken - 60) / 12));
-                                const totalRoundScore = timeBonus + completionBonus + wordBonus;
+                                const wordBonus = overBy === 0 ? 100 : overBy === 1 ? 75 : Math.max(0, 50 - (overBy - 2) * 5);
+                                const isSpeedBonus = timeTaken > 0 && timeTaken <= 60;
+                                const timeBonus = isSpeedBonus ? (50 + 10 + (60 - timeTaken)) : Math.max(0, 50 - Math.floor((timeTaken - 60) / 6));
+                                const newStreakVal = newUser.wordLadder[level.toLowerCase()].currentStreak;
+                                const streakBonus = newStreakVal < 3 ? 0 : newStreakVal < 7 ? 5 : newStreakVal < 14 ? 10 : newStreakVal < 21 ? 15 : newStreakVal < 30 ? 20 : newStreakVal < 45 ? 25 : newStreakVal < 60 ? 30 : newStreakVal < 90 ? 35 : newStreakVal < 120 ? 40 : newStreakVal < 180 ? 45 : 50;
+                                const totalRoundScore = timeBonus + completionBonus + wordBonus + streakBonus;
+                                    newUser.wordLadder[level.toLowerCase()].currentRoundScore = totalRoundScore;
+                                    newUser.wordLadder[level.toLowerCase()].currentRoundStreak = newStreakVal;
                                     newUser.wordLadder[level.toLowerCase()].totalScore = newUser.wordLadder[level.toLowerCase()].totalScore + totalRoundScore;
                                     if(totalRoundScore > newUser.wordLadder[level.toLowerCase()].highScore){
                                         newUser.wordLadder[level.toLowerCase()].highScore = totalRoundScore;
@@ -289,9 +299,14 @@ export class Play extends Component {
                             const shortestLength = this.props.wordLadder[level.toLowerCase()].shortestSolution.length;
                             const userLength = this.state.ladderWords.length;
                             const overBy = userLength - shortestLength;
-                            const wordBonus = overBy === 0 ? 100 : Math.max(0, 50 - (overBy - 1) * 5);
-                            const timeBonus = timeTaken < 60 ? 100 : Math.max(0, 50 - Math.floor((timeTaken - 60) / 12));
-                            const totalRoundScore = timeBonus + completionBonus + wordBonus;
+                            const wordBonus = overBy === 0 ? 100 : overBy === 1 ? 75 : Math.max(0, 50 - (overBy - 2) * 5);
+                            const isSpeedBonus = timeTaken > 0 && timeTaken <= 60;
+                            const timeBonus = isSpeedBonus ? (50 + 10 + (60 - timeTaken)) : Math.max(0, 50 - Math.floor((timeTaken - 60) / 6));
+                            const newStreakVal = newUser.wordLadder[level.toLowerCase()].currentStreak;
+                            const streakBonus = newStreakVal < 3 ? 0 : newStreakVal < 7 ? 5 : newStreakVal < 14 ? 10 : newStreakVal < 21 ? 15 : newStreakVal < 30 ? 20 : newStreakVal < 45 ? 25 : newStreakVal < 60 ? 30 : newStreakVal < 90 ? 35 : newStreakVal < 120 ? 40 : newStreakVal < 180 ? 45 : 50;
+                            const totalRoundScore = timeBonus + completionBonus + wordBonus + streakBonus;
+                            newUser.wordLadder[level.toLowerCase()].currentRoundScore = totalRoundScore;
+                            newUser.wordLadder[level.toLowerCase()].currentRoundStreak = newStreakVal;
                             newUser.wordLadder[level.toLowerCase()].totalScore = newUser.wordLadder[level.toLowerCase()].totalScore + totalRoundScore;
                             if (totalRoundScore > newUser.wordLadder[level.toLowerCase()].highScore) {
                                 newUser.wordLadder[level.toLowerCase()].highScore = totalRoundScore;
@@ -428,6 +443,7 @@ export class Play extends Component {
                             timeFinished={this.state.timeFinished}
                             prevStats={this.state.prevStats}
                             navigation={this.props.navigation}
+                            savedRoundStreak={this.props.currentUser.wordLadder[level.toLowerCase()].currentRoundStreak ?? null}
                         />
                     </View>
                 }

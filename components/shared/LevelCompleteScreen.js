@@ -17,7 +17,7 @@ export const completionBonusMap = {
     three: 50,
 };
 
-export default function LevelCompleteScreen({ completeLadder, level, shortestSolution, timeStarted, timeFinished, prevStats, navigation }) {
+export default function LevelCompleteScreen({ completeLadder, level, shortestSolution, timeStarted, timeFinished, prevStats, navigation, savedRoundStreak }) {
     const currentUser = useSelector((state) => state.userState.currentUser);
     const dispatch = useDispatch();
     const isPremium = currentUser?.purchases?.premium === true;
@@ -72,7 +72,10 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
         return 50;
     };
     const streakBonus = newStreak !== null ? getStreakBonus(newStreak) : 0;
-    const totalScore = completionBonus + wordBonus + timeBonus + streakBonus;
+    // For view solution (not first completion), use the saved streak to reconstruct the bonus
+    const displayStreakDays = isFirstCompletion ? newStreak : savedRoundStreak;
+    const displayStreakBonus = isFirstCompletion ? streakBonus : (savedRoundStreak != null ? getStreakBonus(savedRoundStreak) : 0);
+    const totalScore = completionBonus + wordBonus + timeBonus + displayStreakBonus;
     const newTotalScore = isFirstCompletion ? prevStats.totalScore + totalScore : null;
     const isNewHighScore = isFirstCompletion && totalScore > (prevStats.highScore ?? 0);
     const streakIncreased = isFirstCompletion && newStreak > prevStats.currentStreak;
@@ -351,13 +354,13 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                     </View>
                     <Text style={styles.scoreValue}>+{timeBonus}</Text>
                 </Animatable.View>
-                {streakBonus > 0 && (
+                {displayStreakBonus > 0 && (
                     <Animatable.View animation="fadeInRight" delay={1400} style={styles.scoreRow}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <Text style={styles.scoreLabel}>Streak Bonus</Text>
-                            <Text style={[styles.bonusTag, { backgroundColor: '#FF6B3522', color: '#FF6B35' }]}>🔥 {newStreak} days</Text>
+                            <Text style={[styles.bonusTag, { backgroundColor: '#FF6B3522', color: '#FF6B35' }]}>🔥 {displayStreakDays} days</Text>
                         </View>
-                        <Text style={styles.scoreValue}>+{streakBonus}</Text>
+                        <Text style={styles.scoreValue}>+{displayStreakBonus}</Text>
                     </Animatable.View>
                 )}
                 <View style={styles.divider} />

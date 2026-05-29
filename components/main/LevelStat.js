@@ -132,6 +132,8 @@ export default function LevelStat({ navigation, level }) {
         );
     }
 
+    const wordLadderPuzzle = useSelector(state => state.wordLadderState?.wordLadder?.[level.toLowerCase()]);
+
     const currentStreak = levelData?.currentStreak ?? 0;
     const longestStreak = levelData?.longestStreak ?? 0;
     const totalScore = levelData?.totalScore ?? 0;
@@ -140,6 +142,12 @@ export default function LevelStat({ navigation, level }) {
     const totalSolved = levelData?.totalSolved ?? 0;
     const winRate = totalAttempted > 0 ? Math.round((totalSolved / totalAttempted) * 100) : 0;
     const avgScore = totalSolved >= 7 ? Math.round(totalScore / totalSolved) : null;
+
+    const todaysPuzzleId = wordLadderPuzzle?.id;
+    const isCompletedToday = todaysPuzzleId != null &&
+        levelData?.currentWordLadder?.currentPuzzle?.toString() === todaysPuzzleId?.toString() &&
+        levelData?.currentWordLadder?.completed === true;
+    const dailyScore = isCompletedToday ? (levelData?.currentRoundScore ?? null) : null;
 
     // Color scale: 0-30% = icy blue, 30-60% = yellow, 60-100% = green (accelerated)
     const getWinRateColor = (pct) => {
@@ -184,28 +192,28 @@ export default function LevelStat({ navigation, level }) {
                 </TouchableOpacity>
             </Animatable.View>
 
-            {/* Top row: Avg Score | Total Score */}
+            {/* Row 1: Daily Score | Total Score */}
             <View style={styles.row}>
-                {avgScore !== null ? (
+                {dailyScore !== null ? (
                     <StatCard
-                        icon="📈"
-                        label="Avg Score"
-                        value={avgScore}
+                        icon="📅"
+                        label="Today's Score"
+                        value={dailyScore}
                         delay={150}
-                        accentColor="#F57C00"
+                        accentColor="#007AFF"
                         trigger={animKey}
-                        onPress={() => navigation.navigate('LeaderboardDetail', { level: level.toLowerCase(), category: 'averageScore' })}
+                        onPress={() => navigation.navigate('LeaderboardDetail', { level: level.toLowerCase(), category: 'dailyScore' })}
                     />
                 ) : (
                     <StatCard
-                        icon="📈"
-                        label="Avg Score"
+                        icon="📅"
+                        label="Today's Score"
                         value={0}
                         delay={150}
-                        accentColor="#F57C00"
+                        accentColor="#007AFF"
                         trigger={animKey}
                         locked
-                        lockMessage={`${totalSolved}/7 to unlock`}
+                        lockMessage="Complete today's puzzle"
                     />
                 )}
                 <StatCard
@@ -219,7 +227,7 @@ export default function LevelStat({ navigation, level }) {
                 />
             </View>
 
-            {/* Middle row: Current Streak | Longest Streak */}
+            {/* Row 2: Current Streak | Longest Streak */}
             <View style={styles.row}>
                 <StatCard
                     icon={streakIcon}
@@ -241,13 +249,35 @@ export default function LevelStat({ navigation, level }) {
                 />
             </View>
 
-            {/* Bottom: Puzzles Solved centered */}
-            <View style={[styles.row, { justifyContent: 'center' }]}>
+            {/* Row 3: Avg Score | Puzzles Solved */}
+            <View style={styles.row}>
+                {avgScore !== null ? (
+                    <StatCard
+                        icon="📈"
+                        label="Avg Score"
+                        value={avgScore}
+                        delay={550}
+                        accentColor="#F57C00"
+                        trigger={animKey}
+                        onPress={() => navigation.navigate('LeaderboardDetail', { level: level.toLowerCase(), category: 'averageScore' })}
+                    />
+                ) : (
+                    <StatCard
+                        icon="📈"
+                        label="Avg Score"
+                        value={0}
+                        delay={550}
+                        accentColor="#F57C00"
+                        trigger={animKey}
+                        locked
+                        lockMessage={`${totalSolved}/7 to unlock`}
+                    />
+                )}
                 <StatCard
                     icon="🗓️"
                     label="Puzzles Solved"
                     value={totalSolved}
-                    delay={550}
+                    delay={650}
                     accentColor="#00695C"
                     trigger={animKey}
                     onPress={() => navigation.navigate('LeaderboardDetail', { level: level.toLowerCase(), category: 'totalSolved' })}

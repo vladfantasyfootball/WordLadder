@@ -182,3 +182,37 @@ export function fetchGroupLeaderboard(groupId, level, category, auth) {
         }
     });
 }
+
+export function fetchDailyLeaderboard(level, auth) {
+    return (async (dispatch) => {
+        if (!auth.currentUser) return;
+        const token = await auth.currentUser.getIdToken();
+        try {
+            const res = await axios.post(
+                `${config.WORD_LADDER_BACKEND}/api/leaderboard/daily?level=${level}`,
+                { userId: auth.currentUser.uid },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            dispatch({ type: LEADERBOARD_CHANGE, level, category: 'dailyScore', data: res.data });
+        } catch (e) {
+            console.error('Error fetching daily leaderboard:', e);
+        }
+    });
+}
+
+export function fetchGroupDailyLeaderboard(groupId, level, auth) {
+    return (async (dispatch) => {
+        if (!auth.currentUser) return;
+        const token = await auth.currentUser.getIdToken();
+        try {
+            const res = await axios.post(
+                `${config.WORD_LADDER_BACKEND}/api/leaderboard/daily?level=${level}&groupId=${groupId}`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            dispatch({ type: GROUP_LEADERBOARD_CHANGE, groupId, level, category: 'dailyScore', data: res.data });
+        } catch (e) {
+            console.error('Error fetching group daily leaderboard:', e);
+        }
+    });
+}
