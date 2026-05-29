@@ -25,7 +25,7 @@
     "ios": {
       "googleServicesFile": "./GoogleService-Info.plist",
       "bundleIdentifier": "com.vlad.wordLadder",
-      "buildNumber": "60",
+      "buildNumber": "62",
       "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -74,7 +74,7 @@
     "android": {
       "googleServicesFile": "./google-services.json",
       "package": "com.vlad.wordLadderAndroid",
-      "versionCode": 18,
+      "versionCode": 19,
       "adaptiveIcon": {
         "foregroundImage": "./assets/ic_launcher-playstore.png",
         "backgroundColor": "#a1fcbc"

@@ -17,12 +17,14 @@ import { configureStore } from '@reduxjs/toolkit'
 import { user } from './redux/reducers/user';
 import { wordLadder } from './redux/reducers/wordLadder';
 import { leaderboard } from './redux/reducers/leaderboard';
+import { leaderboardGroups } from './redux/reducers/leaderboardGroups';
 import config from './config';
-import { Alert, View, Text, TouchableOpacity, Platform } from 'react-native';
+import { Alert, View, Text, TouchableOpacity, Platform, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Purchases from 'react-native-purchases';
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import { adsInitialized } from './utils/ads';
+import { joinLeaderboardGroup } from './redux/actions';
 
 let app, auth;
 let initError = null;
@@ -68,6 +70,7 @@ const store = configureStore({
     userState: user,
     wordLadderState: wordLadder,
     leaderboardState: leaderboard,
+    leaderboardGroupsState: leaderboardGroups,
   }
 });
 
@@ -132,6 +135,31 @@ function App() {
       requestTrackingPermissionsAsync();
     }
   }, []);
+
+  // Handle Universal Links for group invites — both cold-start and while running
+  useEffect(() => {
+    if (!user) return; // only handle once authenticated
+
+    const handleJoinUrl = async (url) => {
+      if (!url) return;
+      const match = url.match(/\/join\/([a-f0-9]{24})/i);
+      if (!match) return;
+      const groupId = match[1];
+      try {
+        await store.dispatch(joinLeaderboardGroup(groupId, auth));
+        Alert.alert('Joined! 🎉', 'You have been added to the leaderboard group.');
+      } catch (e) {
+        Alert.alert('Error', 'Could not join the group. The link may be invalid or expired.');
+      }
+    };
+
+    // Cold-start: app opened via a join link
+    Linking.getInitialURL().then(handleJoinUrl);
+
+    // Foreground: link tapped while app is already open
+    const sub = Linking.addEventListener('url', ({ url }) => handleJoinUrl(url));
+    return () => sub.remove();
+  }, [user]);
 
   if (initializing) {
     return null;

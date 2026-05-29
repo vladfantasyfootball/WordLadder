@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { fetchUser, getWordLadders } from '../redux/actions';
+import { fetchUser, getWordLadders, fetchLeaderboardGroups } from '../redux/actions';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Home from './main/Home';
 import Stats from './main/Stats';
@@ -31,6 +31,7 @@ export class MainScreen extends Component {
         }, 30000);
         this.props.fetchUser(auth);
         this.props.getWordLadder(auth);
+        this.props.fetchLeaderboardGroups(auth);
     }
 
     componentDidUpdate() {
@@ -144,7 +145,7 @@ const mapStateToProps = (store) => ({
     currentUser: store.userState.currentUser,
     wordLadder: store.wordLadderState.wordLadder,
 })
-const mapDispatchProps = (dispatch) => bindActionCreators({ fetchUser, getWordLadder: getWordLadders }, dispatch);
+const mapDispatchProps = (dispatch) => bindActionCreators({ fetchUser, getWordLadder: getWordLadders, fetchLeaderboardGroups }, dispatch);
 
 export default connect(mapStateToProps, mapDispatchProps)(MainScreen);
 

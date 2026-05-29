@@ -1,4 +1,4 @@
-import { USER_STATE_CHANGE, WORD_LADDER_CHANGE, LEADERBOARD_CHANGE } from '../constants/index';
+import { USER_STATE_CHANGE, WORD_LADDER_CHANGE, LEADERBOARD_CHANGE, LEADERBOARD_GROUPS_CHANGE, GROUP_LEADERBOARD_CHANGE } from '../constants/index';
 import axios from 'axios';
 import config from '../../config';
 
@@ -91,4 +91,94 @@ export function saveLeaderboardName(name, auth) {
             return response.data;
         }
     })
+}
+
+// ── Leaderboard Group actions ──────────────────────────────────────────────
+
+export function fetchLeaderboardGroups(auth) {
+    return (async (dispatch) => {
+        if (!auth.currentUser) return;
+        const token = await auth.currentUser.getIdToken();
+        try {
+            const res = await axios.get(
+                `${config.WORD_LADDER_BACKEND}/api/leaderboard-groups`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            dispatch({ type: LEADERBOARD_GROUPS_CHANGE, groups: res.data });
+        } catch (e) {
+            console.error('Error fetching leaderboard groups:', e);
+        }
+    });
+}
+
+export function createLeaderboardGroup(name, auth) {
+    return (async (dispatch) => {
+        if (!auth.currentUser) return;
+        const token = await auth.currentUser.getIdToken();
+        const res = await axios.post(
+            `${config.WORD_LADDER_BACKEND}/api/leaderboard-groups`,
+            { name },
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        // Re-fetch the full list so the new group is in Redux
+        dispatch(fetchLeaderboardGroups(auth));
+        return res.data;
+    });
+}
+
+export function joinLeaderboardGroup(groupId, auth) {
+    return (async (dispatch) => {
+        if (!auth.currentUser) return;
+        const token = await auth.currentUser.getIdToken();
+        const res = await axios.post(
+            `${config.WORD_LADDER_BACKEND}/api/leaderboard-groups/${groupId}/join`,
+            {},
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        dispatch(fetchLeaderboardGroups(auth));
+        return res.data;
+    });
+}
+
+export function leaveLeaderboardGroup(groupId, auth) {
+    return (async (dispatch) => {
+        if (!auth.currentUser) return;
+        const token = await auth.currentUser.getIdToken();
+        await axios.post(
+            `${config.WORD_LADDER_BACKEND}/api/leaderboard-groups/${groupId}/leave`,
+            {},
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        dispatch(fetchLeaderboardGroups(auth));
+    });
+}
+
+export function renameLeaderboardGroup(groupId, name, auth) {
+    return (async (dispatch) => {
+        if (!auth.currentUser) return;
+        const token = await auth.currentUser.getIdToken();
+        await axios.put(
+            `${config.WORD_LADDER_BACKEND}/api/leaderboard-groups/${groupId}/rename`,
+            { name },
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        dispatch(fetchLeaderboardGroups(auth));
+    });
+}
+
+export function fetchGroupLeaderboard(groupId, level, category, auth) {
+    return (async (dispatch) => {
+        if (!auth.currentUser) return;
+        const token = await auth.currentUser.getIdToken();
+        try {
+            const res = await axios.post(
+                `${config.WORD_LADDER_BACKEND}/api/leaderboard/group?groupId=${groupId}&level=${level}&category=${category}`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            dispatch({ type: GROUP_LEADERBOARD_CHANGE, groupId, level, category, data: res.data });
+        } catch (e) {
+            console.error('Error fetching group leaderboard:', e);
+        }
+    });
 }
