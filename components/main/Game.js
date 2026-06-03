@@ -158,6 +158,8 @@ export default function Game({ navigation, level, route }) {
         }
     },[adWatched])
     
+    const isPremium = currentUser?.purchases?.premium === true;
+
     useEffect(() => {
         if(currentUser){
             // Shift by 7h so day boundary matches puzzle reset (UTC 07:00 = 11 PM PT)
@@ -167,6 +169,10 @@ export default function Game({ navigation, level, route }) {
                 setAdWatched(true)
             }
         }
+
+        // Don't request ads for premium users — they will never be shown one.
+        if (isPremium) return;
+
         // Clean up any previously-registered listeners before adding new ones.
         // This is necessary because the cleanup must be returned from useEffect itself,
         // not from inside the .then() callback (which React never calls as cleanup).
@@ -189,9 +195,7 @@ export default function Game({ navigation, level, route }) {
                 adCleanupRef.current = null;
             }
         };
-    },[currentUser])
-
-    const isPremium = currentUser?.purchases?.premium === true;
+    },[currentUser?.id, currentUser?.purchases?.premium, currentUser?.ad?.dateWatched])
 
     // Today's puzzle ID — used to hide the button on day 1
     const todayPuzzleId = wordLadder?.[level.toLowerCase()]?.id ?? 1;
