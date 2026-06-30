@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react'
-import { View, StyleSheet, Text, ScrollView, Platform, TouchableOpacity, Alert} from 'react-native'
+import { View, StyleSheet, Text, ScrollView, Platform, TouchableOpacity, Alert, ActivityIndicator} from 'react-native'
 import FlatButton from '../shared/button';
 import TutorialModal from '../shared/TutorialModal';
 import { levelColorScheme } from '../../redux/constants/colorScheme';
@@ -53,6 +53,12 @@ export default function Game({ navigation, level, route }) {
     const wordLadder = useSelector((state) => state.wordLadderState.wordLadder);
     const [showTutorial, setShowTutorial] = useState(false);
     const adCleanupRef = useRef(null);
+    const adWaitTimeoutRef = useRef(null);
+    const pendingShuffleActionRef = useRef(null);
+    const yesterdayAdWaitTimeoutRef = useRef(null);
+    const pendingYesterdayActionRef = useRef(null);
+    const [adWaiting, setAdWaiting] = useState(false);
+    const [yesterdayAdWaiting, setYesterdayAdWaiting] = useState(false);
 
     const loadYesterdayAd = () => {
         if (!yesterdayAd) return () => {};
@@ -157,6 +163,14 @@ export default function Game({ navigation, level, route }) {
             ))
         }
     },[adWatched])
+
+    // Clean up ad-wait timeouts on unmount
+    useEffect(() => {
+        return () => {
+            if (adWaitTimeoutRef.current) clearTimeout(adWaitTimeoutRef.current);
+            if (yesterdayAdWaitTimeoutRef.current) clearTimeout(yesterdayAdWaitTimeoutRef.current);
+        };
+    }, []);
     
     const isPremium = currentUser?.purchases?.premium === true;
 
@@ -183,8 +197,8 @@ export default function Game({ navigation, level, route }) {
 
         // Wait for SDK init then start loading ad
         adsInitialized.then(() => {
-            // Only the Shuffle tab owns the rewarded interstitial — avoids duplicate listeners
-            const unsubA = level === 'Two' ? loadRewardedInterstitial() : () => {};
+            // Skip the shuffle rewarded ad if the user already watched it today
+            const unsubA = (level === 'Two' && !adWatched) ? loadRewardedInterstitial() : () => {};
             const unsubB = loadYesterdayAd();
             adCleanupRef.current = () => { unsubA(); unsubB(); };
         });
@@ -195,26 +209,127 @@ export default function Game({ navigation, level, route }) {
                 adCleanupRef.current = null;
             }
         };
-    },[currentUser?.id, currentUser?.purchases?.premium, currentUser?.ad?.dateWatched])
+    },[currentUser?.id, currentUser?.purchases?.premium, currentUser?.ad?.dateWatched, adWatched])
+
+    // When the shuffle ad loads while a press is pending, show it immediately
+    useEffect(() => {
+        if (adLoaded && pendingShuffleActionRef.current) {
+            const action = pendingShuffleActionRef.current;
+            pendingShuffleActionRef.current = null;
+            setAdWaiting(false);
+            if (adWaitTimeoutRef.current) {
+                clearTimeout(adWaitTimeoutRef.current);
+                adWaitTimeoutRef.current = null;
+            }
+            if (action.isTutorial) pendingTutorialAfterAd = true;
+            rewardedInterstitialAd.show().then(() => StatusBar.setStatusBarHidden(true));
+        }
+    }, [adLoaded]);
+
+    // If the shuffle ad fails while a press is pending, allow through gracefully
+    useEffect(() => {
+        if (adLoadFailed && pendingShuffleActionRef.current) {
+            const action = pendingShuffleActionRef.current;
+            pendingShuffleActionRef.current = null;
+            setAdWaiting(false);
+            if (adWaitTimeoutRef.current) {
+                clearTimeout(adWaitTimeoutRef.current);
+                adWaitTimeoutRef.current = null;
+            }
+            if (action.isTutorial) {
+                setShowTutorial(true);
+            } else {
+                navigation.navigate('Play', { level: 'Two' });
+            }
+        }
+    }, [adLoadFailed]);
+
+    // When the yesterday ad loads while a press is pending, show it immediately
+    useEffect(() => {
+        if (yesterdayAdLoaded && pendingYesterdayActionRef.current) {
+            const action = pendingYesterdayActionRef.current;
+            pendingYesterdayActionRef.current = null;
+            setYesterdayAdWaiting(false);
+            if (yesterdayAdWaitTimeoutRef.current) {
+                clearTimeout(yesterdayAdWaitTimeoutRef.current);
+                yesterdayAdWaitTimeoutRef.current = null;
+            }
+            pendingYesterdayLevel = action.level;
+            yesterdayAd.show().then(() => StatusBar.setStatusBarHidden(true));
+        }
+    }, [yesterdayAdLoaded]);
+
+    // If the yesterday ad fails while a press is pending, allow through gracefully
+    useEffect(() => {
+        if (yesterdayAdLoadFailed && pendingYesterdayActionRef.current) {
+            const action = pendingYesterdayActionRef.current;
+            pendingYesterdayActionRef.current = null;
+            setYesterdayAdWaiting(false);
+            if (yesterdayAdWaitTimeoutRef.current) {
+                clearTimeout(yesterdayAdWaitTimeoutRef.current);
+                yesterdayAdWaitTimeoutRef.current = null;
+            }
+            navigation.navigate('YesterdaySolution', { level: action.level });
+        }
+    }, [yesterdayAdLoadFailed]);
+
+    // Starts a wait for the shuffle ad with an 8s timeout fallback
+    const waitForShuffleAd = (action) => {
+        pendingShuffleActionRef.current = action;
+        setAdWaiting(true);
+        adWaitTimeoutRef.current = setTimeout(() => {
+            if (!pendingShuffleActionRef.current) return; // already resolved
+            pendingShuffleActionRef.current = null;
+            setAdWaiting(false);
+            if (action.isTutorial) {
+                setShowTutorial(true);
+            } else {
+                navigation.navigate('Play', { level: 'Two' });
+            }
+        }, 8000);
+    };
+
+    // Starts a wait for the yesterday ad with an 8s timeout fallback
+    const waitForYesterdayAd = (lvl) => {
+        pendingYesterdayActionRef.current = { level: lvl };
+        setYesterdayAdWaiting(true);
+        yesterdayAdWaitTimeoutRef.current = setTimeout(() => {
+            if (!pendingYesterdayActionRef.current) return;
+            pendingYesterdayActionRef.current = null;
+            setYesterdayAdWaiting(false);
+            navigation.navigate('YesterdaySolution', { level: lvl });
+        }, 8000);
+    };
 
     // Today's puzzle ID — used to hide the button on day 1
     const todayPuzzleId = wordLadder?.[level.toLowerCase()]?.id ?? 1;
 
     const onPressYesterday = () => {
-        if (isPremium || yesterdayAdLoadFailed || !yesterdayAdLoaded) {
+        if (isPremium) {
             navigation.navigate('YesterdaySolution', { level });
             return;
         }
-        if (yesterdayAd && yesterdayAdLoaded) {
+        if (yesterdayAdLoaded) {
             pendingYesterdayLevel = level;
             yesterdayAd.show().then(() => StatusBar.setStatusBarHidden(true));
+        } else if (yesterdayAdLoadFailed) {
+            navigation.navigate('YesterdaySolution', { level });
+        } else {
+            // Ad still loading — wait up to 8s then allow through
+            waitForYesterdayAd(level);
         }
     };
 
     const navigateToPlay = (level) => {
-        if(level.toLowerCase() === "two" && !adWatched && !isPremium && !adLoadFailed){
-            if (rewardedInterstitialAd) {
+        if (level.toLowerCase() === "two" && !adWatched && !isPremium) {
+            if (adLoaded) {
                 rewardedInterstitialAd.show().then(() => {StatusBar.setStatusBarHidden(true)});
+            } else if (adLoadFailed) {
+                // Ad failed to load — allow through gracefully
+                navigation.navigate('Play', { level });
+            } else {
+                // Ad still loading — wait up to 8s then allow through
+                waitForShuffleAd({ isTutorial: false });
             }
         } else if (level.toLowerCase() === "three" && !isPremium) {
             navigation.navigate('Paywall');
@@ -266,10 +381,18 @@ export default function Game({ navigation, level, route }) {
                 }
             }
             // First time on this level
-            if (level === 'Two' && !adWatched && !isPremium && adLoaded) {
-                // Show the ad first, tutorial will appear after CLOSED fires
-                pendingTutorialAfterAd = true;
-                rewardedInterstitialAd.show().then(() => StatusBar.setStatusBarHidden(true));
+            if (level === 'Two' && !adWatched && !isPremium) {
+                if (adLoaded) {
+                    // Show the ad first, tutorial will appear after CLOSED fires
+                    pendingTutorialAfterAd = true;
+                    rewardedInterstitialAd.show().then(() => StatusBar.setStatusBarHidden(true));
+                } else if (adLoadFailed) {
+                    // Ad failed — skip to tutorial directly
+                    setShowTutorial(true);
+                } else {
+                    // Ad still loading — wait up to 8s, then show tutorial
+                    waitForShuffleAd({ isTutorial: true });
+                }
             } else {
                 setShowTutorial(true);
             }
@@ -302,16 +425,15 @@ export default function Game({ navigation, level, route }) {
         || lvlData?.currentWordLadder?.currentAttempt?.length > 0;
 
     const determineLevelDisabled = (level) => {
-        if(level.toLowerCase() === "two"){
-            return (!adLoaded && !adWatched && !isPremium && !adLoadFailed)
-        } else {
-            return false
+        if (level.toLowerCase() === 'two') {
+            return adWaiting;
         }
+        return false;
     }
 
     return (
             <View style={[styles.container, {backgroundColor: levelColorScheme[level]}]}>
-                <FlatButton text={buttonText} onPress={() => {onPressPlay(level)}} width='60' disabled={determineLevelDisabled(level)}/>
+                <FlatButton text={adWaiting && level === 'Two' ? 'Loading...' : buttonText} onPress={() => {onPressPlay(level)}} width='60' disabled={determineLevelDisabled(level)}/>
                             {/* {level === 'Two' && 
                                 <FlatButton text={`Unlock Level Two`} onPress={onPressUnlock} width='50' disabled={false}/> 
                             } */}
@@ -323,8 +445,12 @@ export default function Game({ navigation, level, route }) {
                                     <TouchableOpacity
                                         onPress={onPressYesterday}
                                         style={styles.yesterdayButton}
+                                        disabled={yesterdayAdWaiting}
                                     >
-                                        <Text style={styles.yesterdayButtonText}>Yesterday's Solution</Text>
+                                        {yesterdayAdWaiting
+                                            ? <ActivityIndicator size="small" color="#5B5A53" />
+                                            : <Text style={styles.yesterdayButtonText}>Yesterday's Solution</Text>
+                                        }
                                     </TouchableOpacity>
                                 </View>
                             )}
