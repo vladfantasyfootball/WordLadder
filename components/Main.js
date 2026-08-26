@@ -10,6 +10,7 @@ import { MaterialCommunityIcons, Ionicons, MaterialIcons } from '@expo/vector-ic
 import Profile from './main/Profile';
 import { getAuth } from 'firebase/auth';
 import { registerForPushNotificationsAsync } from '../utils/notifications';
+import * as Notifications from 'expo-notifications';
 import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
 
 
@@ -33,6 +34,7 @@ export class MainScreen extends Component {
         this.props.fetchUser(auth);
         this.props.getWordLadder(auth);
         this.props.fetchLeaderboardGroups(auth);
+        Notifications.setBadgeCountAsync(0);
     }
 
     componentDidUpdate(prevProps) {
