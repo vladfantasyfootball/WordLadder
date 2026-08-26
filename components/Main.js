@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { fetchUser, getWordLadders, fetchLeaderboardGroups } from '../redux/actions';
+import { fetchUser, getWordLadders, fetchLeaderboardGroups, updateUser } from '../redux/actions';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Home from './main/Home';
 import Stats from './main/Stats';
@@ -9,6 +9,7 @@ import Leaderboards from './main/Leaderboards';
 import { MaterialCommunityIcons, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Profile from './main/Profile';
 import { getAuth } from 'firebase/auth';
+import { registerForPushNotificationsAsync } from '../utils/notifications';
 import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
 
 
@@ -34,11 +35,31 @@ export class MainScreen extends Component {
         this.props.fetchLeaderboardGroups(auth);
     }
 
-    componentDidUpdate() {
+    componentDidUpdate(prevProps) {
         const loaded = this.props.currentUser && this.props.wordLadder?.one?.startingWord;
         if (loaded && this._loadTimeout) {
             clearTimeout(this._loadTimeout);
             this._loadTimeout = null;
+        }
+        // Refresh push token once when user first loads
+        if (!prevProps.currentUser && this.props.currentUser) {
+            this._refreshPushToken();
+        }
+    }
+
+    _refreshPushToken = async () => {
+        const { currentUser } = this.props;
+        if (!currentUser?.notifications?.enabled) return;
+        try {
+            const auth = getAuth();
+            const newToken = await registerForPushNotificationsAsync();
+            if (newToken && newToken !== currentUser.notifications.expoPushToken) {
+                this.props.updateUser(currentUser._id, {
+                    notifications: { ...currentUser.notifications, expoPushToken: newToken }
+                }, auth);
+            }
+        } catch (e) {
+            console.error('Error refreshing push token:', e);
         }
     }
 
@@ -145,7 +166,7 @@ const mapStateToProps = (store) => ({
     currentUser: store.userState.currentUser,
     wordLadder: store.wordLadderState.wordLadder,
 })
-const mapDispatchProps = (dispatch) => bindActionCreators({ fetchUser, getWordLadder: getWordLadders, fetchLeaderboardGroups }, dispatch);
+const mapDispatchProps = (dispatch) => bindActionCreators({ fetchUser, getWordLadder: getWordLadders, fetchLeaderboardGroups, updateUser }, dispatch);
 
 export default connect(mapStateToProps, mapDispatchProps)(MainScreen);
 
