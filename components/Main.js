@@ -34,7 +34,11 @@ export class MainScreen extends Component {
         this.props.fetchUser(auth);
         this.props.getWordLadder(auth);
         this.props.fetchLeaderboardGroups(auth);
-        Notifications.setBadgeCountAsync(0);
+        Notifications.getPermissionsAsync().then(({ status }) => {
+            if (status === 'granted') {
+                Notifications.setBadgeCountAsync(0).catch(() => {});
+            }
+        }).catch(() => {});
     }
 
     componentDidUpdate(prevProps) {
