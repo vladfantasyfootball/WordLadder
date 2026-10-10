@@ -339,8 +339,10 @@ export default function LeaderboardDetail({ route }) {
     };
 
     const { top10: entries = [], total = 0, userRank, percentileAhead, userScore, userDisplayName, groupName } = activeData || {};
-    const displayEntries = isGroup ? entries : entries.slice(0, 5);
-    const listTitle = isGroup ? (groupName || activeGroup?.name || 'Group') : 'Top 5';
+    // treat global daily the same as a group: show all entries and enable scroll
+    const isScrollable = isGroup || category === 'dailyScore';
+    const displayEntries = isScrollable ? entries : entries.slice(0, 5);
+    const listTitle = isGroup ? (groupName || activeGroup?.name || 'Group') : (total > 0 ? `Rankings (${total})` : 'Rankings');
     const percentileLabel = category === 'dailyScore'
         ? (isGroup ? 'of group members today' : 'of all players today')
         : (isGroup ? 'of group members' : 'of all players');
@@ -393,7 +395,7 @@ export default function LeaderboardDetail({ route }) {
                             category={category}
                             listTitle={listTitle}
                             showEllipsis={true}
-                            isGroup={isGroup}
+                            isGroup={isScrollable}
                             userRank={userRank}
                             userScore={userScore}
                             userDisplayName={userDisplayName}
