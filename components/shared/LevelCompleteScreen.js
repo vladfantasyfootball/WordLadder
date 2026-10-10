@@ -259,7 +259,7 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
         try {
             const optimalLine = [isOptimalPath ? '⭐ Shortest solution!' : '', isSpeedBonus ? '⚡ Under 1 minute!' : ''].filter(Boolean).map(s => `\n${s}`).join('');
             const displayName = levelDisplayName[level] || level;
-            const statsText = `🪜 I just solved a ${displayName} Word Ladder!\n\n⏱️ Time: ${timeFormattedTimeTaken}\n📊 Score: ${totalScore}\n🪜 ${userLength} words${optimalLine}\n\nCan you beat my score?`;
+            const statsText = `🪜 I just solved a ${displayName} Word Ladder!\n\n⏱️ Time: ${timeFormattedTimeTaken}\n📊 Score: ${totalScore}\n🪜 ${userLength} words${optimalLine}\n\nCan you beat my score?\n\n#wordladder #braingame`;
             // X/Twitter's iOS share extension drops the message and only passes the url field,
             // so we embed the link in the message text on all platforms.
             await Share.share({ message: `${statsText}\n${SHARE_LINK}` });

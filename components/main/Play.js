@@ -385,6 +385,12 @@ export class Play extends Component {
         )
     }
 
+    componentDidUpdate(prevProps, prevState) {
+        if (!prevState.gameCompleted && this.state.gameCompleted) {
+            this.props.navigation.setOptions({ headerRight: undefined });
+        }
+    }
+
     componentWillUnmount() {
         try { this._undoPlayer?.remove(); } catch (e) {}
         try { this._submitPlayer?.remove(); } catch (e) {}
