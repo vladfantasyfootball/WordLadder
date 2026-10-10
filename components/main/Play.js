@@ -434,20 +434,24 @@ export class Play extends Component {
         }
 
         const stepCount = (this.props.wordLadder[level]?.shortestSolution?.length ?? 1) - 1;
-        this.props.navigation.setOptions({
-            headerRight: () => (
-                <TouchableOpacity
-                    onPress={() => this.setState({ showHintModal: true })}
-                    style={{ marginRight: 4, flexDirection: 'row', alignItems: 'center', padding: 6 }}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                    <Ionicons name="flash" size={20} color="#333" />
-                    <Text style={{ fontWeight: '700', fontSize: 15, color: '#333', marginLeft: 2 }}>
-                        {stepCount}
-                    </Text>
-                </TouchableOpacity>
-            )
-        });
+        if (this.state.gameCompleted) {
+            this.props.navigation.setOptions({ headerRight: undefined });
+        } else {
+            this.props.navigation.setOptions({
+                headerRight: () => (
+                    <TouchableOpacity
+                        onPress={() => this.setState({ showHintModal: true })}
+                        style={{ marginRight: 4, flexDirection: 'row', alignItems: 'center', padding: 6 }}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                        <Ionicons name="flash" size={20} color="#333" />
+                        <Text style={{ fontWeight: '700', fontSize: 15, color: '#333', marginLeft: 2 }}>
+                            {stepCount}
+                        </Text>
+                    </TouchableOpacity>
+                )
+            });
+        }
     }
 
     render() {
