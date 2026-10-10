@@ -103,7 +103,8 @@ function LeaderboardEntries({ entries, currentUserId, currentUser, category, lis
     ) : null;
 
     return (
-        <View style={[styles.listContainer, maxHeight != null && { maxHeight }]}>
+        // fixed height (not maxHeight) is required for a nested ScrollView to scroll correctly
+        <View style={[styles.listContainer, maxHeight != null && { height: isGroup ? maxHeight : undefined, maxHeight: isGroup ? undefined : maxHeight }]}>
             <Text style={styles.listTitle}>{listTitle}</Text>
             {entries.length === 0 && (
                 <Text style={styles.emptyText}>No entries yet — be the first!</Text>
@@ -111,10 +112,10 @@ function LeaderboardEntries({ entries, currentUserId, currentUser, category, lis
             {stickyTop}
             {isGroup ? (
                 <ScrollView
-                    style={maxHeight != null ? { maxHeight: maxHeight - 50 } : {}}
+                    style={{ flex: 1 }}
                     nestedScrollEnabled={true}
-                    scrollEnabled={maxHeight != null && entries.length * ROW_HEIGHT > maxHeight - 50}
-                    showsVerticalScrollIndicator={maxHeight != null && entries.length * ROW_HEIGHT > maxHeight - 50}
+                    scrollEnabled={true}
+                    showsVerticalScrollIndicator={true}
                     onScroll={(e) => setInnerScrollY(e.nativeEvent.contentOffset.y)}
                     scrollEventThrottle={16}
                 >
