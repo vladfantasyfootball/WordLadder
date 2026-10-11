@@ -113,8 +113,8 @@ function LeaderboardEntries({ entries, currentUserId, currentUser, category, lis
                 <ScrollView
                     style={maxHeight != null ? { maxHeight: maxHeight - 50 } : {}}
                     nestedScrollEnabled={true}
-                    scrollEnabled={maxHeight != null && entries.length * ROW_HEIGHT > maxHeight - 50}
-                    showsVerticalScrollIndicator={maxHeight != null && entries.length * ROW_HEIGHT > maxHeight - 50}
+                    scrollEnabled={true}
+                    showsVerticalScrollIndicator={true}
                     onScroll={(e) => setInnerScrollY(e.nativeEvent.contentOffset.y)}
                     scrollEventThrottle={16}
                 >
@@ -342,7 +342,9 @@ export default function LeaderboardDetail({ route }) {
     // treat global daily the same as a group: show all entries and enable scroll
     const isScrollable = isGroup || category === 'dailyScore';
     const displayEntries = isScrollable ? entries : entries.slice(0, 5);
-    const listTitle = isGroup ? (groupName || activeGroup?.name || 'Group') : (total > 0 ? `Rankings (${total})` : 'Rankings');
+    const listTitle = isGroup
+        ? `${groupName || activeGroup?.name || 'Group'}${total > 0 ? ` (${total})` : ''}`
+        : (total > 0 ? `Rankings (${total})` : 'Rankings');
     const percentileLabel = category === 'dailyScore'
         ? (isGroup ? 'of group members today' : 'of all players today')
         : (isGroup ? 'of group members' : 'of all players');
