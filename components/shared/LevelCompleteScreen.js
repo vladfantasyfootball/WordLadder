@@ -363,14 +363,14 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                     <Text style={styles.totalLabel}>Round Score</Text>
                     <Text style={styles.totalValue}>{totalScore}</Text>
                 </Animatable.View>
-                <Animatable.View animation="fadeInUp" delay={2000} style={{ alignItems: 'center', marginTop: 10 }}>
+                <Animatable.View animation="fadeInUp" delay={2000} style={{ alignItems: 'center', marginTop: 8, marginBottom: 10 }}>
                     <TouchableOpacity
                         style={styles.rankingsBtn}
                         onPress={() => navigation.navigate('LeaderboardDetail', { level: level.toLowerCase(), category: 'dailyScore' })}
                         activeOpacity={0.8}
                     >
-                        <Ionicons name="trophy-outline" size={15} color="#5B5A53" style={{ marginRight: 6 }} />
-                        <Text style={styles.rankingsBtnText}>Today's Rankings</Text>
+                        <Ionicons name="trophy-outline" size={14} color="#fff" style={{ marginRight: 6 }} />
+                        <Text style={styles.rankingsBtnText}>View Today's Rankings</Text>
                     </TouchableOpacity>
                 </Animatable.View>
             </View>
@@ -601,7 +601,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 20,
-        paddingVertical: 8,
+        paddingVertical: 5,
     },
     scoreLabel: {
         fontSize: 15,
@@ -634,7 +634,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 20,
-        paddingVertical: 10,
+        paddingVertical: 6,
     },
     totalLabel: {
         fontSize: 16,
@@ -747,14 +747,19 @@ const styles = StyleSheet.create({
     rankingsBtn: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.07)',
+        backgroundColor: '#F0A500',
         borderRadius: 20,
-        paddingVertical: 7,
-        paddingHorizontal: 16,
+        paddingVertical: 8,
+        paddingHorizontal: 20,
+        shadowColor: '#F0A500',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.35,
+        shadowRadius: 6,
+        elevation: 3,
     },
     rankingsBtnText: {
         fontSize: 13,
-        fontWeight: '600',
-        color: '#5B5A53',
+        fontWeight: '700',
+        color: '#fff',
     },
 });
