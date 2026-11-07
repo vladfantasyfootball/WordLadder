@@ -363,6 +363,16 @@ export default function LevelCompleteScreen({ completeLadder, level, shortestSol
                     <Text style={styles.totalLabel}>Round Score</Text>
                     <Text style={styles.totalValue}>{totalScore}</Text>
                 </Animatable.View>
+                <Animatable.View animation="fadeInUp" delay={2000} style={{ alignItems: 'center', marginTop: 10 }}>
+                    <TouchableOpacity
+                        style={styles.rankingsBtn}
+                        onPress={() => navigation.navigate('LeaderboardDetail', { level: level.toLowerCase(), category: 'dailyScore' })}
+                        activeOpacity={0.8}
+                    >
+                        <Ionicons name="trophy-outline" size={15} color="#5B5A53" style={{ marginRight: 6 }} />
+                        <Text style={styles.rankingsBtnText}>Today's Rankings</Text>
+                    </TouchableOpacity>
+                </Animatable.View>
             </View>
 
             {/* ── Solution Viewer (fills remaining space) ── */}
@@ -733,5 +743,18 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 8,
         elevation: 5,
+    },
+    rankingsBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.07)',
+        borderRadius: 20,
+        paddingVertical: 7,
+        paddingHorizontal: 16,
+    },
+    rankingsBtnText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#5B5A53',
     },
 });

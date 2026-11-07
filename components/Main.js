@@ -11,7 +11,7 @@ import Profile from './main/Profile';
 import { getAuth } from 'firebase/auth';
 import { registerForPushNotificationsAsync } from '../utils/notifications';
 import * as Notifications from 'expo-notifications';
-import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity, ImageBackground, AppState } from 'react-native';
 
 
 const Tab = createBottomTabNavigator();
@@ -39,6 +39,17 @@ export class MainScreen extends Component {
                 Notifications.setBadgeCountAsync(0).catch(() => {});
             }
         }).catch(() => {});
+
+        // Re-fetch puzzles and user when returning from background so stale day data is never shown
+        this._appStateSubscription = AppState.addEventListener('change', (nextState) => {
+            if (this._lastAppState !== 'active' && nextState === 'active') {
+                const a = getAuth();
+                this.props.fetchUser(a);
+                this.props.getWordLadder(a);
+            }
+            this._lastAppState = nextState;
+        });
+        this._lastAppState = AppState.currentState;
     }
 
     componentDidUpdate(prevProps) {
@@ -71,6 +82,7 @@ export class MainScreen extends Component {
 
     componentWillUnmount() {
         if (this._loadTimeout) clearTimeout(this._loadTimeout);
+        if (this._appStateSubscription) this._appStateSubscription.remove();
     }
 
     retry = () => {

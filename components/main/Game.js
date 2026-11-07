@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react'
-import { View, StyleSheet, Text, ScrollView, Platform, TouchableOpacity, Alert, ActivityIndicator} from 'react-native'
+import { View, StyleSheet, Text, ScrollView, Platform, TouchableOpacity, Alert, ActivityIndicator, Modal } from 'react-native'
 import FlatButton from '../shared/button';
 import TutorialModal from '../shared/TutorialModal';
 import { levelColorScheme } from '../../redux/constants/colorScheme';
@@ -24,17 +24,28 @@ const YESTERDAY_AD_UNIT_ID = __DEV__
     ? 'ca-app-pub-5826991812725211/7638810307'
     : 'ca-app-pub-5826991812725211/4459768188';
 
+// Morph (Level 3) ad — replace placeholder IDs with real AdMob units
+const MORPH_AD_UNIT_ID = __DEV__
+  ? TestIds.REWARDED_INTERSTITIAL
+  : Platform.OS === 'android'
+    ? 'ca-app-pub-5826991812725211/3716829168'
+    : 'ca-app-pub-5826991812725211/5029910836';
+
 // Ad objects are created after SDK is initialized to avoid silent load failures
 let rewardedInterstitialAd;
 let yesterdayAd;
+let morphAd;
 let pendingYesterdayLevel = null;
 // Module-level vars avoid stale closure in ad event listeners
 let shuffleAdRewardEarned = false;
 let pendingTutorialAfterAd = false;
+let morphAdRewardEarned = false;
+let pendingMorphTutorialAfterAd = false;
 adsInitialized
   .then(() => {
     rewardedInterstitialAd = RewardedInterstitialAd.createForAdRequest(REWARDED_INTERSTITIAL_AD_UNIT_ID);
     yesterdayAd = RewardedInterstitialAd.createForAdRequest(YESTERDAY_AD_UNIT_ID);
+    morphAd = RewardedInterstitialAd.createForAdRequest(MORPH_AD_UNIT_ID);
   })
   .catch(() => {});
 
@@ -49,16 +60,16 @@ export default function Game({ navigation, level, route }) {
     const [adLoadFailed, setAdLoadFailed] = useState(false)
     const [yesterdayAdLoaded, setYesterdayAdLoaded] = useState(false)
     const [yesterdayAdLoadFailed, setYesterdayAdLoadFailed] = useState(false)
+    const [morphAdLoaded, setMorphAdLoaded] = useState(false)
+    const [morphAdLoadFailed, setMorphAdLoadFailed] = useState(false)
+    const [morphAdWatched, setMorphAdWatched] = useState(false)
 
     const wordLadder = useSelector((state) => state.wordLadderState.wordLadder);
     const [showTutorial, setShowTutorial] = useState(false);
     const adCleanupRef = useRef(null);
-    const adWaitTimeoutRef = useRef(null);
-    const pendingShuffleActionRef = useRef(null);
-    const yesterdayAdWaitTimeoutRef = useRef(null);
-    const pendingYesterdayActionRef = useRef(null);
-    const [adWaiting, setAdWaiting] = useState(false);
-    const [yesterdayAdWaiting, setYesterdayAdWaiting] = useState(false);
+    const [consentModal, setConsentModal] = useState(null); // { type: 'shuffle'|'yesterday'|'morph', action: any }
+    const [consentCountdown, setConsentCountdown] = useState(3);
+    const consentIntervalRef = useRef(null);
 
     const loadYesterdayAd = () => {
         if (!yesterdayAd) return () => {};
@@ -148,6 +159,50 @@ export default function Game({ navigation, level, route }) {
         }
     }
 
+    const loadMorphAd = () => {
+        if (!morphAd) return () => {};
+        const unsubscribeLoaded = morphAd.addAdEventListener(
+          RewardedAdEventType.LOADED, () => {
+            setMorphAdLoaded(true);
+            setMorphAdLoadFailed(false);
+          }
+        );
+        const unsubscribeEarned = morphAd.addAdEventListener(
+          RewardedAdEventType.EARNED_REWARD, () => {
+            morphAdRewardEarned = true;
+            setMorphAdWatched(true);
+          }
+        );
+        const unsubscribeClosed = morphAd.addAdEventListener(
+          AdEventType.CLOSED, () => {
+            StatusBar.setStatusBarHidden(false);
+            setMorphAdLoaded(false);
+            morphAd.load();
+            const earned = morphAdRewardEarned;
+            morphAdRewardEarned = false;
+            if (pendingMorphTutorialAfterAd) {
+                pendingMorphTutorialAfterAd = false;
+                setShowTutorial(true);
+            } else if (earned) {
+                navigation.navigate('Play', { level: 'Three' });
+            }
+          }
+        );
+        const unsubscribeError = morphAd.addAdEventListener(
+          AdEventType.ERROR, () => {
+            setMorphAdLoaded(false);
+            setMorphAdLoadFailed(true);
+          }
+        );
+        morphAd.load();
+        return () => {
+          unsubscribeLoaded();
+          unsubscribeClosed();
+          unsubscribeEarned();
+          unsubscribeError();
+        };
+    };
+
     useEffect(() => {
         if(currentUser && adWatched){
             // Shift by 7h so day boundary matches puzzle reset (UTC 07:00 = 11 PM PT)
@@ -164,13 +219,73 @@ export default function Game({ navigation, level, route }) {
         }
     },[adWatched])
 
-    // Clean up ad-wait timeouts on unmount
+    useEffect(() => {
+        if (currentUser && morphAdWatched) {
+            const now = new Date();
+            const currentUTCDate = new Date(now.getTime() - 7 * 60 * 60 * 1000).toISOString().split('T')[0];
+            dispatch(updateUser(
+                currentUser.id, {...currentUser,
+                    morphAd: { adWatched: true, dateWatched: currentUTCDate }
+                }, getAuth()
+            ));
+        }
+    }, [morphAdWatched])
+
+    // Clean up consent interval on unmount
     useEffect(() => {
         return () => {
-            if (adWaitTimeoutRef.current) clearTimeout(adWaitTimeoutRef.current);
-            if (yesterdayAdWaitTimeoutRef.current) clearTimeout(yesterdayAdWaitTimeoutRef.current);
+            if (consentIntervalRef.current) clearInterval(consentIntervalRef.current);
         };
     }, []);
+
+    const showConsentModal = (type, action) => {
+        if (consentIntervalRef.current) return; // already counting down
+        setConsentModal({ type, action });
+        setConsentCountdown(3);
+        consentIntervalRef.current = setInterval(() => {
+            setConsentCountdown(prev => (prev <= 1 ? 0 : prev - 1));
+        }, 1000);
+    };
+
+    const cancelConsent = () => {
+        if (consentIntervalRef.current) { clearInterval(consentIntervalRef.current); consentIntervalRef.current = null; }
+        setConsentModal(null);
+        setConsentCountdown(3);
+    };
+
+    // Fire the ad (or skip) when countdown reaches 0
+    useEffect(() => {
+        if (consentCountdown !== 0 || !consentModal) return;
+        if (consentIntervalRef.current) { clearInterval(consentIntervalRef.current); consentIntervalRef.current = null; }
+        const { type, action } = consentModal;
+        setConsentModal(null);
+        setConsentCountdown(3);
+
+        if (type === 'shuffle') {
+            if (adLoaded) {
+                if (action?.isTutorial) pendingTutorialAfterAd = true;
+                rewardedInterstitialAd.show().then(() => StatusBar.setStatusBarHidden(true));
+            } else {
+                if (action?.isTutorial) setShowTutorial(true);
+                else navigation.navigate('Play', { level: 'Two' });
+            }
+        } else if (type === 'morph') {
+            if (morphAdLoaded) {
+                if (action?.isTutorial) pendingMorphTutorialAfterAd = true;
+                morphAd.show().then(() => StatusBar.setStatusBarHidden(true));
+            } else {
+                if (action?.isTutorial) setShowTutorial(true);
+                else navigation.navigate('Play', { level: 'Three' });
+            }
+        } else if (type === 'yesterday') {
+            if (yesterdayAdLoaded) {
+                pendingYesterdayLevel = action.level;
+                yesterdayAd.show().then(() => StatusBar.setStatusBarHidden(true));
+            } else {
+                navigation.navigate('YesterdaySolution', { level: action.level });
+            }
+        }
+    }, [consentCountdown, consentModal, adLoaded, morphAdLoaded, yesterdayAdLoaded]);
     
     const isPremium = currentUser?.purchases?.premium === true;
 
@@ -181,6 +296,9 @@ export default function Game({ navigation, level, route }) {
             const currentUTCDate = new Date(now.getTime() - 7 * 60 * 60 * 1000).toISOString().split('T')[0];
             if(currentUser?.ad?.dateWatched === currentUTCDate && currentUser?.ad?.adWatched){
                 setAdWatched(true)
+            }
+            if(currentUser?.morphAd?.dateWatched === currentUTCDate && currentUser?.morphAd?.adWatched){
+                setMorphAdWatched(true)
             }
         }
 
@@ -200,7 +318,8 @@ export default function Game({ navigation, level, route }) {
             // Skip the shuffle rewarded ad if the user already watched it today
             const unsubA = (level === 'Two' && !adWatched) ? loadRewardedInterstitial() : () => {};
             const unsubB = loadYesterdayAd();
-            adCleanupRef.current = () => { unsubA(); unsubB(); };
+            const unsubC = (level === 'Three' && !morphAdWatched) ? loadMorphAd() : () => {};
+            adCleanupRef.current = () => { unsubA(); unsubB(); unsubC(); };
         });
 
         return () => {
@@ -209,97 +328,7 @@ export default function Game({ navigation, level, route }) {
                 adCleanupRef.current = null;
             }
         };
-    },[currentUser?.id, currentUser?.purchases?.premium, currentUser?.ad?.dateWatched, adWatched])
-
-    // When the shuffle ad loads while a press is pending, show it immediately
-    useEffect(() => {
-        if (adLoaded && pendingShuffleActionRef.current) {
-            const action = pendingShuffleActionRef.current;
-            pendingShuffleActionRef.current = null;
-            setAdWaiting(false);
-            if (adWaitTimeoutRef.current) {
-                clearTimeout(adWaitTimeoutRef.current);
-                adWaitTimeoutRef.current = null;
-            }
-            if (action.isTutorial) pendingTutorialAfterAd = true;
-            rewardedInterstitialAd.show().then(() => StatusBar.setStatusBarHidden(true));
-        }
-    }, [adLoaded]);
-
-    // If the shuffle ad fails while a press is pending, allow through gracefully
-    useEffect(() => {
-        if (adLoadFailed && pendingShuffleActionRef.current) {
-            const action = pendingShuffleActionRef.current;
-            pendingShuffleActionRef.current = null;
-            setAdWaiting(false);
-            if (adWaitTimeoutRef.current) {
-                clearTimeout(adWaitTimeoutRef.current);
-                adWaitTimeoutRef.current = null;
-            }
-            if (action.isTutorial) {
-                setShowTutorial(true);
-            } else {
-                navigation.navigate('Play', { level: 'Two' });
-            }
-        }
-    }, [adLoadFailed]);
-
-    // When the yesterday ad loads while a press is pending, show it immediately
-    useEffect(() => {
-        if (yesterdayAdLoaded && pendingYesterdayActionRef.current) {
-            const action = pendingYesterdayActionRef.current;
-            pendingYesterdayActionRef.current = null;
-            setYesterdayAdWaiting(false);
-            if (yesterdayAdWaitTimeoutRef.current) {
-                clearTimeout(yesterdayAdWaitTimeoutRef.current);
-                yesterdayAdWaitTimeoutRef.current = null;
-            }
-            pendingYesterdayLevel = action.level;
-            yesterdayAd.show().then(() => StatusBar.setStatusBarHidden(true));
-        }
-    }, [yesterdayAdLoaded]);
-
-    // If the yesterday ad fails while a press is pending, allow through gracefully
-    useEffect(() => {
-        if (yesterdayAdLoadFailed && pendingYesterdayActionRef.current) {
-            const action = pendingYesterdayActionRef.current;
-            pendingYesterdayActionRef.current = null;
-            setYesterdayAdWaiting(false);
-            if (yesterdayAdWaitTimeoutRef.current) {
-                clearTimeout(yesterdayAdWaitTimeoutRef.current);
-                yesterdayAdWaitTimeoutRef.current = null;
-            }
-            navigation.navigate('YesterdaySolution', { level: action.level });
-        }
-    }, [yesterdayAdLoadFailed]);
-
-    // Starts a wait for the shuffle ad with an 8s timeout fallback
-    const waitForShuffleAd = (action) => {
-        pendingShuffleActionRef.current = action;
-        setAdWaiting(true);
-        adWaitTimeoutRef.current = setTimeout(() => {
-            if (!pendingShuffleActionRef.current) return; // already resolved
-            pendingShuffleActionRef.current = null;
-            setAdWaiting(false);
-            if (action.isTutorial) {
-                setShowTutorial(true);
-            } else {
-                navigation.navigate('Play', { level: 'Two' });
-            }
-        }, 8000);
-    };
-
-    // Starts a wait for the yesterday ad with an 8s timeout fallback
-    const waitForYesterdayAd = (lvl) => {
-        pendingYesterdayActionRef.current = { level: lvl };
-        setYesterdayAdWaiting(true);
-        yesterdayAdWaitTimeoutRef.current = setTimeout(() => {
-            if (!pendingYesterdayActionRef.current) return;
-            pendingYesterdayActionRef.current = null;
-            setYesterdayAdWaiting(false);
-            navigation.navigate('YesterdaySolution', { level: lvl });
-        }, 8000);
-    };
+    },[currentUser?.id, currentUser?.purchases?.premium, currentUser?.ad?.dateWatched, adWatched, currentUser?.morphAd?.dateWatched, morphAdWatched])
 
     // Today's puzzle ID — used to hide the button on day 1
     const todayPuzzleId = wordLadder?.[level.toLowerCase()]?.id ?? 1;
@@ -309,40 +338,20 @@ export default function Game({ navigation, level, route }) {
             navigation.navigate('YesterdaySolution', { level });
             return;
         }
-        if (yesterdayAdLoaded) {
-            pendingYesterdayLevel = level;
-            yesterdayAd.show().then(() => StatusBar.setStatusBarHidden(true));
-        } else if (yesterdayAdLoadFailed) {
-            navigation.navigate('YesterdaySolution', { level });
-        } else {
-            // Ad still loading — wait up to 8s then allow through
-            waitForYesterdayAd(level);
-        }
+        showConsentModal('yesterday', { level });
     };
 
     const navigateToPlay = (level) => {
         if (level.toLowerCase() === "two" && !adWatched && !isPremium) {
-            if (adLoaded) {
-                rewardedInterstitialAd.show().then(() => {StatusBar.setStatusBarHidden(true)});
-            } else if (adLoadFailed) {
-                // Ad failed to load — allow through gracefully
-                navigation.navigate('Play', { level });
-            } else {
-                // Ad still loading — wait up to 8s then allow through
-                waitForShuffleAd({ isTutorial: false });
-            }
-        } else if (level.toLowerCase() === "three" && !isPremium) {
-            navigation.navigate('Paywall');
+            showConsentModal('shuffle', { isTutorial: false });
+        } else if (level.toLowerCase() === "three" && !morphAdWatched && !isPremium) {
+            showConsentModal('morph', { isTutorial: false });
         } else {
             navigation.navigate('Play', { level });
         }
     }
 
     const onPressPlay = (level) => {
-        if (level.toLowerCase() === 'three' && !isPremium) {
-            navigation.navigate('Paywall');
-            return;
-        }
         const lvl = currentUser?.wordLadder[level.toLowerCase()];
         const hasEverPlayed = lvl?.lastAttempted != null
             || (lvl?.totalAttempted ?? 0) > 0
@@ -382,17 +391,9 @@ export default function Game({ navigation, level, route }) {
             }
             // First time on this level
             if (level === 'Two' && !adWatched && !isPremium) {
-                if (adLoaded) {
-                    // Show the ad first, tutorial will appear after CLOSED fires
-                    pendingTutorialAfterAd = true;
-                    rewardedInterstitialAd.show().then(() => StatusBar.setStatusBarHidden(true));
-                } else if (adLoadFailed) {
-                    // Ad failed — skip to tutorial directly
-                    setShowTutorial(true);
-                } else {
-                    // Ad still loading — wait up to 8s, then show tutorial
-                    waitForShuffleAd({ isTutorial: true });
-                }
+                showConsentModal('shuffle', { isTutorial: true });
+            } else if (level === 'Three' && !morphAdWatched && !isPremium) {
+                showConsentModal('morph', { isTutorial: true });
             } else {
                 setShowTutorial(true);
             }
@@ -407,7 +408,6 @@ export default function Game({ navigation, level, route }) {
 
     
     const buttonText = useMemo(() => {
-        if (level.toLowerCase() === 'three' && !isPremium) return 'Unlock Morph 🔒';
         const levelData = currentUser?.wordLadder[level.toLowerCase()];
         const isCompleted = levelData?.currentWordLadder?.completed;
         const hasStarted = levelData?.currentWordLadder?.currentAttempt?.length > 1;
@@ -424,16 +424,9 @@ export default function Game({ navigation, level, route }) {
         || lvlData?.timeStarted != null
         || lvlData?.currentWordLadder?.currentAttempt?.length > 0;
 
-    const determineLevelDisabled = (level) => {
-        if (level.toLowerCase() === 'two') {
-            return adWaiting;
-        }
-        return false;
-    }
-
     return (
             <View style={[styles.container, {backgroundColor: levelColorScheme[level]}]}>
-                <FlatButton text={adWaiting && level === 'Two' ? 'Loading...' : buttonText} onPress={() => {onPressPlay(level)}} width='60' disabled={determineLevelDisabled(level)}/>
+                <FlatButton text={buttonText} onPress={() => {onPressPlay(level)}} width='60' disabled={false}/>
                             {/* {level === 'Two' && 
                                 <FlatButton text={`Unlock Level Two`} onPress={onPressUnlock} width='50' disabled={false}/> 
                             } */}
@@ -445,12 +438,8 @@ export default function Game({ navigation, level, route }) {
                                     <TouchableOpacity
                                         onPress={onPressYesterday}
                                         style={styles.yesterdayButton}
-                                        disabled={yesterdayAdWaiting}
                                     >
-                                        {yesterdayAdWaiting
-                                            ? <ActivityIndicator size="small" color="#5B5A53" />
-                                            : <Text style={styles.yesterdayButtonText}>Yesterday's Solution</Text>
-                                        }
+                                        <Text style={styles.yesterdayButtonText}>Yesterday's Solution</Text>
                                     </TouchableOpacity>
                                 </View>
                             )}
@@ -463,6 +452,29 @@ export default function Game({ navigation, level, route }) {
                         navigation.navigate('Play', { level });
                     }}
                 />
+
+                <Modal
+                    visible={!!consentModal}
+                    transparent
+                    animationType="fade"
+                    onRequestClose={cancelConsent}
+                >
+                    <View style={styles.consentOverlay}>
+                        <View style={styles.consentCard}>
+                            <Text style={styles.consentEmoji}>📺</Text>
+                            <Text style={styles.consentTitle}>Quick Ad</Text>
+                            <Text style={styles.consentBody}>
+                                {consentModal?.type === 'yesterday'
+                                    ? "A short ad will play, then you'll see yesterday's solution."
+                                    : `A short ad will play, then you can start ${levelDisplayName[level]}.`}
+                            </Text>
+                            <Text style={styles.consentCountdown}>{consentCountdown}</Text>
+                            <TouchableOpacity style={styles.consentCancel} onPress={cancelConsent}>
+                                <Text style={styles.consentCancelText}>Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
                 
             </View>
     )
@@ -492,5 +504,57 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         fontSize: 13,
         textAlign: 'center',
+    },
+    consentOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    consentCard: {
+        backgroundColor: 'white',
+        borderRadius: 20,
+        paddingVertical: 32,
+        paddingHorizontal: 28,
+        alignItems: 'center',
+        width: '78%',
+        shadowColor: '#000',
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 4 },
+    },
+    consentEmoji: {
+        fontSize: 36,
+        marginBottom: 10,
+    },
+    consentTitle: {
+        fontSize: 20,
+        fontWeight: '800',
+        color: '#333',
+        marginBottom: 10,
+    },
+    consentBody: {
+        fontSize: 15,
+        color: '#555',
+        textAlign: 'center',
+        lineHeight: 22,
+        marginBottom: 20,
+    },
+    consentCountdown: {
+        fontSize: 48,
+        fontWeight: '900',
+        color: '#333',
+        marginBottom: 20,
+    },
+    consentCancel: {
+        paddingVertical: 10,
+        paddingHorizontal: 32,
+        borderRadius: 20,
+        backgroundColor: '#eee',
+    },
+    consentCancelText: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#555',
     },
 });

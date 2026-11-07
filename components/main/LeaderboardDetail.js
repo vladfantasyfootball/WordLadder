@@ -288,7 +288,7 @@ export default function LeaderboardDetail({ route }) {
             <View style={[styles.nameEntryScreen, { backgroundColor: bgColor }]}>
                 <View style={styles.modalCard}>
                     <Text style={styles.modalTitle}>Choose your display name</Text>
-                    <Text style={styles.modalSubtitle}>This is how you'll appear on leaderboards. Letters and spaces only, max 20 characters.</Text>
+                    <Text style={styles.modalSubtitle}>This is how you'll appear on leaderboards. Letters and spaces only, max 20 characters. You can change this anytime on your Profile page.</Text>
                     <TextInput
                         style={styles.nameInput}
                         value={nameInput}
