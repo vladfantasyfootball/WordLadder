@@ -12,7 +12,7 @@ const ENTITLEMENT_ID = 'premium';
 const FEATURES = [
     { icon: 'ban-outline', label: 'No ads — ever. Play Classic, Shuffle, and Morph without interruption' },
     { icon: 'analytics-outline', label: 'View the shortest solution after every puzzle' },
-    { icon: 'trophy-outline', label: 'All three difficulty levels, completely ad-free' },
+    { icon: 'trophy-outline', label: 'Unlock all three difficulty levels' },
     { icon: 'infinite-outline', label: 'One-time purchase, yours forever' },
 ];
 

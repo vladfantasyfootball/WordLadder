@@ -111,27 +111,6 @@ export default function LevelStat({ navigation, level }) {
     const isPremium = currentUser?.purchases?.premium === true;
     const bgColor = levelColorScheme[level];
 
-    if (level.toLowerCase() === 'three' && !isPremium) {
-        return (
-            <ScrollView contentContainerStyle={[styles.container, { backgroundColor: bgColor }]}>
-                <Animatable.View animation="fadeInUp" duration={600} style={styles.premiumGate}>
-                    <Ionicons name="lock-closed" size={48} color="#AF52DE" style={{ marginBottom: 16 }} />
-                    <Text style={styles.premiumGateTitle}>Morph is Premium</Text>
-                    <Text style={styles.premiumGateSubtitle}>
-                        {'Unlock Morph to see your stats here. Morph introduces add & remove a letter moves.'}
-                    </Text>
-                    <TouchableOpacity
-                        style={styles.premiumGateBtn}
-                        onPress={() => navigation.navigate('Paywall')}
-                        activeOpacity={0.85}
-                    >
-                        <Text style={styles.premiumGateBtnText}>Unlock Premium</Text>
-                    </TouchableOpacity>
-                </Animatable.View>
-            </ScrollView>
-        );
-    }
-
     const wordLadderPuzzle = useSelector(state => state.wordLadderState?.wordLadder?.[level.toLowerCase()]);
 
     const currentStreak = levelData?.currentStreak ?? 0;

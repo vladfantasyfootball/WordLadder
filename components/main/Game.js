@@ -81,9 +81,7 @@ export default function Game({ navigation, level, route }) {
         );
         const unsubscribeEarned = yesterdayAd.addAdEventListener(
           RewardedAdEventType.EARNED_REWARD, () => {
-            if (pendingYesterdayLevel === level) {
-              navigation.navigate('YesterdaySolution', { level });
-            }
+            // tracked via CLOSED — no action needed here
           }
         );
         const unsubscribeClosed = yesterdayAd.addAdEventListener(
@@ -91,6 +89,11 @@ export default function Game({ navigation, level, route }) {
             StatusBar.setStatusBarHidden(false);
             setYesterdayAdLoaded(false);
             yesterdayAd.load();
+            // navigate regardless of earned — rewarded interstitial grants access on view
+            if (pendingYesterdayLevel) {
+                navigation.navigate('YesterdaySolution', { level: pendingYesterdayLevel });
+                pendingYesterdayLevel = null;
+            }
           }
         );
         const unsubscribeError = yesterdayAd.addAdEventListener(
@@ -119,8 +122,7 @@ export default function Game({ navigation, level, route }) {
         )
         const unsubscribeEarned = rewardedInterstitialAd.addAdEventListener(
           RewardedAdEventType.EARNED_REWARD, (reward) => {
-            shuffleAdRewardEarned = true; // use module var — no stale closure
-            setAdWatched(true)
+            shuffleAdRewardEarned = true; // module var only — no state change to avoid killing CLOSED listener
           }
         )
         const unsubscribeClosed = rewardedInterstitialAd.addAdEventListener(
@@ -130,15 +132,14 @@ export default function Game({ navigation, level, route }) {
             rewardedInterstitialAd.load()
 
             const earned = shuffleAdRewardEarned;
-            shuffleAdRewardEarned = false; // reset for next time
+            shuffleAdRewardEarned = false;
+            if (earned) setAdWatched(true); // only persist if reward was earned
 
             if (pendingTutorialAfterAd) {
-                // First-time Shuffle flow: show tutorial after ad (whether earned or skipped)
                 pendingTutorialAfterAd = false;
-                setShowTutorial(true);
-            } else if (earned) {
-                // Returning Shuffle player who earned the reward
-                navigation.navigate('Play', { level: 'Two' });
+                setTimeout(() => setShowTutorial(true), 150);
+            } else {
+                setTimeout(() => navigation.navigate('Play', { level: 'Two' }), 150);
             }
           }
         )
@@ -169,8 +170,7 @@ export default function Game({ navigation, level, route }) {
         );
         const unsubscribeEarned = morphAd.addAdEventListener(
           RewardedAdEventType.EARNED_REWARD, () => {
-            morphAdRewardEarned = true;
-            setMorphAdWatched(true);
+            morphAdRewardEarned = true; // module var only — no state change to avoid killing CLOSED listener
           }
         );
         const unsubscribeClosed = morphAd.addAdEventListener(
@@ -180,11 +180,12 @@ export default function Game({ navigation, level, route }) {
             morphAd.load();
             const earned = morphAdRewardEarned;
             morphAdRewardEarned = false;
+            if (earned) setMorphAdWatched(true); // only persist if reward was earned
             if (pendingMorphTutorialAfterAd) {
                 pendingMorphTutorialAfterAd = false;
-                setShowTutorial(true);
-            } else if (earned) {
-                navigation.navigate('Play', { level: 'Three' });
+                setTimeout(() => setShowTutorial(true), 150);
+            } else {
+                setTimeout(() => navigation.navigate('Play', { level: 'Three' }), 150);
             }
           }
         );
@@ -264,7 +265,8 @@ export default function Game({ navigation, level, route }) {
         if (type === 'shuffle') {
             if (adLoaded) {
                 if (action?.isTutorial) pendingTutorialAfterAd = true;
-                rewardedInterstitialAd.show().then(() => StatusBar.setStatusBarHidden(true));
+                // delay lets React fully unmount the modal before the ad takes over
+                setTimeout(() => rewardedInterstitialAd.show().then(() => StatusBar.setStatusBarHidden(true)), 150);
             } else {
                 if (action?.isTutorial) setShowTutorial(true);
                 else navigation.navigate('Play', { level: 'Two' });
@@ -272,7 +274,7 @@ export default function Game({ navigation, level, route }) {
         } else if (type === 'morph') {
             if (morphAdLoaded) {
                 if (action?.isTutorial) pendingMorphTutorialAfterAd = true;
-                morphAd.show().then(() => StatusBar.setStatusBarHidden(true));
+                setTimeout(() => morphAd.show().then(() => StatusBar.setStatusBarHidden(true)), 150);
             } else {
                 if (action?.isTutorial) setShowTutorial(true);
                 else navigation.navigate('Play', { level: 'Three' });
@@ -280,7 +282,7 @@ export default function Game({ navigation, level, route }) {
         } else if (type === 'yesterday') {
             if (yesterdayAdLoaded) {
                 pendingYesterdayLevel = action.level;
-                yesterdayAd.show().then(() => StatusBar.setStatusBarHidden(true));
+                setTimeout(() => yesterdayAd.show().then(() => StatusBar.setStatusBarHidden(true)), 150);
             } else {
                 navigation.navigate('YesterdaySolution', { level: action.level });
             }
@@ -456,7 +458,7 @@ export default function Game({ navigation, level, route }) {
                 <Modal
                     visible={!!consentModal}
                     transparent
-                    animationType="fade"
+                    animationType="none"
                     onRequestClose={cancelConsent}
                 >
                     <View style={styles.consentOverlay}>
