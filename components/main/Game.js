@@ -390,9 +390,17 @@ export default function Game({ navigation, level, route }) {
                             )}
                             {todayPuzzleId >= 2 && (
                                 <View style={styles.yesterdayContainer}>
+                                    {!isPremium && (
+                                        <TouchableOpacity
+                                            onPress={() => navigation.navigate('Paywall')}
+                                            style={styles.adFreeButton}
+                                        >
+                                            <Text style={styles.adFreeButtonText}>✨ Go Ad-Free</Text>
+                                        </TouchableOpacity>
+                                    )}
                                     <TouchableOpacity
                                         onPress={onPressYesterday}
-                                        style={styles.yesterdayButton}
+                                        style={[styles.yesterdayButton, { marginTop: !isPremium ? 8 : 0 }]}
                                     >
                                         <Text style={styles.yesterdayButtonText}>Yesterday's Solution</Text>
                                     </TouchableOpacity>
@@ -447,6 +455,18 @@ const styles = StyleSheet.create({
         bottom: 52,
         alignItems: 'center',
         width: '100%',
+    },
+    adFreeButton: {
+        backgroundColor: 'rgba(0,0,0,0.65)',
+        borderRadius: 8,
+        paddingVertical: 8,
+        paddingHorizontal: 20,
+    },
+    adFreeButtonText: {
+        color: '#fff',
+        fontWeight: '700',
+        fontSize: 13,
+        textAlign: 'center',
     },
     yesterdayButton: {
         backgroundColor: '#fff',
