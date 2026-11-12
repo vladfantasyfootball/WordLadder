@@ -265,7 +265,6 @@ export default function Game({ navigation, level, route }) {
         if (type === 'shuffle') {
             if (adLoaded) {
                 if (action?.isTutorial) pendingTutorialAfterAd = true;
-                // delay lets React fully unmount the modal before the ad takes over
                 setTimeout(() => rewardedInterstitialAd.show().then(() => StatusBar.setStatusBarHidden(true)), 150);
             } else {
                 if (action?.isTutorial) setShowTutorial(true);
@@ -291,19 +290,24 @@ export default function Game({ navigation, level, route }) {
     
     const isPremium = currentUser?.purchases?.premium === true;
 
+    // Separate effect: sync watched-today state without touching ad listeners
     useEffect(() => {
-        if(currentUser){
-            // Shift by 7h so day boundary matches puzzle reset (UTC 07:00 = 11 PM PT)
-            const now = new Date();
-            const currentUTCDate = new Date(now.getTime() - 7 * 60 * 60 * 1000).toISOString().split('T')[0];
-            if(currentUser?.ad?.dateWatched === currentUTCDate && currentUser?.ad?.adWatched){
-                setAdWatched(true)
-            }
-            if(currentUser?.morphAd?.dateWatched === currentUTCDate && currentUser?.morphAd?.adWatched){
-                setMorphAdWatched(true)
-            }
+        if (!currentUser) return;
+        const now = new Date();
+        const currentUTCDate = new Date(now.getTime() - 7 * 60 * 60 * 1000).toISOString().split('T')[0];
+        if (currentUser?.ad?.dateWatched === currentUTCDate && currentUser?.ad?.adWatched) {
+            setAdWatched(true);
+        } else {
+            setAdWatched(false);
         }
+        if (currentUser?.morphAd?.dateWatched === currentUTCDate && currentUser?.morphAd?.adWatched) {
+            setMorphAdWatched(true);
+        } else {
+            setMorphAdWatched(false);
+        }
+    }, [currentUser?.ad?.dateWatched, currentUser?.ad?.adWatched, currentUser?.morphAd?.dateWatched, currentUser?.morphAd?.adWatched]);
 
+    useEffect(() => {
         // Don't request ads for premium users — they will never be shown one.
         if (isPremium) return;
 
@@ -317,10 +321,9 @@ export default function Game({ navigation, level, route }) {
 
         // Wait for SDK init then start loading ad
         adsInitialized.then(() => {
-            // Skip the shuffle rewarded ad if the user already watched it today
-            const unsubA = (level === 'Two' && !adWatched) ? loadRewardedInterstitial() : () => {};
+            const unsubA = level === 'Two' ? loadRewardedInterstitial() : () => {};
             const unsubB = loadYesterdayAd();
-            const unsubC = (level === 'Three' && !morphAdWatched) ? loadMorphAd() : () => {};
+            const unsubC = level === 'Three' ? loadMorphAd() : () => {};
             adCleanupRef.current = () => { unsubA(); unsubB(); unsubC(); };
         });
 
@@ -330,7 +333,7 @@ export default function Game({ navigation, level, route }) {
                 adCleanupRef.current = null;
             }
         };
-    },[currentUser?.id, currentUser?.purchases?.premium, currentUser?.ad?.dateWatched, adWatched, currentUser?.morphAd?.dateWatched, morphAdWatched])
+    },[currentUser?.id, currentUser?.purchases?.premium])
 
     // Today's puzzle ID — used to hide the button on day 1
     const todayPuzzleId = wordLadder?.[level.toLowerCase()]?.id ?? 1;
