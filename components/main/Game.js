@@ -271,9 +271,13 @@ export default function Game({ navigation, level, route }) {
 
         // Wait for SDK init then start loading ad
         adsInitialized.then(() => {
-            const unsubA = level === 'Two' ? loadRewardedInterstitial() : () => {};
+            const now = new Date();
+            const today = new Date(now.getTime() - 7 * 60 * 60 * 1000).toISOString().split('T')[0];
+            const shuffleWatchedToday = currentUser?.ad?.dateWatched === today && currentUser?.ad?.adWatched;
+            const morphWatchedToday = currentUser?.morphAd?.dateWatched === today && currentUser?.morphAd?.adWatched;
+            const unsubA = (level === 'Two' && !shuffleWatchedToday) ? loadRewardedInterstitial() : () => {};
             const unsubB = loadYesterdayAd();
-            const unsubC = level === 'Three' ? loadMorphAd() : () => {};
+            const unsubC = (level === 'Three' && !morphWatchedToday) ? loadMorphAd() : () => {};
             adCleanupRef.current = () => { unsubA(); unsubB(); unsubC(); };
         });
 
