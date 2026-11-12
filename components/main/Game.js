@@ -114,9 +114,6 @@ export default function Game({ navigation, level, route }) {
             StatusBar.setStatusBarHidden(false);
             rewardedAdReady = false;
             rewardedInterstitialAd.load();
-            // pre-warm morph for the natural next level
-            morphAdReady = false;
-            morphAd.load();
 
             const earned = shuffleAdRewardEarned;
             shuffleAdRewardEarned = false;
