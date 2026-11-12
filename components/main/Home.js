@@ -11,7 +11,7 @@ export class Home extends Component {
   componentDidMount() { }
   render() {
     return (
-      <Tab.Navigator initialRouteName='Classic' screenOptions={{ lazy: false }}>
+      <Tab.Navigator initialRouteName='Classic'>
         <Tab.Screen
           name={"Classic"}
           options={{

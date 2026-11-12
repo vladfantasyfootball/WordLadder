@@ -41,11 +41,36 @@ let shuffleAdRewardEarned = false;
 let pendingTutorialAfterAd = false;
 let morphAdRewardEarned = false;
 let pendingMorphTutorialAfterAd = false;
+// Module-level loaded flags — independent of component lifecycle
+let rewardedAdReady = false;
+let morphAdReady = false;
+let yesterdayAdReady = false;
 adsInitialized
   .then(() => {
     rewardedInterstitialAd = RewardedInterstitialAd.createForAdRequest(REWARDED_INTERSTITIAL_AD_UNIT_ID);
     yesterdayAd = RewardedInterstitialAd.createForAdRequest(YESTERDAY_AD_UNIT_ID);
     morphAd = RewardedInterstitialAd.createForAdRequest(MORPH_AD_UNIT_ID);
+
+    // LOADED/ERROR/EARNED_REWARD registered once at module level — never torn down
+    rewardedInterstitialAd.addAdEventListener(RewardedAdEventType.LOADED, () => { rewardedAdReady = true; });
+    rewardedInterstitialAd.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => { shuffleAdRewardEarned = true; });
+    rewardedInterstitialAd.addAdEventListener(AdEventType.ERROR, () => {
+        rewardedAdReady = false;
+        setTimeout(() => rewardedInterstitialAd.load(), 5000);
+    });
+
+    morphAd.addAdEventListener(RewardedAdEventType.LOADED, () => { morphAdReady = true; });
+    morphAd.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => { morphAdRewardEarned = true; });
+    morphAd.addAdEventListener(AdEventType.ERROR, () => {
+        morphAdReady = false;
+        setTimeout(() => morphAd.load(), 5000);
+    });
+
+    yesterdayAd.addAdEventListener(RewardedAdEventType.LOADED, () => { yesterdayAdReady = true; });
+    yesterdayAd.addAdEventListener(AdEventType.ERROR, () => {
+        yesterdayAdReady = false;
+        setTimeout(() => yesterdayAd.load(), 5000);
+    });
   })
   .catch(() => {});
 
@@ -55,13 +80,6 @@ export default function Game({ navigation, level, route }) {
     const dispatch = useDispatch();
     const currentUser = useSelector((state) => {return state.userState.currentUser});
     const [adWatched, setAdWatched] = useState(false)
-
-    const [adLoaded, setAdLoaded] = useState(false)
-    const [adLoadFailed, setAdLoadFailed] = useState(false)
-    const [yesterdayAdLoaded, setYesterdayAdLoaded] = useState(false)
-    const [yesterdayAdLoadFailed, setYesterdayAdLoadFailed] = useState(false)
-    const [morphAdLoaded, setMorphAdLoaded] = useState(false)
-    const [morphAdLoadFailed, setMorphAdLoadFailed] = useState(false)
     const [morphAdWatched, setMorphAdWatched] = useState(false)
 
     const wordLadder = useSelector((state) => state.wordLadderState.wordLadder);
@@ -71,69 +89,38 @@ export default function Game({ navigation, level, route }) {
     const [consentCountdown, setConsentCountdown] = useState(3);
     const consentIntervalRef = useRef(null);
 
+    // Only registers CLOSED for navigation — LOADED/ERROR/EARNED_REWARD are at module level
     const loadYesterdayAd = () => {
         if (!yesterdayAd) return () => {};
-        const unsubscribeLoaded = yesterdayAd.addAdEventListener(
-          RewardedAdEventType.LOADED, () => {
-            setYesterdayAdLoaded(true);
-            setYesterdayAdLoadFailed(false);
-          }
-        );
-        const unsubscribeEarned = yesterdayAd.addAdEventListener(
-          RewardedAdEventType.EARNED_REWARD, () => {
-            // tracked via CLOSED — no action needed here
-          }
-        );
         const unsubscribeClosed = yesterdayAd.addAdEventListener(
           AdEventType.CLOSED, () => {
             StatusBar.setStatusBarHidden(false);
-            setYesterdayAdLoaded(false);
+            yesterdayAdReady = false;
             yesterdayAd.load();
-            // navigate regardless of earned — rewarded interstitial grants access on view
             if (pendingYesterdayLevel) {
                 navigation.navigate('YesterdaySolution', { level: pendingYesterdayLevel });
                 pendingYesterdayLevel = null;
             }
           }
         );
-        const unsubscribeError = yesterdayAd.addAdEventListener(
-          AdEventType.ERROR, () => {
-            setYesterdayAdLoaded(false);
-            setYesterdayAdLoadFailed(true);
-          }
-        );
-        yesterdayAd.load();
-        return () => {
-          unsubscribeLoaded();
-          unsubscribeEarned();
-          unsubscribeClosed();
-          unsubscribeError();
-        };
+        if (!yesterdayAdReady) yesterdayAd.load();
+        return () => { unsubscribeClosed(); };
     };
 
     const loadRewardedInterstitial = () => {
         if (!rewardedInterstitialAd) return () => {};
-
-        const unsubscribeLoaded = rewardedInterstitialAd.addAdEventListener(
-          RewardedAdEventType.LOADED, () => {
-            setAdLoaded(true)
-            setAdLoadFailed(false)
-          }
-        )
-        const unsubscribeEarned = rewardedInterstitialAd.addAdEventListener(
-          RewardedAdEventType.EARNED_REWARD, (reward) => {
-            shuffleAdRewardEarned = true; // module var only — no state change to avoid killing CLOSED listener
-          }
-        )
         const unsubscribeClosed = rewardedInterstitialAd.addAdEventListener(
           AdEventType.CLOSED, () => {
-            StatusBar.setStatusBarHidden(false)
-            setAdLoaded(false)
-            rewardedInterstitialAd.load()
+            StatusBar.setStatusBarHidden(false);
+            rewardedAdReady = false;
+            rewardedInterstitialAd.load();
+            // pre-warm morph for the natural next level
+            morphAdReady = false;
+            morphAd.load();
 
             const earned = shuffleAdRewardEarned;
             shuffleAdRewardEarned = false;
-            if (earned) setAdWatched(true); // only persist if reward was earned
+            if (earned) setAdWatched(true);
 
             if (pendingTutorialAfterAd) {
                 pendingTutorialAfterAd = false;
@@ -142,45 +129,22 @@ export default function Game({ navigation, level, route }) {
                 setTimeout(() => navigation.navigate('Play', { level: 'Two' }), 150);
             }
           }
-        )
-        const unsubscribeError = rewardedInterstitialAd.addAdEventListener(
-          AdEventType.ERROR, () => {
-            setAdLoaded(false)
-            setAdLoadFailed(true)
-          }
-        )
-
-        rewardedInterstitialAd.load()
-    
-        return () => {
-          unsubscribeLoaded()
-          unsubscribeClosed()
-          unsubscribeEarned()
-          unsubscribeError()
-        }
-    }
+        );
+        if (!rewardedAdReady) rewardedInterstitialAd.load();
+        return () => { unsubscribeClosed(); };
+    };
 
     const loadMorphAd = () => {
         if (!morphAd) return () => {};
-        const unsubscribeLoaded = morphAd.addAdEventListener(
-          RewardedAdEventType.LOADED, () => {
-            setMorphAdLoaded(true);
-            setMorphAdLoadFailed(false);
-          }
-        );
-        const unsubscribeEarned = morphAd.addAdEventListener(
-          RewardedAdEventType.EARNED_REWARD, () => {
-            morphAdRewardEarned = true; // module var only — no state change to avoid killing CLOSED listener
-          }
-        );
         const unsubscribeClosed = morphAd.addAdEventListener(
           AdEventType.CLOSED, () => {
             StatusBar.setStatusBarHidden(false);
-            setMorphAdLoaded(false);
+            morphAdReady = false;
             morphAd.load();
+
             const earned = morphAdRewardEarned;
             morphAdRewardEarned = false;
-            if (earned) setMorphAdWatched(true); // only persist if reward was earned
+            if (earned) setMorphAdWatched(true);
             if (pendingMorphTutorialAfterAd) {
                 pendingMorphTutorialAfterAd = false;
                 setTimeout(() => setShowTutorial(true), 150);
@@ -189,19 +153,8 @@ export default function Game({ navigation, level, route }) {
             }
           }
         );
-        const unsubscribeError = morphAd.addAdEventListener(
-          AdEventType.ERROR, () => {
-            setMorphAdLoaded(false);
-            setMorphAdLoadFailed(true);
-          }
-        );
-        morphAd.load();
-        return () => {
-          unsubscribeLoaded();
-          unsubscribeClosed();
-          unsubscribeEarned();
-          unsubscribeError();
-        };
+        if (!morphAdReady) morphAd.load();
+        return () => { unsubscribeClosed(); };
     };
 
     useEffect(() => {
@@ -263,7 +216,7 @@ export default function Game({ navigation, level, route }) {
         setConsentCountdown(3);
 
         if (type === 'shuffle') {
-            if (adLoaded) {
+            if (rewardedAdReady) {
                 if (action?.isTutorial) pendingTutorialAfterAd = true;
                 setTimeout(() => rewardedInterstitialAd.show().then(() => StatusBar.setStatusBarHidden(true)), 150);
             } else {
@@ -271,7 +224,7 @@ export default function Game({ navigation, level, route }) {
                 else navigation.navigate('Play', { level: 'Two' });
             }
         } else if (type === 'morph') {
-            if (morphAdLoaded) {
+            if (morphAdReady) {
                 if (action?.isTutorial) pendingMorphTutorialAfterAd = true;
                 setTimeout(() => morphAd.show().then(() => StatusBar.setStatusBarHidden(true)), 150);
             } else {
@@ -279,14 +232,14 @@ export default function Game({ navigation, level, route }) {
                 else navigation.navigate('Play', { level: 'Three' });
             }
         } else if (type === 'yesterday') {
-            if (yesterdayAdLoaded) {
+            if (yesterdayAdReady) {
                 pendingYesterdayLevel = action.level;
                 setTimeout(() => yesterdayAd.show().then(() => StatusBar.setStatusBarHidden(true)), 150);
             } else {
                 navigation.navigate('YesterdaySolution', { level: action.level });
             }
         }
-    }, [consentCountdown, consentModal, adLoaded, morphAdLoaded, yesterdayAdLoaded]);
+    }, [consentCountdown, consentModal]);
     
     const isPremium = currentUser?.purchases?.premium === true;
 
