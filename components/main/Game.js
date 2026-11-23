@@ -45,6 +45,11 @@ let pendingMorphTutorialAfterAd = false;
 let rewardedAdReady = false;
 let morphAdReady = false;
 let yesterdayAdReady = false;
+// Retry counters — capped to prevent request storms on persistent errors
+let rewardedRetries = 0;
+let morphRetries = 0;
+let yesterdayRetries = 0;
+const MAX_AD_RETRIES = 2;
 adsInitialized
   .then(() => {
     rewardedInterstitialAd = RewardedInterstitialAd.createForAdRequest(REWARDED_INTERSTITIAL_AD_UNIT_ID);
@@ -52,24 +57,24 @@ adsInitialized
     morphAd = RewardedInterstitialAd.createForAdRequest(MORPH_AD_UNIT_ID);
 
     // LOADED/ERROR/EARNED_REWARD registered once at module level — never torn down
-    rewardedInterstitialAd.addAdEventListener(RewardedAdEventType.LOADED, () => { rewardedAdReady = true; });
+    rewardedInterstitialAd.addAdEventListener(RewardedAdEventType.LOADED, () => { rewardedAdReady = true; rewardedRetries = 0; });
     rewardedInterstitialAd.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => { shuffleAdRewardEarned = true; });
     rewardedInterstitialAd.addAdEventListener(AdEventType.ERROR, () => {
         rewardedAdReady = false;
-        setTimeout(() => rewardedInterstitialAd.load(), 5000);
+        if (rewardedRetries < MAX_AD_RETRIES) { rewardedRetries++; setTimeout(() => rewardedInterstitialAd.load(), 5000); }
     });
 
-    morphAd.addAdEventListener(RewardedAdEventType.LOADED, () => { morphAdReady = true; });
+    morphAd.addAdEventListener(RewardedAdEventType.LOADED, () => { morphAdReady = true; morphRetries = 0; });
     morphAd.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => { morphAdRewardEarned = true; });
     morphAd.addAdEventListener(AdEventType.ERROR, () => {
         morphAdReady = false;
-        setTimeout(() => morphAd.load(), 5000);
+        if (morphRetries < MAX_AD_RETRIES) { morphRetries++; setTimeout(() => morphAd.load(), 5000); }
     });
 
-    yesterdayAd.addAdEventListener(RewardedAdEventType.LOADED, () => { yesterdayAdReady = true; });
+    yesterdayAd.addAdEventListener(RewardedAdEventType.LOADED, () => { yesterdayAdReady = true; yesterdayRetries = 0; });
     yesterdayAd.addAdEventListener(AdEventType.ERROR, () => {
         yesterdayAdReady = false;
-        setTimeout(() => yesterdayAd.load(), 5000);
+        if (yesterdayRetries < MAX_AD_RETRIES) { yesterdayRetries++; setTimeout(() => yesterdayAd.load(), 5000); }
     });
   })
   .catch(() => {});
@@ -103,7 +108,7 @@ export default function Game({ navigation, level, route }) {
             }
           }
         );
-        if (!yesterdayAdReady) yesterdayAd.load();
+        // load() not called here — triggered on-demand when user taps Yesterday's Solution
         return () => { unsubscribeClosed(); };
     };
 
@@ -113,7 +118,7 @@ export default function Game({ navigation, level, route }) {
           AdEventType.CLOSED, () => {
             StatusBar.setStatusBarHidden(false);
             rewardedAdReady = false;
-            rewardedInterstitialAd.load();
+            rewardedInterstitialAd.load(); // reload for next ad opportunity
 
             const earned = shuffleAdRewardEarned;
             shuffleAdRewardEarned = false;
@@ -127,7 +132,7 @@ export default function Game({ navigation, level, route }) {
             }
           }
         );
-        if (!rewardedAdReady) rewardedInterstitialAd.load();
+        // load() not called here — triggered on-demand when user taps Play
         return () => { unsubscribeClosed(); };
     };
 
@@ -137,7 +142,7 @@ export default function Game({ navigation, level, route }) {
           AdEventType.CLOSED, () => {
             StatusBar.setStatusBarHidden(false);
             morphAdReady = false;
-            morphAd.load();
+            morphAd.load(); // reload for next ad opportunity
 
             const earned = morphAdRewardEarned;
             morphAdRewardEarned = false;
@@ -150,7 +155,7 @@ export default function Game({ navigation, level, route }) {
             }
           }
         );
-        if (!morphAdReady) morphAd.load();
+        // load() not called here — triggered on-demand when user taps Play
         return () => { unsubscribeClosed(); };
     };
 
@@ -191,6 +196,10 @@ export default function Game({ navigation, level, route }) {
 
     const showConsentModal = (type, action) => {
         if (consentIntervalRef.current) return; // already counting down
+        // Trigger load now so the ad has the countdown window to load
+        if (type === 'shuffle' && !rewardedAdReady) rewardedInterstitialAd?.load();
+        if (type === 'morph' && !morphAdReady) morphAd?.load();
+        if (type === 'yesterday' && !yesterdayAdReady) yesterdayAd?.load();
         setConsentModal({ type, action });
         setConsentCountdown(3);
         consentIntervalRef.current = setInterval(() => {
@@ -361,11 +370,6 @@ export default function Game({ navigation, level, route }) {
         }
     }
 
-    const onPressUnlock = () => {
-        navigation.navigate('Paywall')
-    }
-
-    
     const buttonText = useMemo(() => {
         const levelData = currentUser?.wordLadder[level.toLowerCase()];
         const isCompleted = levelData?.currentWordLadder?.completed;
@@ -373,7 +377,7 @@ export default function Game({ navigation, level, route }) {
         if (isCompleted) return 'View Solution';
         if (hasStarted) return `Resume ${levelDisplayName[level]}`;
         return `Play ${levelDisplayName[level]}`;
-    }, [currentUser, level, isPremium]);
+    }, [currentUser, level]);
 
     const lvlData = currentUser?.wordLadder[level.toLowerCase()];
     const hasEverAttempted = lvlData?.lastAttempted != null
@@ -386,9 +390,6 @@ export default function Game({ navigation, level, route }) {
     return (
             <View style={[styles.container, {backgroundColor: levelColorScheme[level]}]}>
                 <FlatButton text={buttonText} onPress={() => {onPressPlay(level)}} width='60' disabled={false}/>
-                            {/* {level === 'Two' && 
-                                <FlatButton text={`Unlock Level Two`} onPress={onPressUnlock} width='50' disabled={false}/> 
-                            } */}
                             {hasEverAttempted && (
                                 <FlatButton text='How to Play' onPress={() => setShowTutorial(true)} width='40' disabled={false}/>
                             )}
