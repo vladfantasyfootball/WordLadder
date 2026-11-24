@@ -201,7 +201,7 @@ export default function Game({ navigation, level, route }) {
         if (type === 'morph' && !morphAdReady) morphAd?.load();
         if (type === 'yesterday' && !yesterdayAdReady) yesterdayAd?.load();
         setConsentModal({ type, action });
-        setConsentCountdown(3);
+        setConsentCountdown(5);
         consentIntervalRef.current = setInterval(() => {
             setConsentCountdown(prev => (prev <= 1 ? 0 : prev - 1));
         }, 1000);
@@ -210,7 +210,7 @@ export default function Game({ navigation, level, route }) {
     const cancelConsent = () => {
         if (consentIntervalRef.current) { clearInterval(consentIntervalRef.current); consentIntervalRef.current = null; }
         setConsentModal(null);
-        setConsentCountdown(3);
+        setConsentCountdown(5);
     };
 
     // Fire the ad (or skip) when countdown reaches 0
@@ -219,7 +219,7 @@ export default function Game({ navigation, level, route }) {
         if (consentIntervalRef.current) { clearInterval(consentIntervalRef.current); consentIntervalRef.current = null; }
         const { type, action } = consentModal;
         setConsentModal(null);
-        setConsentCountdown(3);
+        setConsentCountdown(5);
 
         if (type === 'shuffle') {
             if (rewardedAdReady) {
